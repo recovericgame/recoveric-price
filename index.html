@@ -1580,7 +1580,9 @@ function editLevel(id){
     {label:'저장',cls:'btn-gold',fn:()=>{
       const n=document.getElementById('edit-lv-name').value.trim();
       if(!n){toast('이름 입력 필요','error');return;}
-      lv.name=n;saveSettingsDirty();fillLevelSelects();renderTbl();closeM();toast('변경됨','success');
+      const lvFresh=ST.levels.find(l=>l.id===id);
+      if(!lvFresh)return;
+      lvFresh.name=n;saveSettingsDirty();fillLevelSelects();renderTbl();closeM();toast('변경됨','success');
     }},
     {label:'취소',cls:'btn-outline',fn:closeM}
   ]);
@@ -3175,8 +3177,11 @@ function openIntroEdit(){
     <div class="fg"><label class="flabel">특징 설명 <span id="ie-cnt" style="color:var(--txt3)">(${(f.description||'').length}/200자)</span></label>
       <textarea class="finput" id="ie-desc" rows="4" maxlength="200" oninput="document.getElementById('ie-cnt').textContent='('+this.value.length+'/200자)'" style="width:100%;resize:vertical">${f.description||''}</textarea></div>`,
     [{label:'저장',cls:'btn-gold',fn:()=>{
-      f.url=document.getElementById('ie-url').value.trim()||null;
-      f.description=document.getElementById('ie-desc').value.trim()||null;
+      // introFid로 다시 찾기 (autoLoadFrom이 ST.fabrics를 교체했을 수 있음)
+      const fab=ST.fabrics.find(x=>x.id===+introFid);
+      if(!fab){toast('원단을 찾을 수 없습니다','error');closeM();return;}
+      fab.url=document.getElementById('ie-url').value.trim()||null;
+      fab.description=document.getElementById('ie-desc').value.trim()||null;
       saveFabricsDirty();renderIntro(introFid);closeM();toast('저장됨 ✓','success');
     }},{label:'취소',cls:'btn-outline',fn:closeM}]
   );
