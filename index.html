@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.39</title>
+<title>RECOVERIC 단가관리 시스템 v4.40</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.39</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.40</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2520,38 +2520,14 @@ async function autoSyncTo(){
   }
 }
 
-// JSONP 방식으로 GET (file:// 보안 제한 완전 우회)
-function jsonpLoad(url){
-  return new Promise((resolve,reject)=>{
-    const cb='_gasJSONP'+Date.now();
-    const script=document.createElement('script');
-    const timer=setTimeout(()=>{
-      delete window[cb];
-      if(script.parentNode)script.parentNode.removeChild(script);
-      reject(new Error('JSONP 타임아웃'));
-    },15000);
-    window[cb]=(data)=>{
-      clearTimeout(timer);
-      delete window[cb];
-      if(script.parentNode)script.parentNode.removeChild(script);
-      resolve(data);
-    };
-    script.src=url+'?callback='+cb+'&t='+Date.now();
-    script.onerror=()=>{
-      clearTimeout(timer);
-      delete window[cb];
-      reject(new Error('JSONP 실패'));
-    };
-    document.head.appendChild(script);
-  });
-}
-
 async function autoLoadFrom(){
   const url=ST.sheetsUrl;if(!url)return;
   if(window._isSyncing)return;
   if(window._lastSavedAt&&(Date.now()-window._lastSavedAt)<15000)return;
   try{
-    const d=await jsonpLoad(url);
+    // GitHub Pages(HTTPS)에서는 단순 fetch GET으로 충분
+    const r=await fetch(url+'?t='+Date.now(),{cache:'no-store'});
+    const d=await r.json();
     let updated=false;
     if(d.customers&&d.customers.length){
       const seenCust=new Set();
