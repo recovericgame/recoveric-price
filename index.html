@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.42</title>
+<title>RECOVERIC 단가관리 시스템 v4.43</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.42</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.43</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1295,12 +1295,13 @@ let ST={},role='',selCid=null,activeGrade='',activeTag='',editFid=null,editCid=n
 // ─ Storage ─
 const DEFAULT_SHEETS_URL='https://script.google.com/macros/s/AKfycbyfqmMcjWpwzgtM4GH_QReK1COzBJrrXt7cPGsviMfLAtSfNAT_OKnV91XyXMBbY-6Qag/exec';
 function save(){
-  try{
-    localStorage.setItem('rcv2',JSON.stringify(ST));
-    window._isDirty=true;
-    // _lastSavedAt은 autoSyncTo 성공 후에만 설정 (여기서 설정하면 수신 기기의 autoLoadFrom이 차단됨)
-  }catch(e){}
+  try{ localStorage.setItem('rcv2',JSON.stringify(ST)); }catch(e){}
 }
+// 변경된 데이터 타입만 추적
+function saveFabricsDirty(){save();window._dirtyFabrics=true;autoSyncTo();}
+function saveCustomersDirty(){save();window._dirtyCustomers=true;autoSyncTo();}
+function saveSettingsDirty(){save();window._dirtySettings=true;autoSyncTo();}
+function saveAllDirty(){save();window._dirtyFabrics=true;window._dirtyCustomers=true;window._dirtySettings=true;autoSyncTo();}
 function migrate(old){
   // 항상 최신 기본값에서 시작
   const s=JSON.parse(JSON.stringify(DSTATE));
@@ -1571,7 +1572,7 @@ function addLevel(){
   const id=autoKey(name);
   ST.levels.push({id,name});
   document.getElementById('new-level-name').value='';
-  save();fillLevelSelects();toast('라인 추가됨','success');autoSyncTo();
+  saveSettingsDirty();fillLevelSelects();toast('라인 추가됨','success');
 }
 function editLevel(id){
   const lv=ST.levels.find(l=>l.id===id);if(!lv)return;
@@ -1579,7 +1580,7 @@ function editLevel(id){
     {label:'저장',cls:'btn-gold',fn:()=>{
       const n=document.getElementById('edit-lv-name').value.trim();
       if(!n){toast('이름 입력 필요','error');return;}
-      lv.name=n;save();fillLevelSelects();renderTbl();closeM();toast('변경됨','success');autoSyncTo();
+      lv.name=n;saveSettingsDirty();fillLevelSelects();renderTbl();closeM();toast('변경됨','success');
     }},
     {label:'취소',cls:'btn-outline',fn:closeM}
   ]);
@@ -1587,7 +1588,7 @@ function editLevel(id){
 function delLevel(id){
   if(ST.fabrics.some(f=>f.level===id)){toast('사용 중인 라인은 삭제할 수 없습니다','error');return;}
   ST.levels=ST.levels.filter(l=>l.id!==id);
-  save();fillLevelSelects();toast('삭제됨','success');autoSyncTo();
+  saveSettingsDirty();fillLevelSelects();toast('삭제됨','success');
 }
 function addCat(){
   const name=document.getElementById('new-cat').value.trim();
@@ -1596,7 +1597,7 @@ function addCat(){
   if(ST.categories.includes(name)){toast('이미 존재하는 조직입니다','error');return;}
   ST.categories.push(name);
   document.getElementById('new-cat').value='';
-  save();fillCatList();toast('조직 추가됨','success');autoSyncTo();
+  saveSettingsDirty();fillCatList();toast('조직 추가됨','success');
 }
 function editCat(oldName){
   openM('조직 이름 변경',`<div class="fg"><label class="flabel">새 이름</label><input class="finput" id="edit-cat-name" value="${oldName}" style="width:200px"></div>`,[
@@ -1606,7 +1607,7 @@ function editCat(oldName){
       ST.fabrics.forEach(f=>{if(f.category===oldName)f.category=n;});
       const idx=ST.categories.indexOf(oldName);
       if(idx>=0)ST.categories[idx]=n;
-      save();fillCatList();fillLevelSelects();renderTbl();renderAdminTbl();closeM();toast('변경됨','success');autoSyncTo();
+      saveSettingsDirty();fillCatList();fillLevelSelects();renderTbl();renderAdminTbl();closeM();toast('변경됨','success');
     }},
     {label:'취소',cls:'btn-outline',fn:closeM}
   ]);
@@ -1614,7 +1615,7 @@ function editCat(oldName){
 function delCat(name){
   if(ST.fabrics.some(f=>f.category===name)){toast('사용 중인 조직은 삭제할 수 없습니다','error');return;}
   ST.categories=(ST.categories||[]).filter(c=>c!==name);
-  save();fillCatList();toast('삭제됨','success');autoSyncTo();
+  saveSettingsDirty();fillCatList();toast('삭제됨','success');
 }
 function fillCatFilter(){
   const cats=[...new Set(ST.fabrics.map(f=>f.category))];
@@ -1798,7 +1799,7 @@ function delFFromSlide(){
     [{label:'삭제',cls:'btn-outline',fn:()=>{
       const name=f.name;
       ST.fabrics=ST.fabrics.filter(x=>x.id!==slideFid);
-      save();autoSyncTo();
+      saveFabricsDirty();
       renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
       closeSlidePanel();closeM();
       toast('"'+name+'" 삭제됨','success');
@@ -1838,7 +1839,7 @@ function saveSlidePanel(){
       description:g('sp-desc')?.value?.trim()||null,
       tags,
     });
-    save();autoSyncTo();
+    saveFabricsDirty();
     renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
     closeSlidePanel();
     toast('저장됨 ✓','success');
@@ -2334,9 +2335,9 @@ function saveC(){
   if(editCid){const c=ST.customers.find(x=>x.id===editCid);if(c){c.name=name;c.grade=grade;c.overrides=overrides;}}
   else ST.customers.push({id:ST.nextCid++,name,grade,overrides});
   save();fillSpecialSel();renderCust();renderSpecialTbl();closeM();toast('저장됨','success');
-  autoSyncTo();
+
 }
-function delC(id){if(!confirm('삭제?'))return;ST.customers=ST.customers.filter(c=>c.id!==id);if(specialCid===id){specialCid=null;document.getElementById('sp-search').value='';document.getElementById('sp-cust-info').style.display='none';document.getElementById('sp-empty').style.display='flex';document.getElementById('sp-tbl-wrap').style.display='none';}save();fillSpecialSel();renderCust();renderTbl();toast('삭제됨','success');autoSyncTo();}
+function delC(id){if(!confirm('삭제?'))return;ST.customers=ST.customers.filter(c=>c.id!==id);if(specialCid===id){specialCid=null;document.getElementById('sp-search').value='';document.getElementById('sp-cust-info').style.display='none';document.getElementById('sp-empty').style.display='flex';document.getElementById('sp-tbl-wrap').style.display='none';}saveCustomersDirty();fillSpecialSel();renderCust();renderTbl();toast('삭제됨','success');}
 
 // ─ Admin Fabrics ─
 function renderAdminTbl(){
@@ -2421,13 +2422,13 @@ function saveF(){
   else ST.fabrics.push({id:ST.nextFid++,...d});
   save();fillLevelSelects();fillCatList();
   renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
-  closeM();toast('저장됨','success');autoSyncTo();
+  closeM();toast('저장됨','success');
 }
-function delF(id){if(!confirm('삭제?'))return;ST.fabrics=ST.fabrics.filter(f=>f.id!==id);save();fillLevelSelects();fillCatList();renderTbl();renderAdminTbl();toast('삭제됨','success');autoSyncTo();}
+function delF(id){if(!confirm('삭제?'))return;ST.fabrics=ST.fabrics.filter(f=>f.id!==id);saveFabricsDirty();fillLevelSelects();fillCatList();renderTbl();renderAdminTbl();toast('삭제됨','success');}
 
 // ─ Grade discounts ─
 function loadDisc(){document.getElementById('dsi').value=ST.grades.silver?.discount??3;document.getElementById('dgi').value=ST.grades.gold?.discount??5;document.getElementById('dvi').value=ST.grades.vip?.discount??8;}
-function saveDisc(){ST.grades.silver.discount=+document.getElementById('dsi').value||0;ST.grades.gold.discount=+document.getElementById('dgi').value||0;ST.grades.vip.discount=+document.getElementById('dvi').value||0;save();renderTbl();if(specialCid)renderSpecialTbl();toast('할인율 저장됨','success');autoSyncTo();}
+function saveDisc(){ST.grades.silver.discount=+document.getElementById('dsi').value||0;ST.grades.gold.discount=+document.getElementById('dgi').value||0;ST.grades.vip.discount=+document.getElementById('dvi').value||0;saveSettingsDirty();renderTbl();if(specialCid)renderSpecialTbl();toast('할인율 저장됨','success');}
 
 // ─ PINs ─
 function savePins(){
@@ -2501,16 +2502,21 @@ async function autoSyncTo(){
   const url=ST.sheetsUrl;if(!url)return;
   if(window._isSyncing)return;
   window._isSyncing=true;
-  console.log('[SyncTo] 저장 시작 - customers:'+ST.customers.length+', fabrics:'+ST.fabrics.length);
+  const dirtyF=window._dirtyFabrics;
+  const dirtyC=window._dirtyCustomers;
+  const dirtyS=window._dirtySettings;
+  if(!dirtyF&&!dirtyC&&!dirtyS){window._isSyncing=false;return;}
+  console.log('[SyncTo] 저장 시작 - fabrics:'+dirtyF+', customers:'+dirtyC+', settings:'+dirtyS);
   try{
-    const r1=await gasPost(url,{action:'saveCustomers',customers:ST.customers});
-    const r2=await gasPost(url,{action:'saveFabrics',fabrics:ST.fabrics});
-    const r3=await gasPost(url,{action:'saveLevels',levels:ST.levels||[]});
-    const r4=await gasPost(url,{action:'saveCategories',categories:ST.categories||[]});
-    const r5=await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||''});
-    const statuses=[r1,r2,r3,r4,r5].map(r=>r.status||r.type);
-    console.log('[SyncTo] 저장 완료 응답:', statuses);
-    window._isDirty=false;
+    if(dirtyC){await gasPost(url,{action:'saveCustomers',customers:ST.customers});window._dirtyCustomers=false;}
+    if(dirtyF){await gasPost(url,{action:'saveFabrics',fabrics:ST.fabrics});window._dirtyFabrics=false;}
+    if(dirtyS){
+      await gasPost(url,{action:'saveLevels',levels:ST.levels||[]});
+      await gasPost(url,{action:'saveCategories',categories:ST.categories||[]});
+      await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||''});
+      window._dirtySettings=false;
+    }
+    console.log('[SyncTo] 저장 완료');
     window._lastSavedAt=Date.now();
     showSyncStatus('☁ 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
     setTimeout(()=>{window._lastSavedAt=0;},25000);
@@ -2716,7 +2722,7 @@ function changeCustGrade(){
 }
 function setSpGrade(g){
   const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
-  c.grade=g;save();autoSyncTo();updSpCustInfo();renderSpecialTbl();closeM();toast('등급 변경됨 ✓','success');
+  c.grade=g;saveCustomersDirty();updSpCustInfo();renderSpecialTbl();closeM();toast('등급 변경됨 ✓','success');
 }
 function delSpecialCust(){
   const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
@@ -2727,7 +2733,7 @@ function delSpecialCust(){
   document.getElementById('sp-cust-info').style.display='none';
   document.getElementById('sp-empty').style.display='flex';
   document.getElementById('sp-tbl-wrap').style.display='none';
-  save();autoSyncTo();renderCust();toast('삭제됨','success');
+  saveCustomersDirty();renderCust();toast('삭제됨','success');
 }
 function openAddCust(){
   editCid=null;
@@ -2738,7 +2744,7 @@ function openAddCust(){
       if(!name){toast('고객사명 필요','error');return;}
       const grade=document.getElementById('cg').value;
       ST.customers.push({id:ST.nextCid++,name,grade,priceOverrides:{}});
-      save();autoSyncTo();renderCust();fillSpecialSel();closeM();toast('고객사 추가됨 ✓','success');
+      saveCustomersDirty();renderCust();fillSpecialSel();closeM();toast('고객사 추가됨 ✓','success');
     }},{label:'취소',cls:'btn-outline',fn:closeM}]);
 }
 
@@ -2820,7 +2826,7 @@ function restoreSpPrice(fid,field){
       if(!c.priceOverrides)c.priceOverrides={};
       if(c.priceOverrides[f.name])delete c.priceOverrides[f.name][field];
       if(c.priceOverrides[f.name]&&!Object.keys(c.priceOverrides[f.name]).length)delete c.priceOverrides[f.name];
-      save();autoSyncTo();renderSpecialTbl();closeM();toast('등급 할인가로 복원됨 ✓','success');
+      saveCustomersDirty();renderSpecialTbl();closeM();toast('등급 할인가로 복원됨 ✓','success');
     }},{label:'취소',cls:'btn-outline',fn:closeM}]
   );
 }
@@ -2872,7 +2878,7 @@ function saveSpSlidePanel(){
   const vals={mg:parse('ssp-mg'),baek:parse('ssp-bk'),muji:parse('ssp-mj'),rib:parse('ssp-rb')};
   ['mg','baek','muji','rib'].forEach(k=>{if(vals[k]!=null)ov[k]=vals[k];else delete ov[k];});
   if(!Object.keys(ov).length)delete c.priceOverrides[f.name];
-  save();autoSyncTo();renderSpecialTbl();closeSpSlidePanel();toast('저장됨 ✓','success');
+  saveCustomersDirty();renderSpecialTbl();closeSpSlidePanel();toast('저장됨 ✓','success');
 }
 function copySpecialR(fid){
   const c=ST.customers.find(x=>x.id===specialCid);
@@ -3165,7 +3171,7 @@ function openIntroEdit(){
     [{label:'저장',cls:'btn-gold',fn:()=>{
       f.url=document.getElementById('ie-url').value.trim()||null;
       f.description=document.getElementById('ie-desc').value.trim()||null;
-      save();autoSyncTo();renderIntro(introFid);closeM();toast('저장됨 ✓','success');
+      saveFabricsDirty();renderIntro(introFid);closeM();toast('저장됨 ✓','success');
     }},{label:'취소',cls:'btn-outline',fn:closeM}]
   );
 }
@@ -3196,7 +3202,7 @@ function delTag(name){
   if(!ST.tags)ST.tags=[...TAGS];
   ST.tags=ST.tags.filter(t=>t!==name);
   ST.fabrics.forEach(f=>{f.tags=(f.tags||[]).filter(t=>t!==name);});
-  save();renderTagMgmt();renderTagBtns();renderByApparel();toast('삭제됨','success');autoSyncTo();
+  saveSettingsDirty();renderTagMgmt();renderTagBtns();renderByApparel();toast('삭제됨','success');
 }
 
 // copyRSimple: 지정 할인율로 복사
