@@ -2537,7 +2537,9 @@ async function autoSyncTo(){
 
 async function autoLoadFrom(){
   const url=ST.sheetsUrl;if(!url)return;
-  if(window._isSyncing)return; // 저장 중일 때만 차단
+  if(window._isSyncing)return;
+  // 로컬 미저장 변경사항 있으면 차단 (덮어쓰기 방지)
+  if(window._dirtyFabrics||window._dirtyCustomers||window._dirtySettings)return;
   try{
     const r=await fetch(url+'?t='+Date.now(),{cache:'no-store'});
     const d=await r.json();
