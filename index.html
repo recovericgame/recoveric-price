@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.40</title>
+<title>RECOVERIC 단가관리 시스템 v4.41</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.40</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.41</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1012,6 +1012,9 @@ function doPost(e) {
       sh.appendRow(['seasonName',      data.seasonName||'']);
     }
   }
+
+  // 모든 변경사항 즉시 커밋
+  try { SpreadsheetApp.flush(); } catch(ex) {}
 
   return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
 }
@@ -2510,8 +2513,8 @@ async function autoSyncTo(){
     window._isDirty=false;
     window._lastSavedAt=Date.now();
     showSyncStatus('☁ 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
-    // 저장 완료 8초 후 1회 강제 로드 (Sheets 반영 확인용)
-    setTimeout(()=>{window._lastSavedAt=0;autoLoadFrom();},8000);
+    // 저장 후 25초 뒤 쿨다운 해제 (Sheets 처리 완료 대기)
+    setTimeout(()=>{window._lastSavedAt=0;},25000);
   }catch(e){
     console.error('[Sync] 저장 실패:', e);
     showSyncStatus('⚠ 저장 실패',false);
