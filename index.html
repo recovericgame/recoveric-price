@@ -787,9 +787,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         </div>
         <button id="intro-edit-btn" onclick="openIntroEdit()" style="display:none" class="btn btn-outline btn-sm">✎ 설명·URL 수정</button>
       </div>
-      <div id="intro-empty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--txt3);gap:12px">
-        <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-        <p style="font-size:14px;font-weight:600">원단을 선택하면 카톡 소개 메세지가 생성됩니다</p>
+      <div id="intro-empty" style="flex:1;overflow-y:auto">
+        <div id="intro-list-wrap"></div>
       </div>
       <div id="intro-card" style="display:none;gap:16px;flex-wrap:wrap">
         <div style="flex:1;min-width:280px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow)">
@@ -1464,15 +1463,13 @@ function sv(name,btn,skipHistory){
     if(srch){srch.value='';srch.placeholder='원단명 직접 검색...';}
     const dd=document.getElementById('intro-dropdown');
     if(dd)dd.style.display='none';
-    // 카톡 미리보기 초기화
+    // 미리보기 카드 숨기기
     const introCard=document.getElementById('intro-card');
     if(introCard)introCard.style.display='none';
-    const introEmpty=document.getElementById('intro-empty');
-    if(introEmpty)introEmpty.style.display='flex';
     const introPrev=document.getElementById('intro-preview');
     if(introPrev)introPrev.textContent='';
     introFid=null;
-    initIntroSelects();
+    initIntroSelects(); // 전체 목록 표시
   }
 
   const fc=document.getElementById('float-capture');
@@ -3078,16 +3075,17 @@ function initIntroSelects(){
   catSel.innerHTML='<option value="">조직 전체</option>';
   cats.forEach(c=>catSel.innerHTML+=`<option value="${c}">${c}</option>`);
   fillIntroFabSelect('');
+  renderIntroList(''); // 전체 목록 표시
 }
-// 조직 선택 시 원단 콤보박스 갱신
+// 조직 선택 시 원단 콤보박스 + 목록 갱신
 function filterIntroBycat(){
   const cat=document.getElementById('intro-cat-sel').value;
   fillIntroFabSelect(cat);
-  // 조직 변경 시 텍스트 검색 초기화
   const srch=document.getElementById('intro-search');
   if(srch){srch.value='';srch.placeholder='원단명 직접 검색...';}
   const dd=document.getElementById('intro-dropdown');
   if(dd)dd.style.display='none';
+  renderIntroList(cat); // 조직 필터로 목록 갱신
 }
 function fillIntroFabSelect(cat){
   const fabSel=document.getElementById('intro-fab-sel');if(!fabSel)return;
@@ -3133,16 +3131,48 @@ function pickIntro(fid){
   document.getElementById('intro-dropdown').style.display='none';
   renderIntro(fid);
 }
-function renderIntro(fid){
-  const f=ST.fabrics.find(x=>x.id===+fid);
-  document.getElementById('intro-empty').style.display=f?'none':'flex';
-  document.getElementById('intro-card').style.display=f?'flex':'none';
+// 원단 소개 전체 목록 (조직별 그룹)
+function renderIntroList(filterCat){
+  const wrap=document.getElementById('intro-list-wrap');if(!wrap)return;
   const isAdm=role==='superadmin'||role==='admin';
-  const editBtn=document.getElementById('intro-edit-btn');
-  const editBtn2=document.getElementById('intro-edit-btn2');
-  if(editBtn)editBtn.style.display=f&&isAdm?'inline-flex':'none';
-  if(editBtn2)editBtn2.style.display=f&&isAdm?'inline-flex':'none';
-  if(!f)return;
+  let fabrics=ST.fabrics.filter(f=>f.name&&f.level);
+  if(filterCat)fabrics=fabrics.filter(f=>f.category===filterCat);
+  if(!fabrics.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--txt3);font-size:13px">표시할 원단이 없습니다</div>';return;}
+  // 조직별 그룹
+  const cats=[...new Set(fabrics.map(f=>f.category||'미분류'))];
+  wrap.innerHTML=cats.map(cat=>{
+    const rows=fabrics.filter(f=>(f.category||'미분류')===cat);
+    return `<div style="margin-bottom:12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)">
+      <div style="padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--txt2);letter-spacing:.5px">${cat} · ${rows.length}종</div>
+      ${rows.map(f=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+        <div style="flex:1;min-width:120px">
+          <div style="font-size:13px;font-weight:700;color:var(--txt)">${f.name}</div>
+          ${f.description?`<div style="font-size:11px;color:var(--txt3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px">${f.description}</div>`:'<div style="font-size:11px;color:var(--red);margin-top:2px">설명 미입력</div>'}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-gold btn-sm" onclick="copyIntroById(${f.id})" style="font-size:11px;padding:5px 10px">📋 복사</button>
+          ${isAdm?`<button class="btn btn-outline btn-sm" onclick="openIntroEditById(${f.id})" style="font-size:11px;padding:5px 10px">✎ 수정</button>`:''}
+        </div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+// 특정 원단 메세지 바로 복사
+function copyIntroById(fid){
+  const f=ST.fabrics.find(x=>x.id===+fid);if(!f)return;
+  const msg=buildIntroMsg(f);
+  doCopyText(msg).then(()=>toast(`[${f.name}] 복사됨 ✓`,'success')).catch(()=>showCopyPopup(msg));
+}
+
+// 특정 원단 설명 수정 (목록에서)
+function openIntroEditById(fid){
+  introFid=+fid;
+  openIntroEdit();
+}
+
+// 카톡 메세지 생성 (공통)
+function buildIntroMsg(f){
   const specLine=[f.width?f.width+'"':null,f.weight?f.weight+'g/y':null].filter(Boolean).join(' x ');
   const tags=(f.tags||[]).join(' · ')||'—';
   const url=f.url||'recoveric.com (상세페이지 준비중)';
@@ -3152,11 +3182,23 @@ function renderIntro(fid){
   msg+=`▸ 추천의류 : ${tags}\n`;
   if(f.description)msg+=`\n📌 ${f.description}\n`;
   msg+=`\n🔗 ${url}\n\n현일텍스 CS팀 드림`;
+  return msg;
+}
+
+function renderIntro(fid){
+  const f=ST.fabrics.find(x=>x.id===+fid);
+  document.getElementById('intro-card').style.display=f?'flex':'none';
+  const isAdm=role==='superadmin'||role==='admin';
+  const editBtn=document.getElementById('intro-edit-btn');
+  const editBtn2=document.getElementById('intro-edit-btn2');
+  if(editBtn)editBtn.style.display=f&&isAdm?'inline-flex':'none';
+  if(editBtn2)editBtn2.style.display=f&&isAdm?'inline-flex':'none';
+  if(!f)return;
+  const msg=buildIntroMsg(f);
   document.getElementById('intro-preview').textContent=msg;
   const urlEl=document.getElementById('intro-url-box');
   if(f.url){urlEl.innerHTML=`<a href="${f.url}" target="_blank" style="color:var(--blue)">${f.url}</a>`;}
   else{urlEl.innerHTML=`<span style="color:var(--txt3)">미입력 (recoveric.com 메인으로 연결)</span>`;}
-  // description 상태 표시
   const descStatus=document.getElementById('intro-desc-status');
   if(descStatus){
     if(f.description){
