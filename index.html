@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.41</title>
+<title>RECOVERIC 단가관리 시스템 v4.42</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.41</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.42</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2501,22 +2501,21 @@ async function autoSyncTo(){
   const url=ST.sheetsUrl;if(!url)return;
   if(window._isSyncing)return;
   window._isSyncing=true;
+  console.log('[SyncTo] 저장 시작 - customers:'+ST.customers.length+', fabrics:'+ST.fabrics.length);
   try{
     const r1=await gasPost(url,{action:'saveCustomers',customers:ST.customers});
     const r2=await gasPost(url,{action:'saveFabrics',fabrics:ST.fabrics});
     const r3=await gasPost(url,{action:'saveLevels',levels:ST.levels||[]});
     const r4=await gasPost(url,{action:'saveCategories',categories:ST.categories||[]});
     const r5=await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||''});
-    // 응답 상태 확인
     const statuses=[r1,r2,r3,r4,r5].map(r=>r.status||r.type);
-    console.log('[Sync] 저장 응답:', statuses);
+    console.log('[SyncTo] 저장 완료 응답:', statuses);
     window._isDirty=false;
     window._lastSavedAt=Date.now();
     showSyncStatus('☁ 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
-    // 저장 후 25초 뒤 쿨다운 해제 (Sheets 처리 완료 대기)
     setTimeout(()=>{window._lastSavedAt=0;},25000);
   }catch(e){
-    console.error('[Sync] 저장 실패:', e);
+    console.error('[SyncTo] 저장 실패:', e);
     showSyncStatus('⚠ 저장 실패',false);
   }finally{
     window._isSyncing=false;
@@ -2525,12 +2524,14 @@ async function autoSyncTo(){
 
 async function autoLoadFrom(){
   const url=ST.sheetsUrl;if(!url)return;
-  if(window._isSyncing)return;
-  if(window._lastSavedAt&&(Date.now()-window._lastSavedAt)<15000)return;
+  if(window._isSyncing){console.log('[LoadFrom] 건너뜀: isSyncing');return;}
+  const waited=window._lastSavedAt?(Date.now()-window._lastSavedAt):99999;
+  if(waited<25000){console.log('[LoadFrom] 건너뜀: 저장 후 '+Math.round(waited/1000)+'초');return;}
+  console.log('[LoadFrom] Sheets에서 불러오기 시작...');
   try{
-    // GitHub Pages(HTTPS)에서는 단순 fetch GET으로 충분
     const r=await fetch(url+'?t='+Date.now(),{cache:'no-store'});
     const d=await r.json();
+    console.log('[LoadFrom] Sheets 응답 - customers:'+d.customers?.length+', fabrics:'+d.fabrics?.length);
     let updated=false;
     if(d.customers&&d.customers.length){
       const seenCust=new Set();
@@ -2557,6 +2558,7 @@ async function autoLoadFrom(){
     if(d.grades){ST.grades=d.grades;updated=true;}
     if(d.seasonName){ST.seasonName=d.seasonName;updated=true;}
     if(updated){
+      console.log('[LoadFrom] 데이터 업데이트 - 화면 갱신');
       localStorage.setItem('rcv2',JSON.stringify(ST));
       fillLevelSelects();fillCatList();fillSpecialSel();
       renderTbl();renderCust();renderByLine();renderByCat();renderByApparel();
