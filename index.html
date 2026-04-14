@@ -1663,7 +1663,7 @@ function getDisc(f){
   if(activeGrade) return ST.grades[activeGrade]?.discount||0;
   return 0;
 }
-function applyD(p,d){if(!p||!d)return p;return Math.ceil(p*(1-d/100)/10)*10;}
+function applyD(p,d){if(!p||!d)return p;return Math.ceil(p*(1-d/100)/100)*100;}
 function fp(p,d,gradeHint){
   if(p===null||p===undefined)return '<span class="price-null">—</span>';
   const v=applyD(p,d);
