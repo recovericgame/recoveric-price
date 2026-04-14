@@ -1,0 +1,3325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RECOVERIC 단가관리 시스템 v4.39</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sidebar:#1a2c4e;--sidebar2:#1e3356;--sidebar-txt:#a8bcd4;--sidebar-active:#ffffff;
+  --bg:#f2f5fc;--bg2:#ffffff;--bg3:#f7f9fd;--bg4:#eef1f9;
+  --border:#e4e8f4;--border2:#d0d8ee;
+  --txt:#1a2035;--txt2:#5a6b8a;--txt3:#9aaac8;
+  --gold:#c8900a;--gold-lt:#fff7e6;--gold-bd:#ffd980;
+  --silver:#5570a0;--silver-lt:#f0f4ff;
+  --vip:#7040b8;--vip-lt:#f5f0ff;
+  --promo:#2060e0;--promo-lt:#eff4ff;
+  --standard:#0e9060;--standard-lt:#effaf4;
+  --premium:#c07010;--premium-lt:#fff8ee;
+  --luxury:#6030b0;--luxury-lt:#f8f2ff;
+  --apparel:#c02828;--apparel-lt:#fff2f2;
+  --green:#0e9060;--red:#c02828;--blue:#2060e0;
+  --shadow:0 1px 3px rgba(20,40,100,.07),0 4px 16px rgba(20,40,100,.05);
+  --shadow-md:0 2px 8px rgba(20,40,100,.1),0 8px 32px rgba(20,40,100,.08);
+}
+html,body{height:100%;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+button{cursor:pointer;border:none;font-family:inherit}
+input,select{font-family:inherit;color:var(--txt)}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:none}
+
+/* ─── LOGIN ─── */
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a2c4e 0%,#2a4070 50%,#1a2c4e 100%);z-index:999}
+.login-box{background:#fff;border-radius:20px;padding:48px 40px;width:360px;max-width:90vw;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.25)}
+.login-logo{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;letter-spacing:3px;color:var(--txt);margin-bottom:2px}
+.login-sub{font-size:10px;color:var(--txt3);letter-spacing:2px;margin-bottom:36px;text-transform:uppercase}
+.pin-label{font-size:12px;color:var(--txt2);margin-bottom:14px;font-weight:500}
+.pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:28px}
+.pin-dot{width:14px;height:14px;border-radius:50%;background:var(--bg4);border:2px solid var(--border2);transition:.2s}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold);transform:scale(1.1)}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.pin-key{background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:14px;font-size:20px;font-family:'Outfit',sans-serif;font-weight:600;color:var(--txt);transition:.15s}
+.pin-key:hover{background:var(--gold-lt);border-color:var(--gold-bd);color:var(--gold)}
+.pin-key:active{transform:scale(.94)}
+.pin-del{background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:14px;font-size:15px;color:var(--txt2);transition:.15s}
+.pin-del:hover{background:var(--bg4)}
+.pin-error{color:var(--red);font-size:12px;min-height:18px;font-weight:500}
+
+/* ─── LAYOUT ─── */
+#app{display:none;height:100vh;overflow:hidden}
+.app-wrap{display:flex;height:100vh}
+
+/* ─── SIDEBAR ─── */
+#sidebar{width:224px;min-width:224px;background:var(--sidebar);display:flex;flex-direction:column;transition:.3s}
+.sidebar-logo{padding:28px 20px 22px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logo-mark{font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;letter-spacing:3px;color:#fff}
+.logo-sub{font-size:9px;color:var(--sidebar-txt);letter-spacing:1.5px;margin-top:3px;text-transform:uppercase}
+.sidebar-nav{flex:1;padding:18px 12px;overflow-y:auto}
+.nav-section{font-size:9px;color:rgba(168,188,212,.5);letter-spacing:1.5px;padding:14px 8px 6px;text-transform:uppercase}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border-radius:8px;background:transparent;color:var(--sidebar-txt);font-size:13px;font-weight:500;transition:.15s;margin-bottom:2px}
+.nav-btn:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-btn.active{background:rgba(255,255,255,.12);color:#fff;font-weight:600}
+.nav-btn.active .nav-icon{opacity:1}
+.nav-icon{opacity:.6;flex-shrink:0}
+.sidebar-bottom{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08)}
+.user-badge{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.06);border-radius:8px;margin-bottom:8px}
+.user-name{font-size:12px;color:#fff;font-weight:600}
+.user-role-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:2px;display:inline-block}
+.user-role-pill.superadmin{background:rgba(200,144,10,.2);color:#ffc830}
+.user-role-pill.admin{background:rgba(32,96,224,.2);color:#80aaff}
+.user-role-pill.user{background:rgba(14,144,96,.2);color:#40d090}
+.logout-btn{width:100%;padding:8px;background:transparent;color:rgba(168,188,212,.6);font-size:12px;border-radius:8px;transition:.15s}
+.logout-btn:hover{background:rgba(255,255,255,.06);color:var(--red)}
+
+/* ─── MAIN ─── */
+#main{flex:1;overflow-y:auto;display:flex;flex-direction:column;background:var(--bg)}
+.view{display:none;flex-direction:column;flex:1;padding:20px 24px;animation:fadeUp .2s}
+.view.active{display:flex}
+/* 단가표 뷰는 패딩 줄여서 테이블 최대 활용 */
+#view-price{padding:16px 20px;gap:8px}
+#view-special,#view-byline,#view-bycat,#view-apparel{padding:16px 20px;gap:8px}
+#view-intro{padding:20px 24px;gap:14px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.view-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.view-title{font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;color:var(--txt)}
+.view-title span{color:var(--gold)}
+
+/* ─── CARDS ─── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:20px;margin-bottom:18px}
+.card-title{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';display:block;width:4px;height:16px;background:var(--gold);border-radius:2px}
+
+/* ─── FILTERS ─── */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.search-wrap{position:relative;flex:1;min-width:160px;max-width:280px}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--txt3)}
+.search-input{width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px 8px 32px;color:var(--txt);font-size:13px;outline:none;transition:.15s;box-shadow:var(--shadow)}
+.search-input:focus{border-color:var(--gold-bd);box-shadow:0 0 0 3px rgba(200,144,10,.08)}
+.filter-select{background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--txt);font-size:13px;outline:none;cursor:pointer;box-shadow:var(--shadow)}
+.filter-select:focus{border-color:var(--gold-bd)}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.tag-lbl{font-size:11px;color:var(--txt3);white-space:nowrap;font-weight:600}
+.tag-btn{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;background:var(--bg3);color:var(--txt2);border:1.5px solid var(--border);transition:.15s;cursor:pointer}
+.tag-btn:hover{border-color:var(--gold-bd);color:var(--gold)}
+.tag-btn.active{background:var(--gold-lt);color:var(--gold);border-color:var(--gold-bd)}
+
+/* ─── CUSTOMER BAR ─── */
+.cust-bar{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.cust-lbl{font-size:12px;color:var(--txt2);font-weight:600;white-space:nowrap}
+.cust-sel{background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--txt);font-size:13px;outline:none;min-width:200px}
+.cust-sel:focus{border-color:var(--gold-bd)}
+.grade-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px}
+.grade-pill.silver{background:var(--silver-lt);color:var(--silver)}
+.grade-pill.gold{background:var(--gold-lt);color:var(--gold)}
+.grade-pill.vip{background:var(--vip-lt);color:var(--vip)}
+.disc-txt{font-size:12px;color:var(--txt2)}
+
+/* ─── TABLE ─── */
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow);background:var(--bg2);flex:1;min-height:0}
+.price-tbl{width:100%;border-collapse:collapse;table-layout:auto}
+.price-tbl thead th{
+  background:var(--sidebar);color:rgba(255,255,255,.92);
+  padding:13px 14px;font-size:11px;font-weight:700;
+  text-align:center;white-space:nowrap;position:sticky;top:0;z-index:10;
+  letter-spacing:.2px;border-right:1px solid rgba(255,255,255,.07)
+}
+.price-tbl thead th:last-child{border-right:none}
+.price-tbl thead .unit{display:block;font-size:9px;font-weight:400;opacity:.5;margin-top:2px;letter-spacing:0}
+/* 섹션 구분 행 */
+.price-tbl tr.section-row td{
+.grade-tab.active{background:var(--sidebar);border-color:var(--sidebar);color:#fff !important}
+.grade-tab[data-lv="promo"].active{background:var(--promo);border-color:var(--promo);color:#fff}
+.grade-tab[data-lv="standard"].active{background:var(--standard);border-color:var(--standard);color:#fff}
+.grade-tab[data-lv="premium"].active{background:var(--premium);border-color:var(--premium);color:#fff}
+.grade-tab[data-lv="luxury"].active{background:var(--luxury);border-color:var(--luxury);color:#fff}
+.grade-tab[data-lv="apparel"].active{background:var(--apparel);border-color:var(--apparel);color:#fff}
+.grade-tab[data-lv=""].active{background:var(--sidebar);border-color:var(--sidebar);color:#fff}
+  padding:6px 18px;font-size:10px;font-weight:800;letter-spacing:2px;
+  text-transform:uppercase;white-space:nowrap;
+  border-top:2px solid transparent;border-bottom:1px solid transparent;
+}
+.price-tbl tr.section-row.lv-promo td{background:#e8f0ff;color:#1850c0;border-top-color:#bdd0ff;border-left:4px solid var(--promo)}
+.price-tbl tr.section-row.lv-standard td{background:#e6f9f0;color:#0a7050;border-top-color:#90e0bc;border-left:4px solid var(--standard)}
+.price-tbl tr.section-row.lv-premium td{background:#fff3dd;color:#905000;border-top-color:#ffc060;border-left:4px solid var(--premium)}
+.price-tbl tr.section-row.lv-luxury td{background:#f0e8ff;color:#5020a0;border-top-color:#c0a0f0;border-left:4px solid var(--luxury)}
+.price-tbl tr.section-row.lv-apparel td{background:#ffebeb;color:#900020;border-top-color:#ffaaaa;border-left:4px solid var(--apparel)}
+/* 데이터 행 */
+.price-tbl tbody tr.data-row{border-bottom:1px solid var(--border);transition:.1s}
+.price-tbl tbody tr.data-row:hover{background:#eef2ff}
+.price-tbl td{padding:11px 14px;font-size:13px;vertical-align:middle;white-space:nowrap}
+.td-name{text-align:left;font-weight:600;color:var(--txt);padding-left:18px!important}
+.td-cat{text-align:center;font-size:12px;color:var(--txt2);font-weight:500}
+.td-price{text-align:right;padding-right:18px!important;font-family:'Outfit',sans-serif}
+.td-spec{text-align:center;font-size:12px;color:var(--txt2);font-family:'Outfit',sans-serif;font-weight:500}
+.td-comp{text-align:center;font-size:11px;color:var(--txt2);font-family:'Outfit',sans-serif;white-space:nowrap;background:none!important;border:none!important;box-shadow:none!important}
+.td-copy{text-align:center;width:100px}
+/* 가격 스타일 */
+.price-val{font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;color:var(--txt)}
+.price-null{color:var(--txt3);font-size:12px;font-family:'Outfit',sans-serif}
+/* 등급별 할인가 색상 */
+.price-disc{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700}
+.price-disc.gs{color:#3a5a9a}    /* Silver */
+.price-disc.gg{color:#a07000}    /* Gold */
+.price-disc.gv{color:#5a28a0}    /* VIP */
+.price-disc.gc{color:#0a7050}    /* 고객사 개별 */
+/* 복사 버튼 항상 표시 */
+.row-acts{display:flex;gap:4px;justify-content:center;opacity:1;transition:.15s}
+.copy-msg{
+  background:var(--sidebar);color:rgba(255,255,255,.88);
+  border:1.5px solid var(--sidebar);font-size:10px;font-weight:700;
+  padding:6px 11px;border-radius:6px;cursor:pointer;
+  transition:.2s;white-space:nowrap;letter-spacing:.2px
+}
+.copy-msg:hover{background:var(--gold);border-color:var(--gold);color:#fff;transform:translateY(-1px)}
+.copy-msg.copied{background:#16a34a;border-color:#16a34a;color:#fff}
+
+/* ─── BUTTONS ─── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;transition:.15s;cursor:pointer}
+.btn-gold{background:var(--gold);color:#fff;border:none}
+.btn-gold:hover{background:#a87008;box-shadow:0 4px 12px rgba(200,144,10,.3)}
+.btn-outline{background:var(--bg2);border:1.5px solid var(--border2);color:var(--txt2)}
+.btn-outline:hover{border-color:var(--gold-bd);color:var(--gold)}
+.btn-navy{background:var(--sidebar);color:#fff;border:none}
+.btn-navy:hover{background:var(--sidebar2)}
+.btn-danger{background:#fff2f2;border:1.5px solid #ffc0c0;color:var(--red)}
+.btn-danger:hover{background:var(--red);color:#fff}
+.btn-green{background:var(--green);color:#fff;border:none}
+.btn-green:hover{opacity:.9}
+.btn-sm{padding:7px 14px;font-size:12px}
+
+/* ─── CAPTURE OVERLAY ─── */
+#capture-overlay{position:fixed;inset:0;background:rgba(20,30,60,.7);z-index:800;display:none;align-items:center;justify-content:center;padding:20px}
+#capture-overlay.open{display:flex}
+.cap-box{background:#fff;border-radius:16px;max-width:1000px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.4)}
+.cap-header{display:flex;justify-content:space-between;align-items:flex-start;padding:24px 28px 16px;border-bottom:1px solid #e0e4f0}
+.cap-logo{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;letter-spacing:3px;color:#111}
+.cap-logo-sub{font-size:9px;color:#888;letter-spacing:2px;margin-top:2px}
+.cap-meta{text-align:right;font-size:11px;color:#666}
+.cap-meta .cap-cname{font-size:15px;font-weight:700;color:#111;margin-bottom:3px}
+.cap-body{padding:0 28px 28px}
+.cap-scroll-area{flex:1;overflow-y:auto;min-height:0}
+.cap-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:0;table-layout:fixed}
+.cap-tbl th{
+  background:#1a2c4e;color:#fff;padding:10px 12px;
+  text-align:center;font-weight:600;font-size:11px;
+  border-right:1px solid rgba(255,255,255,.08)
+}
+.cap-tbl th:first-child{text-align:left;border-radius:0}
+.cap-tbl th:last-child{border-right:none}
+.cap-tbl td{
+  padding:9px 12px;border-bottom:1px solid #eaecf4;
+  text-align:center;color:#222;font-size:12px;
+  white-space:nowrap;
+}
+.cap-tbl td:first-child{text-align:left;font-weight:600;color:#111}
+.cap-tbl td.cp{text-align:right;font-family:'Outfit',sans-serif;padding-right:14px;border-bottom:1px solid #eaecf4}
+.cap-tbl td.cs{text-align:center;font-family:'Outfit',sans-serif;color:#444;border-bottom:1px solid #eaecf4}
+.cap-tbl td.cx{text-align:center;color:#333;font-size:11px;letter-spacing:.2px;border-bottom:1px solid #eaecf4;background:inherit}
+.cap-tbl tr.cap-sect td{font-size:10px;font-weight:800;letter-spacing:1.5px;padding:5px 14px;border-bottom:none}
+.cap-tbl tr:nth-child(even):not(.cap-sect) td{background:#f8f9fd}
+/* 캡처 등급 버튼 */
+.cap-grade-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;border:1.5px solid #d0d8ee;background:#fff;color:#5a6b8a;cursor:pointer;transition:.15s}
+.cap-grade-btn:hover{border-color:#1a2c4e;color:#1a2c4e}
+.cap-grade-btn.active{background:#1a2c4e;border-color:#1a2c4e;color:#fff}
+.cap-grade-btn[data-grade="silver"].active{background:#5570a0;border-color:#5570a0}
+.cap-grade-btn[data-grade="gold"].active{background:#c8900a;border-color:#c8900a}
+.cap-grade-btn[data-grade="vip"].active{background:#7040b8;border-color:#7040b8}
+.cap-grade-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+/* 행 선택 스타일 */
+.price-tbl tbody tr.data-row.row-selected{background:#dbeafe!important}
+.price-tbl tbody tr.data-row.row-selected .td-name{color:#1d4ed8}
+.copy-msg{
+  background:var(--sidebar);color:rgba(255,255,255,.9);
+  border:1.5px solid var(--sidebar);font-size:11px;font-weight:600;
+  padding:6px 11px;border-radius:6px;transition:.2s;white-space:nowrap;
+  opacity:1!important;
+}
+.copy-msg:hover{background:var(--gold);border-color:var(--gold);color:#fff}
+.copy-msg.copied{background:#16a34a;border-color:#16a34a;color:#fff}
+.row-acts{display:flex;gap:4px;justify-content:center;opacity:1!important;transition:.15s}
+.cap-footer{margin:16px 28px 0;padding-top:12px;border-top:1px solid #e0e4f0;display:flex;justify-content:space-between;font-size:10px;color:#999;padding-bottom:20px}
+.cap-actions{display:flex;gap:8px;padding:14px 28px;border-top:1px solid #eee;background:#fafbfe;border-radius:0 0 16px 16px;flex-shrink:0;flex-wrap:wrap;align-items:center}
+/* Image result box */
+#cap-img-wrap{display:none;text-align:center;padding:16px 0}
+#cap-img-wrap img{max-width:100%;border:1px solid #dde;border-radius:8px}
+
+/* ─── CUSTOMERS ─── */
+.cust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.cc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow);transition:.15s}
+.cc:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.cc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cc-name{font-size:15px;font-weight:700;color:var(--txt)}
+.cc-info{font-size:12px;color:var(--txt2);margin-bottom:4px}
+.cc-ovr{font-size:11px;color:var(--txt3);margin-top:6px}
+.cc-acts{display:flex;gap:6px;margin-top:14px}
+
+/* ─── GRADE TABS ─── */
+.grade-tab-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.grade-tab{
+  display:flex;align-items:center;gap:8px;padding:10px 22px;
+  border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;
+  border:2px solid var(--border2);background:var(--bg3);color:var(--txt2);
+  transition:.15s;letter-spacing:.3px;white-space:nowrap
+}
+.grade-tab:hover{border-color:var(--sidebar);color:var(--sidebar)}
+.grade-tab.active[data-grade=""]{background:var(--sidebar);border-color:var(--sidebar);color:#fff}
+.grade-tab[data-grade="silver"].active{background:#5570a0;border-color:#5570a0;color:#fff}
+.grade-tab[data-grade="gold"].active{background:#c8900a;border-color:#c8900a;color:#fff;box-shadow:0 3px 12px rgba(200,144,10,.3)}
+.grade-tab[data-grade="vip"].active{background:#7040b8;border-color:#7040b8;color:#fff;box-shadow:0 3px 12px rgba(112,64,184,.3)}
+.grade-mode-info{font-size:12px;font-weight:600;padding:8px 14px;border-radius:8px;margin-left:8px;display:none}
+.grade-mode-info.silver{background:rgba(85,112,160,.1);color:#5570a0;display:inline-flex;align-items:center}
+.grade-mode-info.gold{background:rgba(200,144,10,.1);color:#c8900a;display:inline-flex;align-items:center}
+.grade-mode-info.vip{background:rgba(112,64,184,.1);color:#7040b8;display:inline-flex;align-items:center}
+
+/* ─── GRADE CARDS ─── */
+.grade-row{display:flex;gap:14px;flex-wrap:wrap}
+.grade-card{flex:1;min-width:160px;background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:16px}
+.grade-card-name{font-size:12px;font-weight:700;margin-bottom:12px}
+.grade-card-name.silver{color:var(--silver)}
+.grade-card-name.gold{color:var(--gold)}
+.grade-card-name.vip{color:var(--vip)}
+.disc-row{display:flex;align-items:center;gap:6px}
+.disc-inp{background:var(--bg2);border:1.5px solid var(--border2);border-radius:8px;padding:7px 12px;color:var(--txt);font-size:16px;font-family:'Outfit',sans-serif;font-weight:700;width:72px;text-align:center;outline:none}
+.disc-inp:focus{border-color:var(--gold-bd)}
+
+/* ─── MODAL ─── */
+#modal-ov{position:fixed;inset:0;background:rgba(20,30,60,.55);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+#modal-ov.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-md)}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:20px;color:var(--txt)}
+.modal-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* ─── FORMS ─── */
+.form-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:4px}
+.flabel{font-size:11px;color:var(--txt2);font-weight:600}
+.finput{background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--txt);font-size:13px;outline:none}
+.finput:focus{border-color:var(--gold-bd);background:#fff}
+.fsel{background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--txt);font-size:13px;outline:none;cursor:pointer}
+.fsel:focus{border-color:var(--gold-bd)}
+
+/* ─── SHEETS PAGE ─── */
+.step-list{counter-reset:step}
+.step-item{display:flex;gap:14px;margin-bottom:16px;align-items:flex-start}
+.step-num{width:28px;height:28px;background:var(--sidebar);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:700;font-size:13px;flex-shrink:0}
+.step-txt{font-size:13px;color:var(--txt2);line-height:1.7;padding-top:4px}
+.step-txt b{color:var(--txt)}
+.code-wrap{background:var(--sidebar);border-radius:10px;padding:16px;font-size:11px;font-family:monospace;color:#a8d0ff;line-height:1.8;overflow-x:auto;white-space:pre;max-height:280px;overflow-y:auto;margin:10px 0}
+.info-box{background:var(--gold-lt);border:1.5px solid var(--gold-bd);border-radius:10px;padding:14px 16px;font-size:12px;color:var(--txt2);line-height:1.8;margin-bottom:16px}
+.info-box b{color:var(--gold)}
+
+/* ─── TOAST ─── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.ti{background:#fff;border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--txt);box-shadow:var(--shadow-md);animation:sIn .2s;display:flex;align-items:center;gap:8px}
+.ti.success{border-color:#86efac;background:#f0fdf4;color:var(--green)}
+.ti.error{border-color:#fca5a5;background:#fff2f2;color:var(--red)}
+@keyframes sIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ─── ADMIN TABLE ─── */
+.item-name{font-size:13px;font-weight:600;color:var(--txt);padding:10px 14px!important;text-align:left}
+.cat-txt{font-size:12px;color:var(--txt2);text-align:center;padding:10px 8px!important}
+.spec-txt{font-size:12px;font-family:'Outfit',sans-serif;color:var(--txt2);text-align:right;padding:10px 10px!important}
+.lv-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:.5px}
+.lv-badge.lv-promo{background:var(--promo-lt);color:var(--promo)}
+.lv-badge.lv-standard{background:var(--standard-lt);color:var(--standard)}
+.lv-badge.lv-premium{background:var(--premium-lt);color:var(--premium)}
+.lv-badge.lv-luxury{background:var(--luxury-lt);color:var(--luxury)}
+.lv-badge.lv-apparel{background:var(--apparel-lt);color:var(--apparel)}
+/* 편집/삭제 버튼 공통 */
+.copy-xs{background:var(--bg3);border:1.5px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--txt2);cursor:pointer;transition:.15s;white-space:nowrap}
+.copy-xs:hover{border-color:var(--sidebar);color:var(--sidebar)}
+
+/* ─── 슬라이드 편집 패널 ─── */
+.slide-panel{position:fixed;top:0;right:0;bottom:0;width:360px;background:var(--bg2);border-left:1.5px solid var(--border2);box-shadow:-4px 0 24px rgba(20,40,100,.1);transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:500;display:flex;flex-direction:column;overflow:hidden}
+.slide-panel.open{transform:translateX(0)}
+.slide-panel-dim{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:499;display:none}
+.slide-panel-dim.show{display:block}
+#price-tbl-area{flex:1;overflow:auto;transition:margin-right .25s}
+#price-tbl-area.panel-open{margin-right:360px}
+@media(max-width:768px){
+  .slide-panel{position:fixed;top:0;right:0;bottom:0;width:100vw;max-width:400px;z-index:200}
+  #price-tbl-area.panel-open{margin-right:0}
+}
+.slide-panel-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg3);flex-shrink:0}
+.slide-panel-body{flex:1;overflow-y:auto;padding:20px}
+.sp-field{margin-bottom:14px}
+.sp-label{font-size:11px;font-weight:700;color:var(--txt2);margin-bottom:5px;display:block}
+.sp-input{width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--txt);background:var(--bg);outline:none;transition:.15s}
+.sp-input:focus{border-color:var(--gold-bd);background:#fff;box-shadow:0 0 0 3px rgba(200,144,10,.08)}
+.sp-row{display:flex;gap:8px}
+.sp-row .sp-field{flex:1}
+.sp-actions{display:flex;gap:8px;padding:16px 20px;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg3)}
+
+/* ─── 고객사 특별 단가 직접입력 셀 ─── */
+#sp-tbl-area{flex:1;overflow:auto;transition:margin-right .25s;position:relative}
+#sp-slide-panel{position:fixed;top:0;right:0;bottom:0;width:340px;background:var(--bg2);border-left:1.5px solid var(--border2);box-shadow:-4px 0 24px rgba(20,40,100,.1);transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:500;display:flex;flex-direction:column;overflow:hidden}
+#sp-slide-panel.open{transform:translateX(0)}
+#float-capture{
+  position:fixed;bottom:88px;right:20px;z-index:150;
+  background:var(--gold);color:#fff;border:none;
+  width:52px;height:52px;border-radius:50%;
+  display:none;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(200,144,10,.45);
+  cursor:pointer;transition:.2s;font-size:22px
+}
+#float-capture:hover{background:#a07000;transform:scale(1.08)}
+#float-capture.visible{display:flex}
+
+/* ─── MOBILE ─── */
+#mtoggle{display:none;position:fixed;bottom:20px;right:20px;width:50px;height:50px;background:var(--sidebar);border-radius:50%;z-index:200;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(26,44,78,.4)}
+@media(max-width:768px){
+  #sidebar{position:fixed;left:-240px;top:0;bottom:0;z-index:100;transition:.3s}
+  #sidebar.open{left:0}
+  #mtoggle{display:flex}
+  .view{padding:16px}
+  .grade-row{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login">
+  <div class="login-box">
+    <div class="login-logo">RECOVERIC</div>
+    <div class="login-sub">Price Management System</div>
+    <div class="pin-label">PIN 번호 4자리를 입력하세요</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="pin-keypad">
+      <button class="pin-key" onclick="pi('1')">1</button>
+      <button class="pin-key" onclick="pi('2')">2</button>
+      <button class="pin-key" onclick="pi('3')">3</button>
+      <button class="pin-key" onclick="pi('4')">4</button>
+      <button class="pin-key" onclick="pi('5')">5</button>
+      <button class="pin-key" onclick="pi('6')">6</button>
+      <button class="pin-key" onclick="pi('7')">7</button>
+      <button class="pin-key" onclick="pi('8')">8</button>
+      <button class="pin-key" onclick="pi('9')">9</button>
+      <div></div>
+      <button class="pin-key" onclick="pi('0')">0</button>
+      <button class="pin-del" onclick="pd()">⌫</button>
+    </div>
+    <div class="pin-error" id="pin-err"></div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+<div class="app-wrap">
+
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">RECOVERIC</div>
+      <div class="logo-sub">단가 관리 시스템</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.39</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">메인</div>
+      <button class="nav-btn active" id="nb-price" onclick="sv('price',this)">
+        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        등급별 단가표
+      </button>
+      <button class="nav-btn" id="nb-special" onclick="sv('special',this)">
+        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        고객사 특별 단가표
+      </button>
+      <button class="nav-btn" id="nb-byline" onclick="sv('byline',this)">
+        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+        라인별 단가표
+      </button>
+      <button class="nav-btn" id="nb-bycat" onclick="sv('bycat',this)">
+        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="9" cy="7" r="4" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M3 20a6 6 0 0112 0"/><path stroke-linecap="round" stroke-width="2" d="M16 11h6M16 15h6M16 19h6"/></svg>
+        조직별 단가표
+      </button>
+      <button class="nav-btn" id="nb-apparel" onclick="sv('apparel',this)">
+        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7l-3 3 3 3M17 7l3 3-3 3M3 10h18M10 3l-1 18M14 3l1 18"/></svg>
+        추천의류별 단가표
+      </button>
+      <button class="nav-btn" id="nb-intro" onclick="sv('intro',this)">
+        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        원단 소개
+      </button>
+      <div class="nav-section" id="ns-admin">관리</div>
+      <button class="nav-btn" id="nb-admin" onclick="sv('admin',this)">
+        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/></svg>
+        관리 및 설정
+      </button>
+      <button class="nav-btn" id="nb-sheets" onclick="sv('sheets',this)">
+        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Google Sheets 연동
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-badge">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,.5)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <div>
+          <div class="user-name" id="u-name">-</div>
+          <div id="u-pill" class="user-role-pill">-</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">로그아웃</button>
+    </div>
+  </aside>
+
+  <main id="main">
+
+    <!-- ══ 단가표 ══ -->
+    <div class="view active" id="view-price">
+      <!-- 상단 컨트롤 바 -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:2px">
+        <div class="view-title" style="margin-bottom:0;margin-right:8px">단가표 <span id="season-title">2026 상반기</span></div>
+        <div class="search-wrap" style="max-width:220px">
+          <svg class="search-icon" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input class="search-input" id="srch" placeholder="품목명 검색..." oninput="renderTbl()">
+        </div>
+        <select class="filter-select" id="flv" onchange="renderTbl()" style="min-width:0">
+          <option value="">라인 전체</option>
+        </select>
+        <select class="filter-select" id="fcat" onchange="renderTbl()" style="min-width:0">
+          <option value="">조직 전체</option>
+        </select>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-gold btn-sm" onclick="openCapture()">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+            이미지 캡처
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="showCopyMenu()">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            전체 텍스트 복사
+          </button>
+        </div>
+      </div>
+
+      <!-- 등급 탭 -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;box-shadow:var(--shadow)">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap">등급별 단가</span>
+          <div class="grade-tab-bar" style="margin-bottom:0">
+            <button class="grade-tab active" data-grade="" onclick="selectGradeTab(this,'')">표준가</button>
+            <button class="grade-tab" data-grade="silver" onclick="selectGradeTab(this,'silver')">🥈 SILVER</button>
+            <button class="grade-tab" data-grade="gold" onclick="selectGradeTab(this,'gold')">🥇 GOLD</button>
+            <button class="grade-tab" data-grade="vip" onclick="selectGradeTab(this,'vip')">💎 VIP</button>
+          </div>
+          <div id="grade-mode-info" style="font-size:11px;color:var(--txt2);display:none"></div>
+        </div>
+      </div>
+
+      <!-- 의류 태그 -->
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span class="tag-lbl">의류 태그</span>
+        <div id="tags" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+        <span id="active-tag-count" style="display:none;background:var(--gold);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;margin-left:4px"></span>
+      </div>
+
+      <!-- 테이블 + 슬라이드 패널 래퍼 -->
+      <div id="price-panel-wrap" style="display:flex;gap:0;flex:1;min-height:0;overflow:hidden;position:relative">
+        <div class="table-wrap" id="price-tbl-area">
+          <table class="price-tbl">
+            <colgroup>
+              <col style="width:14%"><!-- 품목명 -->
+              <col style="width:8%"> <!-- 조직 -->
+              <col style="width:9%"> <!-- 8%MG -->
+              <col style="width:10%"><!-- 백/백아이 -->
+              <col style="width:9%"> <!-- 무지 -->
+              <col style="width:10%"><!-- 부속RIB -->
+              <col style="width:7%"> <!-- 폭 -->
+              <col style="width:6%"> <!-- g/y -->
+              <col style="width:14%"><!-- 혼용률 -->
+              <col style="width:13%"><!-- 액션 -->
+            </colgroup>
+            <thead><tr>
+              <th>품목명</th>
+              <th>조직</th>
+              <th>8%MG<span class="unit">원/YD</span></th>
+              <th>백·백아이<span class="unit">원/YD</span></th>
+              <th>무지<span class="unit">원/YD</span></th>
+              <th>부속(RIB)<span class="unit">원/YD</span></th>
+              <th>폭<span class="unit">인치</span></th>
+              <th>g/y</th>
+              <th>혼용률</th>
+              <th>액션</th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <!-- 슬라이드 편집 패널 -->
+        <div id="edit-slide-panel" class="slide-panel">
+          <div class="slide-panel-header">
+            <span id="slide-panel-title" style="font-size:13px;font-weight:700;color:var(--txt)">원단 수정</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button id="slide-del-btn" class="btn btn-sm" onclick="delFFromSlide()" style="display:none;background:#fff2f2;border:1.5px solid var(--red);color:var(--red);padding:5px 10px;font-size:11px">🗑 삭제</button>
+              <button class="btn btn-gold btn-sm" onclick="saveSlidePanel()" style="padding:6px 14px">저장</button>
+              <button onclick="closeSlidePanel()" style="background:none;border:none;font-size:18px;color:var(--txt2);cursor:pointer;line-height:1;padding:0 2px">✕</button>
+            </div>
+          </div>
+          <div class="slide-panel-body" id="slide-panel-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 고객사 ══ -->
+    <div class="view" id="view-cust">
+      <div class="view-header">
+        <div class="view-title">고객사 <span>관리</span></div>
+        <button class="btn btn-gold btn-sm" onclick="openAddC()">+ 고객사 추가</button>
+      </div>
+      <div class="filter-bar" style="margin-bottom:16px">
+        <div class="search-wrap">
+          <svg class="search-icon" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input class="search-input" id="csrch" placeholder="고객사 검색..." oninput="renderCust()">
+        </div>
+        <select class="filter-select" id="cgsf" onchange="renderCust()">
+          <option value="">전체 등급</option>
+          <option value="silver">Silver</option>
+          <option value="gold">Gold</option>
+          <option value="vip">VIP</option>
+        </select>
+        <span id="ccnt" style="font-size:12px;color:var(--txt2)"></span>
+      </div>
+      <div class="cust-grid" id="cgrid"></div>
+    </div>
+
+    <!-- ══ 고객사 특별 단가표 ══ -->
+    <div class="view" id="view-special">
+      <div class="view-header">
+        <div class="view-title">고객사 <span>특별 단가표</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gold btn-sm" onclick="openCapture('special')">📸 캡처</button>
+          <button class="btn btn-outline btn-sm" onclick="copyAllSpecial()">📋 전체 텍스트 복사</button>
+          <button class="btn btn-navy btn-sm" id="sp-add-btn" onclick="openAddCust()">+ 고객사 추가</button>
+        </div>
+      </div>
+      <!-- 고객사 검색형 콤보박스 -->
+      <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--shadow)">
+        <!-- 1차: 등급 필터 -->
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap">등급</span>
+          <div style="display:flex;gap:4px">
+            <button class="grade-tab active" id="spgf-all" data-grade="" onclick="setSpGradeFilter('',this)" style="padding:5px 10px;font-size:11px">전체</button>
+            <button class="grade-tab" id="spgf-silver" data-grade="silver" onclick="setSpGradeFilter('silver',this)" style="padding:5px 10px;font-size:11px">🥈 Silver</button>
+            <button class="grade-tab" id="spgf-gold" data-grade="gold" onclick="setSpGradeFilter('gold',this)" style="padding:5px 10px;font-size:11px">🥇 Gold</button>
+            <button class="grade-tab" id="spgf-vip" data-grade="vip" onclick="setSpGradeFilter('vip',this)" style="padding:5px 10px;font-size:11px">💎 VIP</button>
+          </div>
+        </div>
+        <div style="width:1px;height:28px;background:var(--border)"></div>
+        <!-- 2차: 고객사 검색 -->
+        <span style="font-size:12px;font-weight:700;color:var(--txt2);white-space:nowrap">고객사 선택</span>
+        <div style="position:relative;flex:1;min-width:200px;max-width:320px">
+          <input type="text" id="sp-search" class="search-input" placeholder="고객사명 검색..." oninput="filterCustList()" onfocus="showCustDropdown()" autocomplete="off" style="padding-left:12px">
+          <div id="sp-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border2);border-radius:8px;box-shadow:var(--shadow-md);z-index:50;max-height:200px;overflow-y:auto;margin-top:4px"></div>
+        </div>
+        <div id="sp-cust-info" style="display:none;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:700;color:var(--txt)" id="sp-cust-name"></span>
+          <button id="sp-grade-badge" onclick="changeCustGrade()" style="padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:none"></button>
+          <span style="font-size:11px;color:var(--txt2)" id="sp-grade-txt"></span>
+          <button onclick="delSpecialCust()" style="padding:4px 10px;border-radius:6px;font-size:11px;color:var(--red);border:1.5px solid var(--red);background:none;cursor:pointer">삭제</button>
+        </div>
+      </div>
+      <!-- 빈 상태 -->
+      <div id="sp-empty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--txt3);gap:12px">
+        <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <p style="font-size:14px;font-weight:600">고객사를 선택하면 해당 단가표가 표시됩니다</p>
+        <p style="font-size:12px">수정 버튼 클릭 시 직접 가격 입력 가능 (관리자 이상)</p>
+      </div>
+      <!-- 특별 단가 테이블 + 슬라이드 패널 -->
+      <div id="sp-tbl-wrap" style="display:none;flex:1;min-height:0;position:relative;flex-direction:column">
+        <!-- 원단명 검색 -->
+        <div style="padding:8px 0 4px">
+          <input type="text" id="sp-fab-search" class="search-input" placeholder="원단명 검색..." oninput="renderSpecialTbl()" style="max-width:280px;padding-left:12px">
+        </div>
+        <div class="table-wrap" id="sp-tbl-area" style="position:relative">
+          <table class="price-tbl">
+            <colgroup>
+              <col style="width:14%"><col style="width:8%">
+              <col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:10%">
+              <col style="width:7%"><col style="width:6%"><col style="width:13%"><col style="width:12%">
+            </colgroup>
+            <thead><tr>
+              <th>품목명</th><th>조직</th>
+              <th>8%MG<span class="unit">원/YD</span></th>
+              <th>백·백아이<span class="unit">원/YD</span></th>
+              <th>무지<span class="unit">원/YD</span></th>
+              <th>부속(RIB)<span class="unit">원/YD</span></th>
+              <th>폭<span class="unit">인치</span></th><th>g/y</th>
+              <th>혼용률</th><th>액션</th>
+            </tr></thead>
+            <tbody id="sp-tbody"></tbody>
+          </table>
+        </div>
+        <!-- 고객사 슬라이드 편집 패널 -->
+        <div id="sp-slide-panel" class="slide-panel">
+          <div class="slide-panel-header">
+            <span id="sp-slide-title" style="font-size:13px;font-weight:700;color:var(--txt)">단가 수정</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="btn btn-gold btn-sm" onclick="saveSpSlidePanel()" style="padding:6px 14px">저장</button>
+              <button onclick="closeSpSlidePanel()" style="background:none;border:none;font-size:18px;color:var(--txt2);cursor:pointer;line-height:1;padding:0 2px">✕</button>
+            </div>
+          </div>
+          <div class="slide-panel-body" id="sp-slide-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 라인별 단가표 ══ -->
+    <div class="view" id="view-byline">
+      <div class="view-header" style="margin-bottom:10px">
+        <div class="view-title">라인별 <span>단가표</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gold btn-sm" onclick="openCapture('byline')">📸 캡처</button>
+          <button class="btn btn-outline btn-sm" onclick="copyAllByLine()">📋 전체 텍스트 복사</button>
+        </div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap;min-width:36px">라인</span>
+          <div id="bl-btns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--border);padding-top:8px">
+          <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap;min-width:36px">등급</span>
+          <div class="grade-tab-bar" id="bl-grade-bar" style="margin-bottom:0">
+            <button class="grade-tab active" data-grade="" onclick="setBlGrade(this,'')">표준가</button>
+            <button class="grade-tab" data-grade="silver" onclick="setBlGrade(this,'silver')">🥈 SILVER</button>
+            <button class="grade-tab" data-grade="gold" onclick="setBlGrade(this,'gold')">🥇 GOLD</button>
+            <button class="grade-tab" data-grade="vip" onclick="setBlGrade(this,'vip')">💎 VIP</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap" style="flex:1;min-height:0">
+        <table class="price-tbl"><colgroup><col style="width:15%"><col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:7%"><col style="width:6%"><col style="width:14%"><col style="width:10%"></colgroup>
+          <thead><tr><th>품목명</th><th>조직</th><th>8%MG<span class="unit">원/YD</span></th><th>백·백아이<span class="unit">원/YD</span></th><th>무지<span class="unit">원/YD</span></th><th>부속(RIB)<span class="unit">원/YD</span></th><th>폭<span class="unit">인치</span></th><th>g/y</th><th>혼용률</th><th>카톡</th></tr></thead>
+          <tbody id="bl-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ 조직별 단가표 ══ -->
+    <div class="view" id="view-bycat">
+      <div class="view-header" style="margin-bottom:10px">
+        <div class="view-title">조직별 <span>단가표</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gold btn-sm" onclick="openCapture('bycat')">📸 캡처</button>
+          <button class="btn btn-outline btn-sm" onclick="copyAllByCat()">📋 전체 텍스트 복사</button>
+        </div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap;min-width:36px">조직</span>
+          <div id="bc-btns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--border);padding-top:8px">
+          <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap;min-width:36px">등급</span>
+          <div class="grade-tab-bar" id="bc-grade-bar" style="margin-bottom:0">
+            <button class="grade-tab active" data-grade="" onclick="setBcGrade(this,'')">표준가</button>
+            <button class="grade-tab" data-grade="silver" onclick="setBcGrade(this,'silver')">🥈 SILVER</button>
+            <button class="grade-tab" data-grade="gold" onclick="setBcGrade(this,'gold')">🥇 GOLD</button>
+            <button class="grade-tab" data-grade="vip" onclick="setBcGrade(this,'vip')">💎 VIP</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap" style="flex:1;min-height:0">
+        <table class="price-tbl"><colgroup><col style="width:15%"><col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:7%"><col style="width:6%"><col style="width:14%"><col style="width:10%"></colgroup>
+          <thead><tr><th>품목명</th><th>라인</th><th>8%MG<span class="unit">원/YD</span></th><th>백·백아이<span class="unit">원/YD</span></th><th>무지<span class="unit">원/YD</span></th><th>부속(RIB)<span class="unit">원/YD</span></th><th>폭<span class="unit">인치</span></th><th>g/y</th><th>혼용률</th><th>카톡</th></tr></thead>
+          <tbody id="bc-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ 추천의류별 단가표 ══ -->
+    <div class="view" id="view-apparel">
+      <div class="view-header" style="margin-bottom:10px">
+        <div class="view-title">추천의류별 <span>단가표</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gold btn-sm" onclick="openCapture('apparel')">📸 캡처</button>
+          <button class="btn btn-outline btn-sm" onclick="copyAllByApparel()">📋 전체 텍스트 복사</button>
+        </div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px">
+        <div>
+          <p style="font-size:11px;font-weight:700;color:var(--txt2);margin-bottom:8px">의류 유형 선택</p>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div id="ap-btns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            <span id="ap-tag-count" style="display:none;background:var(--gold);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap"></span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--border);padding-top:8px">
+          <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap;min-width:36px">등급</span>
+          <div class="grade-tab-bar" id="ap-grade-bar" style="margin-bottom:0">
+            <button class="grade-tab active" data-grade="" onclick="setApGrade(this,'')">표준가</button>
+            <button class="grade-tab" data-grade="silver" onclick="setApGrade(this,'silver')">🥈 SILVER</button>
+            <button class="grade-tab" data-grade="gold" onclick="setApGrade(this,'gold')">🥇 GOLD</button>
+            <button class="grade-tab" data-grade="vip" onclick="setApGrade(this,'vip')">💎 VIP</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap" style="flex:1;min-height:0">
+        <table class="price-tbl"><colgroup><col style="width:13%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:7%"><col style="width:6%"><col style="width:14%"><col style="width:15%"></colgroup>
+          <thead><tr><th>품목명</th><th>라인</th><th>조직</th><th>8%MG<span class="unit">원/YD</span></th><th>백·백아이<span class="unit">원/YD</span></th><th>무지<span class="unit">원/YD</span></th><th>폭<span class="unit">인치</span></th><th>g/y</th><th>혼용률</th><th>카톡</th></tr></thead>
+          <tbody id="ap-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ 원단 소개 ══ -->
+    <div class="view" id="view-intro">
+      <div class="view-header">
+        <div class="view-title">원단 <span>소개</span></div>
+      </div>
+      <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow)">
+        <!-- 1차: 조직 선택 -->
+        <select id="intro-cat-sel" onchange="filterIntroBycat()" class="filter-select" style="min-width:100px">
+          <option value="">조직 전체</option>
+        </select>
+        <!-- 2차: 원단 콤보박스 -->
+        <select id="intro-fab-sel" onchange="pickIntroBySelect(this.value)" class="filter-select" style="min-width:180px">
+          <option value="">원단 선택...</option>
+        </select>
+        <!-- 텍스트 검색 (별도) -->
+        <div style="position:relative;flex:1;min-width:160px;max-width:280px">
+          <input type="text" id="intro-search" class="search-input" placeholder="원단명 직접 검색..." oninput="filterIntroList()" autocomplete="off" style="padding-left:12px">
+          <div id="intro-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border2);border-radius:8px;box-shadow:var(--shadow-md);z-index:50;max-height:220px;overflow-y:auto;margin-top:4px"></div>
+        </div>
+        <button id="intro-edit-btn" onclick="openIntroEdit()" style="display:none" class="btn btn-outline btn-sm">✎ 설명·URL 수정</button>
+      </div>
+      <div id="intro-empty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--txt3);gap:12px">
+        <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <p style="font-size:14px;font-weight:600">원단을 선택하면 카톡 소개 메세지가 생성됩니다</p>
+      </div>
+      <div id="intro-card" style="display:none;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:280px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow)">
+          <div style="font-size:11px;font-weight:700;color:var(--txt2);margin-bottom:12px">카톡 메세지 미리보기</div>
+          <pre id="intro-preview" style="font-size:13px;line-height:1.9;white-space:pre-wrap;font-family:'Noto Sans KR',sans-serif;color:var(--txt);background:var(--bg3);border-radius:8px;padding:16px;border:1px solid var(--border)"></pre>
+          <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-gold btn-sm" onclick="copyIntro()">📋 카톡 메세지 복사</button>
+            <button class="btn btn-outline btn-sm" onclick="openIntroEdit()" id="intro-edit-btn2" style="display:none">✎ 설명 수정</button>
+          </div>
+        </div>
+        <div style="flex:1;min-width:260px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow)">
+          <div style="font-size:11px;font-weight:700;color:var(--txt2);margin-bottom:10px">홈페이지 링크</div>
+          <div id="intro-url-box" style="font-size:13px;color:var(--blue);word-break:break-all;margin-bottom:14px"></div>
+          <div id="intro-desc-status" style="margin-bottom:12px"></div>
+          <div style="font-size:11px;color:var(--txt3);line-height:1.7">✎ 설명 수정 버튼으로 원단 특징 설명과 URL을 바로 수정할 수 있습니다.</div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="view" id="view-admin">
+      <div class="view-header">
+        <div class="view-title">관리 및 <span>설정</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">시즌명 설정</div>
+        <p style="font-size:12px;color:var(--txt2);margin-bottom:10px">단가표 상단에 표시되는 시즌명입니다.</p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="finput" id="season-input" placeholder="예: 2026 상반기" style="width:200px;font-size:13px">
+          <button class="btn btn-gold btn-sm" onclick="saveSeasonName()">저장</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">등급별 기본 할인율</div>
+        <div class="grade-row">
+          <div class="grade-card">
+            <div class="grade-card-name silver">⬤ Silver 등급</div>
+            <div class="disc-row"><input class="disc-inp" id="dsi" type="number" min="0" max="50" value="3" onchange="saveDisc()"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
+          </div>
+          <div class="grade-card">
+            <div class="grade-card-name gold">⬤ Gold 등급</div>
+            <div class="disc-row"><input class="disc-inp" id="dgi" type="number" min="0" max="50" value="5" onchange="saveDisc()"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
+          </div>
+          <div class="grade-card">
+            <div class="grade-card-name vip">⬤ VIP 등급</div>
+            <div class="disc-row"><input class="disc-inp" id="dvi" type="number" min="0" max="50" value="8" onchange="saveDisc()"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="pin-card">
+        <div class="card-title">PIN 번호 변경</div>
+        <div class="form-row">
+          <div class="fg"><label class="flabel">최고관리자 PIN</label><input class="finput" id="p1" type="password" placeholder="4자리" maxlength="4" style="width:110px"></div>
+          <div class="fg"><label class="flabel">관리자 PIN</label><input class="finput" id="p2" type="password" placeholder="4자리" maxlength="4" style="width:110px"></div>
+          <div class="fg"><label class="flabel">일반 PIN</label><input class="finput" id="p3" type="password" placeholder="4자리" maxlength="4" style="width:110px"></div>
+          <button class="btn btn-gold" onclick="savePins()">저장</button>
+        </div>
+      </div>
+
+      <!-- 원단 관리 -->
+      <div class="card">
+        <div class="card-title">원단 관리</div>
+        <div style="background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--txt2);line-height:1.8;margin-bottom:14px">
+          원단 추가·편집은 <b>등급별 단가표</b>의 행 끝 <b style="color:var(--gold)">수정 버튼</b>을 클릭하세요.<br>
+          슬라이드 패널에서 가격·스펙·URL·설명·태그를 한 번에 수정할 수 있습니다.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-navy btn-sm" onclick="openAddF()">+ 원단 추가</button>
+          <button class="btn btn-outline btn-sm" onclick="sv('price',document.getElementById('nb-price'))">등급별 단가표로 이동 →</button>
+          <button class="btn btn-sm" onclick="resetFabrics()" style="background:var(--bg3);border:1.5px solid var(--border2);color:var(--txt2)">🔄 기본 원단 데이터 복원</button>
+        </div>
+      </div>
+
+      <!-- 라인별·조직별 분류 관리 -->
+      <div class="card">
+        <div class="card-title">라인 관리</div>
+        <p style="font-size:12px;color:var(--txt2);margin-bottom:12px">원단을 분류하는 라인입니다. 사용 중인 라인은 삭제 불가합니다.</p>
+        <div id="level-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="finput" id="new-level-name" placeholder="새 라인 이름 (예: 신규라인)" style="width:200px;font-size:13px">
+          <button class="btn btn-navy btn-sm" onclick="addLevel()">+ 라인 추가</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">조직 관리</div>
+        <p style="font-size:12px;color:var(--txt2);margin-bottom:12px">원단 조직(구분)을 관리합니다. 사용 중인 조직은 삭제 불가합니다.</p>
+        <div id="cat-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="finput" id="new-cat" placeholder="새 조직 이름 (예: 본딩)" style="width:180px;font-size:12px">
+          <button class="btn btn-navy btn-sm" onclick="addCat()">+ 조직 추가</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">추천의류 태그 관리</div>
+        <p style="font-size:12px;color:var(--txt2);margin-bottom:12px">원단에 붙이는 의류 태그입니다. 삭제 시 해당 태그가 모든 원단에서 제거됩니다.</p>
+        <div id="tag-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="finput" id="new-tag" placeholder="새 태그 이름 (예: 코트)" style="width:180px;font-size:12px">
+          <button class="btn btn-navy btn-sm" onclick="addTag()">+ 태그 추가</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Google Sheets ══ -->
+    <div class="view" id="view-sheets">
+      <div class="view-header">
+        <div class="view-title">Google Sheets <span>연동</span></div>
+      </div>
+      <div class="info-box">
+        <b>💡 협업 방식 안내:</b> Google Sheets가 데이터 저장소 역할을 합니다.<br>
+        이 HTML 앱 → Sheets 저장 / 불러오기로 동기화되며, 팀원들은 <b>Sheets를 직접 공유받아 열람·수정</b>할 수 있습니다.<br>
+        앱을 새로 열었을 때 "Sheets에서 불러오기"를 누르면 최신 데이터가 반영됩니다.
+      </div>
+      <div class="card">
+        <div class="card-title">1단계: Google Sheet 만들고 공유하기</div>
+        <div class="step-list">
+          <div class="step-item"><div class="step-num">1</div><div class="step-txt"><a href="https://sheets.new" target="_blank" style="color:var(--blue)">sheets.new</a> 에서 새 스프레드시트를 만드세요</div></div>
+          <div class="step-item"><div class="step-num">2</div><div class="step-txt">오른쪽 위 <b>공유</b> 버튼 → 팀원 이메일 추가 → <b>편집자</b> 권한 부여 (팀원들이 직접 단가 수정도 가능)</div></div>
+          <div class="step-item"><div class="step-num">3</div><div class="step-txt">링크 공유 설정: <b>링크가 있는 사용자 → 편집자</b> 로 설정하면 이메일 없이도 공유 가능</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">2단계: Apps Script 설정 (최초 1회)</div>
+        <div class="step-list">
+          <div class="step-item"><div class="step-num">1</div><div class="step-txt">Sheets에서 <b>확장 프로그램 → Apps Script</b> 클릭</div></div>
+          <div class="step-item"><div class="step-num">2</div><div class="step-txt">기존 코드 전체 삭제 후 아래 코드를 붙여넣고 저장 (💾 Ctrl+S)</div></div>
+        </div>
+        <div class="code-wrap" id="gascode">// ══ RECOVERIC 단가관리 연동 스크립트 v4 ══
+// 현일텍스 주식회사 / recoveric.com
+// [설치] Apps Script → 전체선택(Ctrl+A) → 붙여넣기(Ctrl+V) → 저장 → 배포(웹 앱, 모든 사용자)
+
+function doPost(e) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  // text/plain;charset=utf-8 로 전송된 JSON 파싱
+  let data;
+  try {
+    data = JSON.parse(e.postData.contents);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({ok:false,err:err.message})).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (data.action === 'saveCustomers') {
+    const sh = ss.getSheetByName('고객사') || ss.insertSheet('고객사');
+    sh.clearContents();
+    sh.appendRow(['업체명','등급','특별단가(JSON)','저장일시']);
+    (data.customers||[]).forEach(c =>
+      sh.appendRow([c.name, c.grade, JSON.stringify(c.priceOverrides||{}), new Date().toLocaleString('ko-KR')])
+    );
+  }
+
+  if (data.action === 'saveFabrics') {
+    const sh = ss.getSheetByName('단가표') || ss.insertSheet('단가표');
+    sh.clearContents();
+    sh.appendRow(['ID','레벨','조직','품목명','8%MG','백백아이','무지','부속','부속단위','폭','gy','C','P','SP','R','태그','URL','설명']);
+    (data.fabrics||[]).forEach(f => {
+      if (!f.name || f.name === '품목명') return;
+      if (!f.level || f.level === 'level') return;
+      sh.appendRow([f.id,f.level,f.category||'',f.name,f.mg||'',f.baek||'',f.muji||'',f.rib||'',f.ribUnit||'',f.width||'',f.weight||'',f.c||0,f.p||0,f.sp||0,f.r||0,(f.tags||[]).join(','),f.url||'',f.description||'']);
+    });
+  }
+
+  if (data.action === 'saveLevels') {
+    const sh = ss.getSheetByName('라인설정') || ss.insertSheet('라인설정');
+    sh.clearContents();
+    sh.appendRow(['키(ID)','이름']);
+    (data.levels||[]).forEach(l => sh.appendRow([l.id, l.name]));
+  }
+
+  if (data.action === 'saveCategories') {
+    const sh = ss.getSheetByName('조직설정') || ss.insertSheet('조직설정');
+    sh.clearContents();
+    sh.appendRow(['조직명']);
+    (data.categories||[]).forEach(c => sh.appendRow([c]));
+  }
+
+  if (data.action === 'saveSettings') {
+    const sh = ss.getSheetByName('설정') || ss.insertSheet('설정');
+    sh.clearContents();
+    sh.appendRow(['키','값']);
+    sh.appendRow(['silver_discount', data.grades?.silver?.discount||0]);
+    sh.appendRow(['gold_discount',   data.grades?.gold?.discount||0]);
+    sh.appendRow(['vip_discount',    data.grades?.vip?.discount||0]);
+    sh.appendRow(['seasonName',      data.seasonName||'']);
+  }
+
+  // saveAll: 전체 일괄 저장 (no-cors 방식에서 사용)
+  if (data.action === 'saveAll') {
+    if (data.customers) {
+      const sh = ss.getSheetByName('고객사') || ss.insertSheet('고객사');
+      sh.clearContents();
+      sh.appendRow(['업체명','등급','특별단가(JSON)','저장일시']);
+      (data.customers||[]).forEach(c => sh.appendRow([c.name,c.grade,JSON.stringify(c.priceOverrides||{}),new Date().toLocaleString('ko-KR')]));
+    }
+    if (data.fabrics) {
+      const sh = ss.getSheetByName('단가표') || ss.insertSheet('단가표');
+      sh.clearContents();
+      sh.appendRow(['ID','레벨','조직','품목명','8%MG','백백아이','무지','부속','부속단위','폭','gy','C','P','SP','R','태그','URL','설명']);
+      (data.fabrics||[]).forEach(f => {
+        if (!f.name || f.name === '품목명') return;
+        if (!f.level || f.level === 'level') return;
+        sh.appendRow([f.id,f.level,f.category||'',f.name,f.mg||'',f.baek||'',f.muji||'',f.rib||'',f.ribUnit||'',f.width||'',f.weight||'',f.c||0,f.p||0,f.sp||0,f.r||0,(f.tags||[]).join(','),f.url||'',f.description||'']);
+      });
+    }
+    if (data.levels) {
+      const sh = ss.getSheetByName('라인설정') || ss.insertSheet('라인설정');
+      sh.clearContents(); sh.appendRow(['키(ID)','이름']);
+      (data.levels||[]).forEach(l => sh.appendRow([l.id,l.name]));
+    }
+    if (data.categories) {
+      const sh = ss.getSheetByName('조직설정') || ss.insertSheet('조직설정');
+      sh.clearContents(); sh.appendRow(['조직명']);
+      (data.categories||[]).forEach(c => sh.appendRow([c]));
+    }
+    if (data.grades) {
+      const sh = ss.getSheetByName('설정') || ss.insertSheet('설정');
+      sh.clearContents(); sh.appendRow(['키','값']);
+      sh.appendRow(['silver_discount', data.grades?.silver?.discount||0]);
+      sh.appendRow(['gold_discount',   data.grades?.gold?.discount||0]);
+      sh.appendRow(['vip_discount',    data.grades?.vip?.discount||0]);
+      sh.appendRow(['seasonName',      data.seasonName||'']);
+    }
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  const ss     = SpreadsheetApp.getActiveSpreadsheet();
+  const result = {};
+  // 캐시 무력화: SpreadsheetApp.flush() 후 읽기
+  try { SpreadsheetApp.flush(); } catch(ex) {}
+
+  const cs = ss.getSheetByName('고객사');
+  if (cs && cs.getLastRow() > 1) {
+    result.customers = cs.getDataRange().getValues().slice(1)
+      .filter(row => row[0])
+      .map((row, i) => ({id:i+1, name:row[0], grade:row[1], priceOverrides:JSON.parse(row[2]||'{}')}));
+  }
+
+  const fs = ss.getSheetByName('단가표');
+  if (fs && fs.getLastRow() > 1) {
+    result.fabrics = fs.getDataRange().getValues().slice(1)
+      .filter(row => row[0] && row[3] && row[3] !== '품목명')
+      .filter(row => row[1] && row[1] !== 'level')
+      .map(row => ({id:+row[0],level:row[1],category:row[2]||'',name:row[3],
+        mg:row[4]||null,baek:row[5]||null,muji:row[6]||null,rib:row[7]||null,
+        ribUnit:row[8]||undefined,width:row[9]||null,weight:row[10]||null,
+        c:+row[11]||0,p:+row[12]||0,sp:+row[13]||0,r:+row[14]||0,
+        tags:row[15]?String(row[15]).split(',').filter(Boolean):[],
+        url:row[16]||null,description:row[17]||null}));
+  }
+
+  const ls = ss.getSheetByName('라인설정');
+  if (ls && ls.getLastRow() > 1) {
+    result.levels = ls.getDataRange().getValues().slice(1)
+      .filter(row => row[0]).map(row => ({id:row[0], name:row[1]}));
+  }
+
+  const cs2 = ss.getSheetByName('조직설정');
+  if (cs2 && cs2.getLastRow() > 1) {
+    result.categories = cs2.getDataRange().getValues().slice(1)
+      .filter(row => row[0]).map(row => row[0]);
+  }
+
+  const stSheet = ss.getSheetByName('설정');
+  if (stSheet && stSheet.getLastRow() > 1) {
+    const rows = stSheet.getDataRange().getValues().slice(1);
+    const map = {};
+    rows.forEach(r => { if(r[0]) map[r[0]] = r[1]; });
+    if (map.silver_discount !== undefined) {
+      result.grades = {
+        silver: { discount: +map.silver_discount||0 },
+        gold:   { discount: +map.gold_discount||0 },
+        vip:    { discount: +map.vip_discount||0 },
+      };
+    }
+    if (map.seasonName) result.seasonName = map.seasonName;
+  }
+
+  const json = JSON.stringify(result);
+  const cb = e.parameter && e.parameter.callback;
+  if (cb) {
+    return ContentService.createTextOutput(cb + '(' + json + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
+}</div>
+        <div style="margin:10px 0 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="copyGas()" style="font-size:13px;padding:10px 20px">
+            📋 Apps Script 코드 전체 복사
+          </button>
+          <span style="font-size:12px;color:var(--txt2)">← 클릭 후 Apps Script 편집창에 붙여넣기(Ctrl+A → Ctrl+V)</span>
+        </div>
+        <div class="step-list">
+          <div class="step-item"><div class="step-num">3</div><div class="step-txt"><b>배포 → 새 배포</b> 클릭 → 유형: 웹 앱 → 액세스: <b>모든 사용자</b> → <b>배포</b></div></div>
+          <div class="step-item"><div class="step-num">4</div><div class="step-txt">생성된 URL을 아래에 붙여넣기 (한 번만 설정하면 팀원 모두 동일 URL 사용)</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">3단계: URL 입력 및 동기화</div>
+        <div class="fg" style="margin-bottom:14px">
+          <label class="flabel">Apps Script 웹 앱 URL</label>
+          <input class="finput" id="surl" placeholder="https://script.google.com/macros/s/..." oninput="saveSUrl()" style="width:100%;max-width:600px;font-size:12px">
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-green btn-sm" onclick="syncTo()">⬆ Sheets에 저장</button>
+          <button class="btn btn-outline btn-sm" onclick="syncFrom()">⬇ Sheets에서 불러오기</button>
+        </div>
+        <p id="sync-st" style="font-size:12px;margin-top:10px;color:var(--txt2)"></p>
+        <div style="margin-top:16px;padding:14px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--txt2);line-height:1.8">
+          <b style="color:var(--txt)">📋 직원 공유 방법:</b><br>
+          ① 이 HTML 파일을 카카오톡/메일로 팀원에게 전달<br>
+          ② 팀원이 파일을 열어 PIN 입력 후 접속<br>
+          ③ Google Sheets 연동 탭에 URL 입력 후 "불러오기"<br>
+          ④ 이후부터는 저장 시 자동으로 Sheets에 기록됨<br>
+          <br>
+          <b style="color:var(--txt)">📊 Sheets 직접 편집:</b> 공유된 Sheets에서 팀원이 직접 수정한 내용은 "불러오기" 버튼으로 앱에 반영됩니다
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+</div>
+
+<!-- ═══ CAPTURE OVERLAY ═══ -->
+<div id="slide-dim" class="slide-panel-dim" onclick="closeSlidePanelByDim()"></div>
+<div id="capture-overlay" onclick="capOutsideClick(event)">
+  <div class="cap-box" id="cap-box">
+    <!-- 상단 타이틀 + 이미지생성 버튼 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;border-bottom:1px solid #e8ecf4">
+      <div style="font-size:13px;font-weight:700;color:#1a2035">단가표 이미지 캡처</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-gold btn-sm" id="cap-do-btn-top" onclick="doCapture()" style="font-size:12px;padding:7px 14px">
+          📸 이미지 생성
+        </button>
+        <button onclick="closeCapture()" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:20px;color:#9aa0b8;line-height:1;border-radius:6px" onmouseover="this.style.background='#f0f2f8'" onmouseout="this.style.background='none'">✕</button>
+      </div>
+    </div>
+    <!-- 등급 선택 바 -->
+    <div id="cap-grade-bar" style="display:flex;align-items:center;gap:12px;padding:10px 20px;background:#f7f9fd;border-bottom:1px solid #e8ecf4;flex-wrap:wrap">
+      <span style="font-size:12px;color:#5a6b8a;font-weight:600">캡처 등급 선택</span>
+      <div style="display:flex;gap:6px">
+        <button class="cap-grade-btn active" data-grade="" onclick="selectCapGrade(this,'')">표준 단가</button>
+        <button class="cap-grade-btn" data-grade="silver" onclick="selectCapGrade(this,'silver')">🥈 Silver</button>
+        <button class="cap-grade-btn" data-grade="gold" onclick="selectCapGrade(this,'gold')">🥇 Gold</button>
+        <button class="cap-grade-btn" data-grade="vip" onclick="selectCapGrade(this,'vip')">💎 VIP</button>
+      </div>
+      <span id="cap-grade-info" style="font-size:11px;color:#9aa0b8"></span>
+    </div>
+    <div class="cap-scroll-area">
+      <div id="cap-preview">
+        <div class="cap-header">
+          <div>
+            <div class="cap-logo">RECOVERIC</div>
+            <div class="cap-logo-sub">PREMIUM CIRCULAR KNIT FABRIC · recoveric.com</div>
+          </div>
+          <div class="cap-meta">
+            <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px" id="cap-cn"></div>
+            <!-- 등급 배지 - 캡처 이미지 내 표시 -->
+            <div id="cap-grade-badge" style="display:none;margin-bottom:4px"></div>
+            <div id="cap-dt" style="font-size:10px;color:#666"></div>
+            <div id="cap-tag-badge" style="font-size:9px;color:#888;margin-top:2px;display:none"></div>
+            <div style="font-size:9px;color:#aaa;margin-top:2px">본 단가표는 고객사 전용입니다</div>
+          </div>
+        </div>
+        <div class="cap-body">
+          <table class="cap-tbl" id="captbl">
+            <colgroup>
+              <col style="width:17%"><!-- 품목명 -->
+              <col style="width:9%"> <!-- 구분 -->
+              <col style="width:9%"> <!-- 8%MG -->
+              <col style="width:10%"><!-- 백/백아이 -->
+              <col style="width:9%"> <!-- 무지 -->
+              <col style="width:10%"><!-- 부속RIB -->
+              <col style="width:8%"> <!-- 폭 -->
+              <col style="width:6%"> <!-- g/y -->
+              <col style="width:22%"><!-- 혼용률 -->
+            </colgroup>
+            <thead><tr>
+              <th style="text-align:left">품목명</th>
+              <th>구분</th>
+              <th>8%MG<br><span style="font-size:8px;font-weight:400;opacity:.65">원/YD</span></th>
+              <th>백/백아이<br><span style="font-size:8px;font-weight:400;opacity:.65">원/YD</span></th>
+              <th>무지<br><span style="font-size:8px;font-weight:400;opacity:.65">원/YD</span></th>
+              <th>부속(RIB)<br><span style="font-size:8px;font-weight:400;opacity:.65">원/YD</span></th>
+              <th>폭(인치)</th>
+              <th>g/y</th>
+              <th>혼용률</th>
+            </tr></thead>
+            <tbody id="captbody"></tbody>
+          </table>
+        </div>
+        <div class="cap-footer">
+          <span>RECOVERIC · recoveric.com · 현일텍스 주식회사</span>
+          <span>※ 단가는 야드(YD) 기준 / 원사가격 변동 시 단가 변동 가능</span>
+        </div>
+      </div>
+      <div id="cap-img-wrap"></div>
+    </div>
+    <div class="cap-actions">
+      <button class="btn btn-gold btn-sm" id="cap-do-btn" onclick="doCapture()">📸 이미지 생성</button>
+      <button class="btn btn-outline btn-sm" id="cap-dl-btn" onclick="capDownload()" style="display:none">⬇ 다운로드</button>
+      <button class="btn btn-outline btn-sm" id="cap-cp-btn" onclick="capCopy()" style="display:none">📋 클립보드 복사</button>
+      <span id="cap-cp-hint" style="font-size:11px;color:var(--txt2);display:none">카톡에 바로 붙여넣기 가능합니다</span>
+      <button class="btn btn-outline btn-sm" onclick="closeCapture()" style="margin-left:auto">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-ov">
+  <div class="modal">
+    <div class="modal-title" id="m-title"></div>
+    <div id="m-content"></div>
+    <div class="modal-acts" id="m-acts"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<button id="float-capture" onclick="openCapture()" title="이미지 캡처">📸</button>
+<button id="mtoggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="white"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+</button>
+
+<script>
+// ═══ DATA ═══
+const LVNAMES={promo:'프로모션',standard:'Standard',premium:'Premium',luxury:'Luxury',apparel:'의류'};
+const LVCLS={promo:'promo',standard:'standard',premium:'premium',luxury:'luxury',apparel:'apparel'};
+const TAGS=['반팔','긴팔','민소매','크롭티','맨투맨','후드','후드집업','이너','반바지','칠부바지','긴바지','스커트','가디건','집업','자켓','트레이닝세트'];
+
+const DFABRICS=[
+  // ── Promotion ──
+  {id:1,level:'promo',category:'싱글',name:'V싱글',mg:null,baek:3900,muji:3900,rib:6900,width:'70/74',weight:370,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
+  {id:2,level:'promo',category:'싱글',name:'면20수싱글',mg:null,baek:3200,muji:3900,rib:7000,width:'70/74',weight:340,c:100,p:0,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:3,level:'promo',category:'싱글',name:'스포츠싱글',mg:4600,baek:4500,muji:4600,rib:7000,width:'62/64',weight:380,c:0,p:76,sp:0,r:24,tags:['반팔','긴팔','이너'],url:null,description:null},
+  {id:4,level:'promo',category:'싱글',name:'프리미엄싱글',mg:5000,baek:5100,muji:5200,rib:8000,width:'72/74',weight:420,c:55,p:45,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:5,level:'promo',category:'싱글',name:'슈퍼싱글',mg:5000,baek:5000,muji:5100,rib:8000,width:'72/74',weight:430,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:6,level:'promo',category:'싱글',name:'울트라싱글',mg:5400,baek:5600,muji:5700,rib:8800,width:'72/74',weight:500,c:66,p:34,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:7,level:'promo',category:'싱글',name:'쉬폰싱글',mg:null,baek:3900,muji:3900,rib:7000,width:'60/62',weight:360,c:0,p:100,sp:0,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
+  {id:8,level:'promo',category:'양면',name:'이너폰테',mg:null,baek:4400,muji:4500,rib:7000,width:'62/64',weight:330,c:23,p:77,sp:0,r:0,tags:['이너','반팔','긴팔'],url:null,description:null},
+  {id:9,level:'promo',category:'양면',name:'RS-600GD',mg:6200,baek:6300,muji:6500,rib:8800,width:'76/78',weight:600,c:35,p:65,sp:0,r:0,tags:['맨투맨','후드','긴팔'],url:null,description:null},
+  {id:10,level:'promo',category:'쭈리',name:'V쭈리',mg:null,baek:5900,muji:5900,rib:7900,width:'70/72',weight:570,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
+  {id:11,level:'promo',category:'쭈리',name:'RS-365T(3단)',mg:6600,baek:6700,muji:6900,rib:8800,width:'74/76',weight:620,c:43,p:57,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
+  {id:12,level:'promo',category:'쭈리',name:'컴팩미니쭈리',mg:5600,baek:5700,muji:5900,rib:8000,width:'74/76',weight:500,c:30,p:70,sp:0,r:0,tags:['맨투맨','후드'],url:null,description:null},
+  {id:13,level:'promo',category:'쭈리',name:'헤비M쭈리',mg:null,baek:5800,muji:5900,rib:9000,width:'64/66',weight:500,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드','후드집업','트레이닝세트'],url:null,description:null},
+  {id:14,level:'promo',category:'쭈리',name:'헤비M쭈리(8%)',mg:5200,baek:null,muji:null,rib:9000,width:'64/66',weight:460,c:23,p:77,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
+  {id:15,level:'promo',category:'후라이스',name:'쉬폰후라이스',mg:null,baek:7000,muji:7000,rib:7000,width:'60/62',weight:490,c:0,p:98,sp:2,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  // ── Standard ──
+  {id:16,level:'standard',category:'몰나염',name:'몰나염싱글',mg:null,baek:null,muji:7600,rib:8800,width:'72/74',weight:420,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:17,level:'standard',category:'쭈리',name:'RS-080GT',mg:9800,baek:10100,muji:10300,rib:8800,width:'74/76',weight:820,c:62,p:38,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
+  {id:18,level:'standard',category:'쭈리',name:'TDEG',mg:7500,baek:7500,muji:7900,rib:8800,width:'70/72',weight:640,c:49,p:51,sp:0,r:0,tags:['맨투맨','후드'],url:null,description:null},
+  {id:19,level:'standard',category:'기모',name:'365기모',mg:7900,baek:8100,muji:8200,rib:8800,width:'70/72',weight:660,c:40,p:60,sp:0,r:0,tags:['맨투맨','후드','긴바지','트레이닝세트'],url:null,description:null},
+  // ── Premium ──
+  {id:20,level:'premium',category:'싱글',name:'RS-400S',mg:6800,baek:7000,muji:7100,rib:9000,width:'72/74',weight:420,c:55,p:45,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:21,level:'premium',category:'싱글',name:'RS-500S',mg:8500,baek:8700,muji:8800,rib:9000,width:'72/74',weight:500,c:66,p:34,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:22,level:'premium',category:'싱글',name:'노블싱글(스판)',mg:null,baek:6600,muji:6700,rib:9000,width:'62/64',weight:320,c:63,p:33,sp:4,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
+  {id:23,level:'premium',category:'PK',name:'노블PK',mg:null,baek:7000,muji:7100,rib:1800,ribUnit:'EA',width:'60/62',weight:420,c:27,p:70,sp:3,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:24,level:'premium',category:'골지',name:'2X2GB골지',mg:null,baek:7000,muji:7100,rib:null,width:'60/62',weight:420,c:74,p:26,sp:0,r:0,tags:['이너'],url:null,description:null},
+  {id:25,level:'premium',category:'양면',name:'실켓분또',mg:null,baek:8000,muji:8200,rib:null,width:'62/64',weight:440,c:20,p:74,sp:6,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
+  {id:26,level:'premium',category:'몰나염',name:'몰나염쭈리',mg:null,baek:null,muji:8700,rib:9500,width:'64/66',weight:520,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드'],url:null,description:null},
+  {id:27,level:'premium',category:'쭈리',name:'5S클래스',mg:9200,baek:9200,muji:9700,rib:8800,width:'70/74',weight:790,c:46,p:54,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
+  {id:28,level:'premium',category:'쭈리',name:'RS-850T',mg:13100,baek:13400,muji:13600,rib:11500,width:'72/74',weight:760,c:70,p:30,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
+  {id:29,level:'premium',category:'기모',name:'소프트후리스',mg:9600,baek:9800,muji:10000,rib:9000,width:'60/62',weight:580,c:60,p:40,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
+  // ── Luxury ──
+  {id:30,level:'luxury',category:'헤비니트',name:'RS-헤비니트',mg:13100,baek:13400,muji:13600,rib:null,width:'72/74',weight:810,c:47,p:50,sp:3,r:0,tags:['가디건','긴팔'],url:null,description:null},
+  {id:31,level:'luxury',category:'실켓양면',name:'아머',mg:16600,baek:16900,muji:17100,rib:15000,width:'72/74',weight:850,c:32,p:68,sp:0,r:0,tags:['맨투맨','후드','자켓'],url:null,description:null},
+  {id:32,level:'luxury',category:'쭈리',name:'다이아헤비쭈리',mg:14100,baek:14400,muji:14600,rib:12000,width:'62/64',weight:820,c:45,p:55,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
+  {id:33,level:'luxury',category:'기모',name:'RS-800ZG',mg:13200,baek:13500,muji:13700,rib:12000,width:'64/66',weight:830,c:44,p:56,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
+  // ── 의류 ──
+  {id:34,level:'apparel',category:'의류',name:'피그먼트반팔티',mg:null,baek:null,muji:14900,rib:null,width:null,weight:null,c:55,p:45,sp:0,r:0,tags:['반팔'],url:null,description:null},
+];
+const DSTATE={
+  dataVersion:4,
+  pins:{superadmin:'0327',admin:'9764',user:'0000'},
+  grades:{silver:{discount:3},gold:{discount:5},vip:{discount:8}},
+  seasonName:'2026 상반기',
+  fabrics:DFABRICS,
+  customers:[
+    {id:1,name:'LOKWARD',grade:'vip',priceOverrides:{}},
+    {id:2,name:'SUARE',grade:'gold',priceOverrides:{}},
+    {id:3,name:'BLACKBAMBA',grade:'silver',priceOverrides:{}},
+  ],
+  customLevels:{},
+  customCats:[],
+  levels:[
+    {id:'promo', name:'프로모션'},
+    {id:'standard', name:'Standard'},
+    {id:'premium', name:'Premium'},
+    {id:'luxury', name:'Luxury'},
+    {id:'apparel', name:'의류'},
+  ],
+  categories:['싱글','쭈리','기모','양면','PK','골지','몰나염','헤비니트','후라이스','실켓양면','의류'],
+  tags:['반팔','긴팔','민소매','크롭티','맨투맨','후드','후드집업','이너','반바지','칠부바지','긴바지','스커트','가디건','집업','자켓','트레이닝세트'],
+  sheetsUrl:'https://script.google.com/macros/s/AKfycbyfqmMcjWpwzgtM4GH_QReK1COzBJrrXt7cPGsviMfLAtSfNAT_OKnV91XyXMBbY-6Qag/exec',
+  nextCid:4,nextFid:35,
+};
+
+let ST={},role='',selCid=null,activeGrade='',activeTag='',editFid=null,editCid=null,capBlob=null;
+
+// ─ Storage ─
+const DEFAULT_SHEETS_URL='https://script.google.com/macros/s/AKfycbyfqmMcjWpwzgtM4GH_QReK1COzBJrrXt7cPGsviMfLAtSfNAT_OKnV91XyXMBbY-6Qag/exec';
+function save(){
+  try{
+    localStorage.setItem('rcv2',JSON.stringify(ST));
+    window._isDirty=true;
+    // _lastSavedAt은 autoSyncTo 성공 후에만 설정 (여기서 설정하면 수신 기기의 autoLoadFrom이 차단됨)
+  }catch(e){}
+}
+function migrate(old){
+  // 항상 최신 기본값에서 시작
+  const s=JSON.parse(JSON.stringify(DSTATE));
+  // 사용자 설정값만 보존 (기본 원단 데이터는 v4 기준으로 리셋)
+  if(old.pins)s.pins=old.pins;
+  if(old.grades)s.grades=old.grades;
+  if(old.sheetsUrl)s.sheetsUrl=old.sheetsUrl;
+  if(old.seasonName)s.seasonName=old.seasonName;
+  if(old.tags&&old.tags.length)s.tags=old.tags;
+  if(old.levels&&old.levels.length)s.levels=old.levels;
+  if(old.categories&&old.categories.length)s.categories=old.categories;
+  // 고객사 데이터 보존 (priceOverrides 구조 마이그레이션 포함)
+  if(old.customers&&old.customers.length){
+    s.customers=old.customers.map(c=>{
+      if(!c.priceOverrides){c.priceOverrides={};delete c.overrides;}
+      return c;
+    });
+    s.nextCid=old.nextCid||s.nextCid;
+  }
+  // 원단 데이터: v4 이상으로 저장된 데이터만 신뢰 (구버전은 DFABRICS로 리셋)
+  if(old.dataVersion>=4&&old.fabrics&&old.fabrics.length){
+    s.fabrics=old.fabrics.map(f=>({url:null,description:null,...f}));
+    s.nextFid=old.nextFid||s.nextFid;
+  }
+  // 필수 필드 보장
+  // 원단 중복 제거 (ID 기준 + 이름+레벨 기준 복합 중복 제거)
+  if(s.fabrics){
+    const seenIds=new Set();
+    const seenKeys=new Set();
+    s.fabrics=s.fabrics.filter(f=>{
+      const nameKey=`${f.level}|${f.name}`;
+      if(seenIds.has(f.id)||seenKeys.has(nameKey))return false;
+      seenIds.add(f.id);
+      seenKeys.add(nameKey);
+      return true;
+    });
+  }
+  // 고객사 중복 제거 (이름 기준)
+  if(s.customers){
+    const seenCust=new Set();
+    s.customers=s.customers.filter(c=>{
+      const key=c.name.trim().toLowerCase();
+      if(seenCust.has(key))return false;
+      seenCust.add(key);
+      return true;
+    });
+  }
+  s.dataVersion=4;
+  if(!s.seasonName)s.seasonName='2026 상반기';
+  if(!s.sheetsUrl)s.sheetsUrl=DEFAULT_SHEETS_URL;
+  if(!s.tags||!s.tags.length)s.tags=[...TAGS];
+  return s;
+}
+function load(){
+  try{
+    const raw=localStorage.getItem('rcv2');
+    ST=raw?migrate(JSON.parse(raw)):JSON.parse(JSON.stringify(DSTATE));
+    // migrate/dedup 결과를 즉시 localStorage에 반영
+    if(raw)localStorage.setItem('rcv2',JSON.stringify(ST));
+  }catch(e){ST=JSON.parse(JSON.stringify(DSTATE));}
+}
+
+// ─ Login ─
+let pb='';
+function pi(d){if(pb.length>=4)return;pb+=d;upd();if(pb.length===4)setTimeout(chk,150);}
+function pd(){pb=pb.slice(0,-1);upd();document.getElementById('pin-err').textContent='';}
+function upd(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pb.length);}
+function chk(){
+  const p=ST.pins;
+  if(pb===p.superadmin)enter('superadmin','최고관리자','superadmin');
+  else if(pb===p.admin)enter('admin','관리자','admin');
+  else if(pb===p.user)enter('user','일반','user');
+  else{document.getElementById('pin-err').textContent='PIN이 틀렸습니다';pb='';upd();}
+}
+function enter(r,label,cls){
+  role=r;pb='';upd();
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('u-name').textContent=label;
+  const pill=document.getElementById('u-pill');
+  pill.textContent=label;pill.className='user-role-pill '+cls;
+  const isAdm=r==='superadmin'||r==='admin';
+  const isSuperAdmin=r==='superadmin';
+  ['nb-admin','ns-admin'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.style.display=isAdm?'':'none';
+  });
+  // Sheets 연동은 최고관리자만
+  const nbSheets=document.getElementById('nb-sheets');
+  if(nbSheets)nbSheets.style.display=isSuperAdmin?'flex':'none';
+  document.getElementById('pin-card').style.display=isSuperAdmin?'block':'none';
+  init();
+}
+function logout(){
+  document.getElementById('login').style.display='flex';
+  document.getElementById('app').style.display='none';
+  pb='';upd();document.getElementById('pin-err').textContent='';
+  history.replaceState(null,'',location.pathname);
+}
+
+// ─ Init ─
+function init(){
+  migrateLevels();
+  // 시즌명 표시
+  const st=document.getElementById('season-title');if(st)st.textContent=ST.seasonName||'2026 상반기';
+  loadSeasonInput();
+  fillLevelSelects();fillCatList();renderTagBtns();renderTagMgmt();
+  fillSpecialSel();
+  initIntroSelects();
+  renderTbl();renderCust();renderAdminTbl();loadDisc();
+  renderByLine();renderByCat();renderByApparel();
+  document.getElementById('surl').value=ST.sheetsUrl||'';
+  const fc=document.getElementById('float-capture');
+  if(fc)fc.classList.add('visible');
+  autoLoadFrom();
+  // 30초마다 자동 갱신 (저장 직후에는 건너뜀)
+  if(window._autoRefreshTimer)clearInterval(window._autoRefreshTimer);
+  window._autoRefreshTimer=setInterval(()=>{
+    if(role&&!window._isSyncing)autoLoadFrom();
+  },10000);
+  // 초기 진입 hash 처리
+  if(window._initialView&&window._initialView!=='price'){
+    sv(window._initialView,null,false);
+    window._initialView=null;
+  } else {
+    history.replaceState({view:'price'},'','#price');
+  }
+}
+function sv(name,btn,skipHistory){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const viewEl=document.getElementById('view-'+name);
+  if(viewEl)viewEl.classList.add('active');
+  if(btn)btn.classList.add('active');
+  else{const nb=document.getElementById('nb-'+name);if(nb)nb.classList.add('active');}
+
+  // 뷰 전환 시 상태 리셋
+  if(name==='price'){
+    activeGrade='';activeTag='';
+    const flv=document.getElementById('flv');if(flv)flv.value='';
+    const fcat=document.getElementById('fcat');if(fcat)fcat.value='';
+    const fsrch=document.getElementById('fsrch');if(fsrch)fsrch.value='';
+    document.querySelectorAll('#view-price .grade-tab').forEach(b=>b.classList.toggle('active',b.dataset.grade===''));
+    const info=document.getElementById('grade-mode-info');if(info)info.style.display='none';
+    renderTagBtns();renderTbl();
+  }
+  else if(name==='byline'){activeBl='';activeBlGrade='';renderByLine();}
+  else if(name==='bycat'){activeBc='';activeBcGrade='';renderByCat();}
+  else if(name==='apparel'){activeAp='';activeApGrade='';renderByApparel();}
+  else if(name==='cust')renderCust();
+  else if(name==='admin'){renderAdminTbl();fillLevelSelects();fillCatList();renderTagMgmt();loadSeasonInput();}
+  else if(name==='special'){renderSpecialTbl();}
+  else if(name==='intro'){
+    // 원단 소개 완전 초기화
+    const catSel=document.getElementById('intro-cat-sel');
+    if(catSel)catSel.value='';
+    const fabSel=document.getElementById('intro-fab-sel');
+    if(fabSel)fabSel.value='';
+    const srch=document.getElementById('intro-search');
+    if(srch){srch.value='';srch.placeholder='원단명 직접 검색...';}
+    const dd=document.getElementById('intro-dropdown');
+    if(dd)dd.style.display='none';
+    // 카톡 미리보기 초기화
+    const introCard=document.getElementById('intro-card');
+    if(introCard)introCard.style.display='none';
+    const introEmpty=document.getElementById('intro-empty');
+    if(introEmpty)introEmpty.style.display='flex';
+    const introPrev=document.getElementById('intro-preview');
+    if(introPrev)introPrev.textContent='';
+    introFid=null;
+    initIntroSelects();
+  }
+
+  const fc=document.getElementById('float-capture');
+  if(fc)fc.classList.toggle('visible',['price','byline','bycat','apparel','special'].includes(name));
+  if(!skipHistory){history.pushState({view:name},'','#'+name);}
+}
+
+// 브라우저 뒤로/앞으로 버튼 이벤트
+window.addEventListener('popstate',e=>{
+  const name=(e.state&&e.state.view)||'price';
+  sv(name,null,true);
+});
+
+// 초기 진입 시 hash 처리
+window.addEventListener('load',()=>{
+  const hash=location.hash.replace('#','');
+  const valid=['price','special','byline','bycat','apparel','intro','admin','cust','sheets'];
+  if(hash&&valid.includes(hash)){
+    // 로그인 후에만 적용 — 앱 진입 이후에 처리
+    window._initialView=hash;
+  }
+});
+
+// ─ 레벨/조직 관리 ─
+function migrateLevels(){
+  // 구버전 customLevels 마이그레이션
+  if(!ST.levels){
+    ST.levels=[
+      {id:'promo',name:'프로모션'},{id:'standard',name:'Standard'},
+      {id:'premium',name:'Premium'},{id:'luxury',name:'Luxury'},{id:'apparel',name:'의류'},
+    ];
+    Object.entries(ST.customLevels||{}).forEach(([id,name])=>{
+      if(!ST.levels.find(l=>l.id===id)) ST.levels.push({id,name});
+    });
+  }
+  if(!ST.categories){
+    const fromFabrics=[...new Set(ST.fabrics.map(f=>f.category))];
+    const base=['싱글','쭈리','기모','양면','PK','골지','몰나염','헤비니트','후라이스','실켓양면'];
+    ST.categories=[...new Set([...base,...fromFabrics,...(ST.customCats||[])])].filter(Boolean);
+  }
+}
+function getAllLevels(){
+  return Object.fromEntries((ST.levels||[]).map(l=>[l.id,l.name]));
+}
+function autoKey(name){
+  // 한글/영문 이름으로 유니크 키 자동생성
+  return 'lv_'+Date.now().toString(36);
+}
+function fillLevelSelects(){
+  migrateLevels();
+  const lvs=ST.levels||[];
+  const lvMap=getAllLevels();
+  // 메인 필터
+  const flv=document.getElementById('flv');
+  if(flv){flv.innerHTML='<option value="">라인 전체</option>';lvs.forEach(l=>flv.innerHTML+=`<option value="${l.id}">${l.name}</option>`);}
+  // 관리자 필터
+  const alf=document.getElementById('alf');
+  if(alf){alf.innerHTML='<option value="">라인 전체</option>';lvs.forEach(l=>alf.innerHTML+=`<option value="${l.id}">${l.name}</option>`);}
+  // 라인 목록 - 모두 수정/삭제 가능
+  const ll=document.getElementById('level-list');
+  if(ll){
+    ll.innerHTML=lvs.map(l=>{
+      const inUse=ST.fabrics.some(f=>f.level===l.id);
+      return `<div style="display:inline-flex;align-items:center;gap:0;border:1.5px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--bg2)">
+        <span style="padding:6px 12px;font-size:12px;font-weight:600;color:var(--txt)">${l.name}</span>
+        <button onclick="editLevel('${l.id}')" title="이름 변경" style="padding:6px 8px;background:var(--bg3);border:none;border-left:1px solid var(--border2);cursor:pointer;font-size:11px;color:var(--txt2)" onmouseover="this.style.background='var(--gold-lt)'" onmouseout="this.style.background='var(--bg3)'">✎</button>
+        <button onclick="delLevel('${l.id}')" title="${inUse?'사용중 - 삭제불가':'삭제'}" style="padding:6px 8px;background:var(--bg3);border:none;border-left:1px solid var(--border2);cursor:pointer;font-size:11px;color:${inUse?'var(--txt3)':'var(--red)'}" ${inUse?'disabled':''} onmouseover="this.style.background='#fff2f2'" onmouseout="this.style.background='var(--bg3)'">✕</button>
+      </div>`;
+    }).join('');
+  }
+}
+function fillCatList(){
+  migrateLevels();
+  const cats=ST.categories||[];
+  const usedCats=new Set(ST.fabrics.map(f=>f.category));
+  // 조직별 필터
+  const fcat=document.getElementById('fcat');
+  if(fcat){fcat.innerHTML='<option value="">조직 전체</option>';cats.forEach(c=>fcat.innerHTML+=`<option value="${c}">${c}</option>`);}
+  // 조직 목록 - 모두 수정/삭제 가능
+  const cl=document.getElementById('cat-list');
+  if(cl){
+    cl.innerHTML=cats.map(c=>{
+      const inUse=usedCats.has(c);
+      return `<div style="display:inline-flex;align-items:center;gap:0;border:1.5px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--bg2)">
+        <span style="padding:6px 12px;font-size:12px;font-weight:600;color:var(--txt)">${c}</span>
+        <button onclick="editCat('${c}')" title="이름 변경" style="padding:6px 8px;background:var(--bg3);border:none;border-left:1px solid var(--border2);cursor:pointer;font-size:11px;color:var(--txt2)" onmouseover="this.style.background='var(--gold-lt)'" onmouseout="this.style.background='var(--bg3)'">✎</button>
+        <button onclick="delCat('${c}')" title="${inUse?'사용중 - 삭제불가':'삭제'}" style="padding:6px 8px;background:var(--bg3);border:none;border-left:1px solid var(--border2);cursor:pointer;font-size:11px;color:${inUse?'var(--txt3)':'var(--red)'}" ${inUse?'disabled':''} onmouseover="this.style.background='#fff2f2'" onmouseout="this.style.background='var(--bg3)'">✕</button>
+      </div>`;
+    }).join('');
+  }
+}
+function addLevel(){
+  const name=document.getElementById('new-level-name').value.trim();
+  if(!name){toast('라인 이름을 입력하세요','error');return;}
+  if(!ST.levels)ST.levels=[];
+  if(ST.levels.find(l=>l.name===name)){toast('이미 존재하는 이름입니다','error');return;}
+  const id=autoKey(name);
+  ST.levels.push({id,name});
+  document.getElementById('new-level-name').value='';
+  save();fillLevelSelects();toast('라인 추가됨','success');autoSyncTo();
+}
+function editLevel(id){
+  const lv=ST.levels.find(l=>l.id===id);if(!lv)return;
+  openM('라인 이름 변경',`<div class="fg"><label class="flabel">새 이름</label><input class="finput" id="edit-lv-name" value="${lv.name}" style="width:200px"></div>`,[
+    {label:'저장',cls:'btn-gold',fn:()=>{
+      const n=document.getElementById('edit-lv-name').value.trim();
+      if(!n){toast('이름 입력 필요','error');return;}
+      lv.name=n;save();fillLevelSelects();renderTbl();closeM();toast('변경됨','success');autoSyncTo();
+    }},
+    {label:'취소',cls:'btn-outline',fn:closeM}
+  ]);
+}
+function delLevel(id){
+  if(ST.fabrics.some(f=>f.level===id)){toast('사용 중인 라인은 삭제할 수 없습니다','error');return;}
+  ST.levels=ST.levels.filter(l=>l.id!==id);
+  save();fillLevelSelects();toast('삭제됨','success');autoSyncTo();
+}
+function addCat(){
+  const name=document.getElementById('new-cat').value.trim();
+  if(!name){toast('조직 이름을 입력하세요','error');return;}
+  if(!ST.categories)ST.categories=[];
+  if(ST.categories.includes(name)){toast('이미 존재하는 조직입니다','error');return;}
+  ST.categories.push(name);
+  document.getElementById('new-cat').value='';
+  save();fillCatList();toast('조직 추가됨','success');autoSyncTo();
+}
+function editCat(oldName){
+  openM('조직 이름 변경',`<div class="fg"><label class="flabel">새 이름</label><input class="finput" id="edit-cat-name" value="${oldName}" style="width:200px"></div>`,[
+    {label:'저장',cls:'btn-gold',fn:()=>{
+      const n=document.getElementById('edit-cat-name').value.trim();
+      if(!n){toast('이름 입력 필요','error');return;}
+      ST.fabrics.forEach(f=>{if(f.category===oldName)f.category=n;});
+      const idx=ST.categories.indexOf(oldName);
+      if(idx>=0)ST.categories[idx]=n;
+      save();fillCatList();fillLevelSelects();renderTbl();renderAdminTbl();closeM();toast('변경됨','success');autoSyncTo();
+    }},
+    {label:'취소',cls:'btn-outline',fn:closeM}
+  ]);
+}
+function delCat(name){
+  if(ST.fabrics.some(f=>f.category===name)){toast('사용 중인 조직은 삭제할 수 없습니다','error');return;}
+  ST.categories=(ST.categories||[]).filter(c=>c!==name);
+  save();fillCatList();toast('삭제됨','success');autoSyncTo();
+}
+function fillCatFilter(){
+  const cats=[...new Set(ST.fabrics.map(f=>f.category))];
+  const s=document.getElementById('fcat');
+  s.innerHTML='<option value="">조직 전체</option>';
+  cats.forEach(c=>s.innerHTML+=`<option value="${c}">${c}</option>`);
+}
+function renderTagBtns(){
+  const el=document.getElementById('tags');if(!el)return;el.innerHTML='';
+  const tags=ST.tags||TAGS;
+  tags.forEach(t=>{
+    const b=document.createElement('button');
+    b.className='tag-btn'+(activeTag===t?' active':'');
+    b.textContent=t;
+    b.onclick=()=>{activeTag=activeTag===t?'':t;renderTagBtns();renderTbl();};
+    el.appendChild(b);
+  });
+  // 활성 태그 배지 업데이트 — "N품목 태그 설정함"
+  const countEl=document.getElementById('active-tag-count');
+  if(countEl){
+    if(activeTag){
+      const cnt=ST.fabrics.filter(f=>(f.tags||[]).includes(activeTag)).length;
+      countEl.style.display='inline';
+      countEl.textContent=`${cnt}품목 태그 설정함`;
+    } else {
+      countEl.style.display='none';
+    }
+  }
+}
+function getFabs(){
+  const s=(document.getElementById('srch').value||'').toLowerCase();
+  const lv=document.getElementById('flv').value;
+  const cat=document.getElementById('fcat').value;
+  return ST.fabrics.filter(f=>{
+    if(s&&!f.name.toLowerCase().includes(s)&&!f.category.toLowerCase().includes(s))return false;
+    if(lv&&f.level!==lv)return false;
+    if(cat&&f.category!==cat)return false;
+    if(activeTag&&!(f.tags||[]).includes(activeTag))return false;
+    return true;
+  });
+}
+function getDisc(f){
+  if(activeGrade) return ST.grades[activeGrade]?.discount||0;
+  return 0;
+}
+function applyD(p,d){if(!p||!d)return p;return Math.ceil(p*(1-d/100)/10)*10;}
+function fp(p,d,gradeHint){
+  if(p===null||p===undefined)return '<span class="price-null">—</span>';
+  const v=applyD(p,d);
+  if(!d) return `<span class="price-val">${v.toLocaleString()}</span>`;
+  const g=gradeHint||activeGrade;
+  let cls='gs';
+  if(g==='gold')cls='gg';else if(g==='vip')cls='gv';else if(g==='silver')cls='gs';
+  return `<span class="price-disc ${cls}">${v.toLocaleString()}</span>`;
+}
+function comp(f){const pts=[];if(f.c>0)pts.push('C'+f.c+'%');if(f.p>0)pts.push('P'+f.p+'%');if(f.sp>0)pts.push('SP'+f.sp+'%');if(f.r>0)pts.push('R'+f.r+'%');return pts.join(' ');}
+
+function renderTbl(){
+  const fabs=getFabs();
+  const tb=document.getElementById('tbody');
+  if(!fabs.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과 없음</td></tr>';return;}
+  const allLvs=getAllLevels();
+  const lvOrder=[...Object.keys(allLvs)];
+  fabs.forEach(f=>{if(!allLvs[f.level]&&!lvOrder.includes(f.level))lvOrder.push(f.level);});
+  const grouped={};
+  fabs.forEach(f=>{if(!grouped[f.level])grouped[f.level]=[];grouped[f.level].push(f);});
+  let html='';
+  const lvIcons={promo:'◆',standard:'■',premium:'★',luxury:'✦',apparel:'▲'};
+  const isAdm=role==='superadmin'||role==='admin';
+  lvOrder.forEach(lv=>{
+    if(!grouped[lv])return;
+    const lvName=allLvs[lv]||lv;
+    const lvCls=LVCLS[lv]||'promo';
+    html+=`<tr class="section-row lv-${lvCls}"><td colspan="10">${lvIcons[lv]||'·'} ${lvName} · ${grouped[lv].length}종</td></tr>`;
+    grouped[lv].forEach(f=>{
+      const d=getDisc(f);
+      const rib=f.rib?(f.ribUnit==='EA'?`<span class="price-val">${f.rib.toLocaleString()}/EA</span>`:fp(f.rib,d)):'<span class="price-null">—</span>';
+      html+=`<tr class="data-row" data-fid="${f.id}">
+        <td class="td-name">${f.name}</td>
+        <td class="td-cat">${f.category}</td>
+        <td class="td-price">${fp(f.mg,d)}</td>
+        <td class="td-price">${fp(f.baek,d)}</td>
+        <td class="td-price">${fp(f.muji,d)}</td>
+        <td class="td-price">${rib}</td>
+        <td class="td-spec">${f.width?f.width+'"':'—'}</td>
+        <td class="td-spec">${f.weight?f.weight+'g':'—'}</td>
+        <td class="td-comp">${comp(f)||'—'}</td>
+        <td class="td-copy"><div class="row-acts">
+          <button class="copy-xs copy-msg" data-copy-fid="${f.id}" onclick="copyR(${f.id})">메세지 복사</button>
+          ${isAdm?`<button class="copy-xs" style="border-color:var(--gold);color:var(--gold)" onclick="openSlidePanel(${f.id})">수정</button>`:''}
+        </div></td>
+      </tr>`;
+    });
+  });
+  tb.innerHTML=html;
+}
+
+// ─ 슬라이드 편집 패널 ─
+let slideFid=null;
+function openSlidePanel(fid){
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+  slideFid=fid;
+  const allLvs=getAllLevels();
+  const tags=ST.tags||TAGS;
+  const tagCks=tags.map(t=>`<label style="display:inline-flex;align-items:center;gap:3px;margin:2px 5px 2px 0;font-size:11px;cursor:pointer">
+    <input type="checkbox" value="${t}" ${(f.tags||[]).includes(t)?'checked':''}>${t}</label>`).join('');
+  document.getElementById('slide-panel-title').textContent=`${f.name} 수정`;
+  document.getElementById('slide-panel-body').innerHTML=`
+    <div class="sp-row">
+      <div class="sp-field"><span class="sp-label">라인</span>
+        <select class="sp-input" id="sp-lv">${Object.entries(allLvs).map(([k,v])=>`<option value="${k}"${f.level===k?' selected':''}>${v}</option>`).join('')}</select>
+      </div>
+      <div class="sp-field"><span class="sp-label">조직</span>
+        <select class="sp-input" id="sp-cat">${(ST.categories||[]).map(c=>`<option value="${c}"${f.category===c?' selected':''}>${c}</option>`).join('')}<option value="_new">직접입력</option></select>
+      </div>
+    </div>
+    <div class="sp-field"><span class="sp-label">품목명</span><input class="sp-input" id="sp-name" value="${f.name||''}"></div>
+    <div class="sp-row">
+      <div class="sp-field"><span class="sp-label">8%MG</span><input class="sp-input" id="sp-mg" type="number" value="${f.mg||''}"></div>
+      <div class="sp-field"><span class="sp-label">백/백아이</span><input class="sp-input" id="sp-bk" type="number" value="${f.baek||''}"></div>
+    </div>
+    <div class="sp-row">
+      <div class="sp-field"><span class="sp-label">무지</span><input class="sp-input" id="sp-mj" type="number" value="${f.muji||''}"></div>
+      <div class="sp-field"><span class="sp-label">부속(RIB)</span><input class="sp-input" id="sp-rb" type="number" value="${f.rib||''}"></div>
+      <div class="sp-field" style="max-width:70px"><span class="sp-label">단위</span>
+        <select class="sp-input" id="sp-ru"><option value="">YD</option><option value="EA"${f.ribUnit==='EA'?' selected':''}>EA</option></select>
+      </div>
+    </div>
+    <div class="sp-row">
+      <div class="sp-field"><span class="sp-label">폭</span><input class="sp-input" id="sp-wi" value="${f.width||''}" placeholder="70/74"></div>
+      <div class="sp-field"><span class="sp-label">g/y</span><input class="sp-input" id="sp-wt" type="number" value="${f.weight||''}"></div>
+    </div>
+    <div class="sp-row">
+      <div class="sp-field"><span class="sp-label">C%</span><input class="sp-input" id="sp-cc" type="number" value="${f.c||0}"></div>
+      <div class="sp-field"><span class="sp-label">P%</span><input class="sp-input" id="sp-cp" type="number" value="${f.p||0}"></div>
+      <div class="sp-field"><span class="sp-label">SP%</span><input class="sp-input" id="sp-cs" type="number" value="${f.sp||0}"></div>
+      <div class="sp-field"><span class="sp-label">R%</span><input class="sp-input" id="sp-cr" type="number" value="${f.r||0}"></div>
+    </div>
+    <div class="sp-field"><span class="sp-label">홈페이지 URL</span><input class="sp-input" id="sp-url" value="${f.url||''}" placeholder="https://recoveric.com/..."></div>
+    <div class="sp-field"><span class="sp-label">원단 특징 설명 <span id="sp-desc-cnt" style="color:var(--txt3)">(0/200)</span></span>
+      <textarea class="sp-input" id="sp-desc" rows="3" maxlength="200" oninput="document.getElementById('sp-desc-cnt').textContent='('+this.value.length+'/200)'" style="resize:vertical">${f.description||''}</textarea>
+    </div>
+    <div class="sp-field"><span class="sp-label">의류 태그</span><div>${tagCks}</div></div>
+  `;
+  // desc 글자수 초기화
+  const descEl=document.getElementById('sp-desc');
+  if(descEl)document.getElementById('sp-desc-cnt').textContent='('+descEl.value.length+'/200)';
+  // Enter 키 저장 바인딩
+  document.getElementById('slide-panel-body').querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&inp.type!=='checkbox'){e.preventDefault();saveSlidePanel();}
+    if(e.key==='Escape')closeSlidePanel();});
+  });
+  const panel=document.getElementById('edit-slide-panel');
+  panel.classList.add('open');
+  showSlideDim();
+  // 삭제 버튼 표시 (관리자 이상만)
+  const delBtn=document.getElementById('slide-del-btn');
+  if(delBtn)delBtn.style.display=(role==='superadmin'||role==='admin')?'inline-flex':'none';
+  const tblArea=document.getElementById('price-tbl-area');
+  if(window.innerWidth>=768)tblArea.classList.add('panel-open');
+}
+function closeSlidePanel(){
+  document.getElementById('edit-slide-panel').classList.remove('open');
+  const tblArea=document.getElementById('price-tbl-area');
+  if(tblArea)tblArea.classList.remove('panel-open');
+  slideFid=null;
+  hideSlideDim();
+}
+function closeSlidePanelByDim(){closeSlidePanel();closeSpSlidePanel();}
+function showSlideDim(){const d=document.getElementById('slide-dim');if(d)d.classList.add('show');}
+function hideSlideDim(){const d=document.getElementById('slide-dim');if(d)d.classList.remove('show');}
+function delFFromSlide(){
+  if(!slideFid)return;
+  const f=ST.fabrics.find(x=>x.id===slideFid);if(!f)return;
+  openM(`"${f.name}" 삭제 확인`,
+    `<div style="background:#fff2f2;border:1.5px solid var(--red);border-radius:10px;padding:14px;font-size:13px;line-height:1.8;color:#800">
+      <b>⚠ 주의</b><br>
+      <b>${f.name}</b> 원단을 삭제합니다.<br>
+      삭제 후 복구할 수 없습니다.
+    </div>`,
+    [{label:'삭제',cls:'btn-outline',fn:()=>{
+      const name=f.name;
+      ST.fabrics=ST.fabrics.filter(x=>x.id!==slideFid);
+      save();autoSyncTo();
+      renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
+      closeSlidePanel();closeM();
+      toast('"'+name+'" 삭제됨','success');
+    }},
+    {label:'취소',cls:'btn-gold',fn:closeM}]
+  );
+}
+function saveSlidePanel(){
+  if(!slideFid){toast('수정 대상이 없습니다','error');return;}
+  const idx=ST.fabrics.findIndex(x=>x.id===slideFid);
+  if(idx<0){toast('품목을 찾을 수 없습니다','error');return;}
+  const f=ST.fabrics[idx];
+  try{
+    const g=id=>document.getElementById(id);
+    const lvEl=g('sp-lv'),catEl=g('sp-cat'),nameEl=g('sp-name');
+    if(!lvEl||!catEl||!nameEl){toast('입력 폼 오류. 패널을 닫고 다시 열어주세요','error');return;}
+    const catSel=catEl.value;
+    const catVal=catSel==='_new'?(prompt('새 조직명 입력:')||''):catSel;
+    if(!catVal){toast('조직명을 입력하세요','error');return;}
+    const name=nameEl.value.trim();
+    if(!name){toast('품목명을 입력하세요','error');return;}
+    const tags=[...document.querySelectorAll('#slide-panel-body input[type=checkbox]:checked')].map(c=>c.value);
+    ST.fabrics[idx]=Object.assign({},f,{
+      level:lvEl.value, category:catVal, name,
+      mg:parseInt(g('sp-mg')?.value)||null,
+      baek:parseInt(g('sp-bk')?.value)||null,
+      muji:parseInt(g('sp-mj')?.value)||null,
+      rib:parseInt(g('sp-rb')?.value)||null,
+      ribUnit:g('sp-ru')?.value||undefined,
+      width:g('sp-wi')?.value?.trim()||null,
+      weight:parseInt(g('sp-wt')?.value)||null,
+      c:parseInt(g('sp-cc')?.value)||0,
+      p:parseInt(g('sp-cp')?.value)||0,
+      sp:parseInt(g('sp-cs')?.value)||0,
+      r:parseInt(g('sp-cr')?.value)||0,
+      url:g('sp-url')?.value?.trim()||null,
+      description:g('sp-desc')?.value?.trim()||null,
+      tags,
+    });
+    save();autoSyncTo();
+    renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
+    closeSlidePanel();
+    toast('저장됨 ✓','success');
+  }catch(err){
+    toast('저장 오류: '+err.message,'error');
+    console.error('saveSlidePanel error:',err);
+  }
+}
+
+// ─ Grade tab (등급별 단가표 전용) ─
+function selectGradeTab(btn,grade){
+  activeGrade=grade;
+  // 등급별 단가표의 등급 탭만 처리 (다른 뷰의 grade-tab에 영향 없도록)
+  document.querySelectorAll('#view-price .grade-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const info=document.getElementById('grade-mode-info');
+  if(info){
+    if(grade){
+      const disc=ST.grades[grade]?.discount||0;
+      const gcol={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
+      info.style.display='flex';
+      info.style.color=gcol[grade];
+      info.style.background=gcol[grade]+'18';
+      info.style.padding='5px 12px';
+      info.style.borderRadius='8px';
+      info.style.fontWeight='700';
+      info.textContent=grade.toUpperCase()+' 등급 · −'+disc+'% 적용 중';
+    } else {
+      info.style.display='none';
+    }
+  }
+  renderTbl();
+}
+
+// ─ Customer selector (legacy stubs — 더 이상 사용 안 함) ─
+function fillCustSel(){}
+function selCust(){}
+function updCInfo(){}
+
+// ─ Copy text ─
+function copyR(id){
+  const f=ST.fabrics.find(x=>x.id===id);if(!f)return;
+  const d=getDisc(f);
+  const fmt=p=>p?applyD(p,d).toLocaleString()+'원':'—';
+  const ribStr=f.rib?(f.ribUnit==='EA'?f.rib.toLocaleString()+'원/EA':fmt(f.rib)):'—';
+  const specLine=[f.width?f.width+'"':null,f.weight?f.weight+'g/y':null].filter(Boolean).join(' x ');
+  const compLine=comp(f)||'—';
+  let t=`[${f.name}]  RECOVERIC\n`;
+  t+=`# 8%MG : ${fmt(f.mg)}\n# 백/백아이 : ${fmt(f.baek)}\n# 무지 : ${fmt(f.muji)}\n# 부속(RIB) : ${ribStr}\n\n`;
+  t+=`■ 단가 : YD(야드)\n`;
+  if(specLine)t+=`■ ${specLine}\n`;
+  t+=`■ ${compLine}`;
+  doCopyText(t).then(()=>{
+    document.querySelectorAll('.data-row').forEach(r=>r.classList.remove('row-selected'));
+    const row=document.querySelector(`tr[data-fid="${id}"]`);
+    if(row)row.classList.add('row-selected');
+    const btn=document.querySelector(`button[data-copy-fid="${id}"]`);
+    if(btn){btn.textContent='✓ 복사됨';btn.classList.add('copied');setTimeout(()=>{btn.textContent='메세지 복사';btn.classList.remove('copied');},2000);}
+    toast('메세지 복사됨 ✓','success');
+  }).catch(()=>showCopyPopup(t));
+}
+function showCopyPopup(text){
+  openM('메세지 복사',
+    `<p style="font-size:12px;color:var(--txt2);margin-bottom:10px">아래 텍스트를 길게 눌러 전체 선택 후 복사하세요.</p>
+     <textarea id="copy-ta" readonly style="width:100%;height:200px;padding:12px;font-size:13px;line-height:1.7;border:1.5px solid var(--border2);border-radius:8px;resize:none;background:var(--bg3);color:var(--txt);font-family:'Noto Sans KR',sans-serif">${text}</textarea>`,
+    [{label:'닫기',cls:'btn-outline',fn:closeM}]
+  );
+  // 자동 선택
+  setTimeout(()=>{
+    const ta=document.getElementById('copy-ta');
+    if(ta){ta.focus();ta.select();}
+  },100);
+}
+function showCopyMenu(){
+  const fabs=getFabs();
+  if(!fabs.length){toast('표시된 품목 없음','error');return;}
+  openM('전체 메세지 복사',`<p style="font-size:13px;color:var(--txt2)">현재 표시된 <b style="color:var(--txt)">${fabs.length}개 품목</b> 전체를 카카오 메세지 형식으로 복사합니다.</p>`,
+    [{label:'전체 메세지 복사',cls:'btn-gold',fn:()=>{cpAll();closeM();}},
+     {label:'취소',cls:'btn-outline',fn:closeM}]);
+}
+function cpAll(){
+  const fabs=getFabs();
+  copyFabsToKakao(fabs, getDisc);
+}
+
+// 공용: 원단 목록을 카톡 형식으로 복사
+function copyFabsToKakao(fabs, discFn){
+  if(!fabs||!fabs.length){toast('표시된 품목 없음','error');return;}
+  const blocks=fabs.map(f=>{
+    const d=typeof discFn==='function'?discFn(f):(typeof discFn==='number'?discFn:0);
+    const fmt=p=>p?applyD(p,d).toLocaleString()+'원':'—';
+    const ribStr=f.rib?(f.ribUnit==='EA'?f.rib.toLocaleString()+'원/EA':fmt(f.rib)):'—';
+    const specLine=[f.width?f.width+'"':null,f.weight?f.weight+'g/y':null].filter(Boolean).join(' x ');
+    let t=`[${f.name}]  RECOVERIC\n`;
+    t+=`# 8%MG : ${fmt(f.mg)}\n# 백/백아이 : ${fmt(f.baek)}\n# 무지 : ${fmt(f.muji)}\n# 부속(RIB) : ${ribStr}\n\n`;
+    t+=`■ 단가 : YD(야드)\n`;
+    if(specLine)t+=`■ ${specLine}\n`;
+    t+=`■ ${comp(f)||'—'}`;
+    return t;
+  });
+  const allText=blocks.join('\n\n');
+  doCopyText(allText)
+    .then(()=>toast(`${fabs.length}개 메세지 복사 완료`,'success'))
+    .catch(()=>showCopyPopup(allText));
+}
+
+// 각 뷰 전체 복사 함수
+function copyAllByLine(){
+  const d=ST.grades[activeBlGrade]?.discount||0;
+  const fabs=activeBl?ST.fabrics.filter(f=>f.level===activeBl):ST.fabrics;
+  copyFabsToKakao(fabs,d);
+}
+function copyAllByCat(){
+  const d=ST.grades[activeBcGrade]?.discount||0;
+  const fabs=activeBc?ST.fabrics.filter(f=>f.category===activeBc):ST.fabrics;
+  copyFabsToKakao(fabs,d);
+}
+function copyAllByApparel(){
+  const d=ST.grades[activeApGrade]?.discount||0;
+  const fabs=activeAp?ST.fabrics.filter(f=>(f.tags||[]).includes(activeAp)):ST.fabrics;
+  copyFabsToKakao(fabs,d);
+}
+function copyAllSpecial(){
+  if(!specialCid){toast('고객사를 선택하세요','error');return;}
+  const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
+  const fabs=ST.fabrics;
+  copyFabsToKakao(fabs,(f)=>{
+    const ov=(c.priceOverrides||{})[f.name];
+    return ST.grades[c.grade]?.discount||0;
+  });
+}
+
+// ─ CAPTURE ─
+let capGrade='', capCtx='price'; // capGrade: 선택된 캡처 등급, capCtx: 캡처 컨텍스트
+
+function selectCapGrade(btn, grade){
+  capGrade=grade;
+  document.querySelectorAll('.cap-grade-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const disc=grade?ST.grades[grade]?.discount||0:0;
+  const info=document.getElementById('cap-grade-info');
+  info.textContent=grade?(grade.toUpperCase()+' 등급 · 기본 할인 −'+disc+'%'):'';
+  const titleEl=document.getElementById('cap-cn');
+  if(grade) titleEl.textContent='RECOVERIC 단가표 ['+grade.toUpperCase()+' 등급]';
+  else titleEl.textContent='RECOVERIC 단가표';
+  buildCapTable();
+  // 이미지 생성 후 등급 변경 시 → 미리보기 모드로 자동 복원
+  const imgWrap=document.getElementById('cap-img-wrap');
+  if(imgWrap&&imgWrap.style.display!=='none'){
+    imgWrap.style.display='none';
+    imgWrap.innerHTML='';
+    document.getElementById('cap-preview').style.display='block';
+    document.getElementById('cap-do-btn').style.display='inline-flex';
+    const btnTop=document.getElementById('cap-do-btn-top');
+    if(btnTop){btnTop.style.display='inline-flex';btnTop.textContent='📸 이미지 생성';btnTop.disabled=false;}
+    document.getElementById('cap-dl-btn').style.display='none';
+    document.getElementById('cap-cp-btn').style.display='none';
+    const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
+    capBlob=null;
+  }
+}
+
+function capDiscFor(f){
+  return capGrade?ST.grades[capGrade]?.discount||0:0;
+}
+
+function capPriceFor(f,field){
+  // special 컨텍스트 + 고객사 선택 시 → 직접단가 우선
+  if(capCtx==='special'&&specialCid){
+    const c=ST.customers.find(x=>x.id===specialCid);
+    if(c){
+      const ov=(c.priceOverrides||{})[f.name];
+      if(ov&&typeof ov==='object'&&ov[field]!=null)return{price:ov[field],direct:true};
+      // 없으면 고객사 등급 할인 적용
+      const d=ST.grades[c.grade]?.discount||0;
+      const p=f[field];if(!p)return{price:null,direct:false};
+      return{price:applyD(p,d),direct:false};
+    }
+  }
+  // 일반 컨텍스트
+  const d=capDiscFor(f);
+  const p=f[field];if(!p)return{price:null,direct:false};
+  return{price:d?applyD(p,d):p,direct:false};
+}
+
+function capOutsideClick(e){
+  if(e.target===document.getElementById('capture-overlay'))closeCapture();
+}
+
+function buildCapTable(){
+  let fabs;
+  if(capCtx==='special'&&specialCid){
+    fabs=ST.fabrics;
+  } else if(capCtx==='byline'){
+    fabs=activeBl?ST.fabrics.filter(f=>f.level===activeBl):ST.fabrics;
+  } else if(capCtx==='bycat'){
+    fabs=activeBc?ST.fabrics.filter(f=>f.category===activeBc):ST.fabrics;
+  } else if(capCtx==='apparel'){
+    fabs=activeAp?ST.fabrics.filter(f=>(f.tags||[]).includes(activeAp)):ST.fabrics;
+  } else {
+    fabs=getFabs();
+  }
+  const lcols={promo:'#e8f0ff',standard:'#e6f9f0',premium:'#fff3dd',luxury:'#f0e8ff',apparel:'#ffebeb'};
+  const ltxt={promo:'#1850c0',standard:'#0a7050',premium:'#905000',luxury:'#5020a0',apparel:'#900020'};
+  const grouped={};
+  fabs.forEach(f=>{if(!grouped[f.level])grouped[f.level]=[];grouped[f.level].push(f);});
+  // 등급 배지 표시
+  const gradeBadgeEl=document.getElementById('cap-grade-badge');
+  if(gradeBadgeEl){
+    // special 컨텍스트: 고객사 등급 표시
+    let displayGrade=capGrade||'';
+    if(capCtx==='special'&&specialCid&&!capGrade){
+      const c=ST.customers.find(x=>x.id===specialCid);
+      if(c)displayGrade=c.grade;
+    }
+    if(displayGrade){
+      const gColors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
+      const gLabels={silver:'SILVER',gold:'GOLD',vip:'VIP'};
+      gradeBadgeEl.innerHTML=`<span style="display:inline-block;background:${gColors[displayGrade]};color:#fff;padding:5px 18px;border-radius:6px;font-size:12px;font-weight:900;letter-spacing:2px;font-family:'Outfit',sans-serif">${gLabels[displayGrade]||displayGrade.toUpperCase()}</span>`;
+      gradeBadgeEl.style.display='block';
+    } else {
+      gradeBadgeEl.style.display='none';
+    }
+  }
+  // 태그 배지 (추천의류별 캡처 시)
+  const tagBadgeEl=document.getElementById('cap-tag-badge');
+  if(tagBadgeEl){
+    if(capCtx==='apparel'&&activeAp){
+      tagBadgeEl.style.display='block';
+      tagBadgeEl.textContent=`✦ ${activeAp} 추천 원단`;
+    } else {
+      tagBadgeEl.style.display='none';
+    }
+  }
+  let rows='';
+  const allLvNames=getAllLevels();
+  Object.keys(allLvNames).forEach(lv=>{
+    if(!grouped[lv])return;
+    rows+=`<tr class="cap-sect"><td colspan="9" style="background:${lcols[lv]||'#f0f0f0'};color:${ltxt[lv]||'#333'};border-left:4px solid ${ltxt[lv]||'#999'}">${(allLvNames[lv]||lv).toUpperCase()}</td></tr>`;
+    grouped[lv].forEach(f=>{
+      const fmtField=field=>{
+        if(field==='rib'&&f.ribUnit==='EA')return f.rib?f.rib.toLocaleString()+'/EA':'-';
+        const {price}=capPriceFor(f,field);
+        return price?price.toLocaleString():'-';
+      };
+      // direct 단가가 있으면 빨간색으로 표시
+      const fmtCell=field=>{
+        const {price,direct}=capPriceFor(f,field);
+        if(!price)return '-';
+        return direct?`<span style="color:#c02828;font-weight:700">${price.toLocaleString()}</span>`:price.toLocaleString();
+      };
+      const rib=f.rib?(f.ribUnit==='EA'?f.rib.toLocaleString()+'/EA':fmtField('rib')):'-';
+      rows+=`<tr>
+        <td style="text-align:left;font-weight:600">${f.name}</td>
+        <td style="text-align:center">${f.category}</td>
+        <td class="cp">${f.mg?fmtCell('mg'):'-'}</td>
+        <td class="cp">${f.baek?fmtCell('baek'):'-'}</td>
+        <td class="cp">${f.muji?fmtCell('muji'):'-'}</td>
+        <td class="cp">${rib}</td>
+        <td class="cs">${f.width?f.width+'"':'-'}</td>
+        <td class="cs">${f.weight?f.weight+'g':'-'}</td>
+        <td class="cx">${comp(f)||'-'}</td>
+      </tr>`;
+    });
+  });
+  document.getElementById('captbody').innerHTML=rows;
+}
+
+function openCapture(viewCtx){
+  const ctx=viewCtx||'price';
+  capCtx=ctx;
+  // 제목 설정
+  let titleText='RECOVERIC 단가표';
+  if(ctx==='special'&&specialCid){
+    const c=ST.customers.find(x=>x.id===specialCid);
+    if(c){
+      const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};
+      titleText=`${c.name} 전용 단가표 [${gl[c.grade]||c.grade.toUpperCase()}]`;
+    }
+  } else if(ctx==='byline'&&activeBl){
+    const allLvs=getAllLevels();titleText=`${allLvs[activeBl]||activeBl} 단가표`;
+  } else if(ctx==='bycat'&&activeBc){
+    titleText=`${activeBc} 조직 단가표`;
+  } else if(ctx==='apparel'&&activeAp){
+    titleText=`${activeAp} 추천 단가표`;
+  }
+  const titleEl=document.getElementById('cap-cn');
+  if(titleEl)titleEl.textContent=titleText;
+  document.getElementById('cap-dt').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'})+' 기준';
+  const allLvs=getAllLevels();
+  // 컨텍스트별 초기 등급 결정
+  let initGrade='';
+  if(ctx==='byline') initGrade=activeBlGrade||'';
+  else if(ctx==='bycat') initGrade=activeBcGrade||'';
+  else if(ctx==='apparel') initGrade=activeApGrade||'';
+  else if(ctx==='special'&&specialCid){
+    const c=ST.customers.find(x=>x.id===specialCid);
+    if(c)initGrade=c.grade||'';
+  } else initGrade=activeGrade||'';
+  capGrade=initGrade;
+  document.querySelectorAll('.cap-grade-btn').forEach(b=>b.classList.toggle('active',b.dataset.grade===initGrade));
+  if(initGrade){const disc=ST.grades[initGrade]?.discount||0;document.getElementById('cap-grade-info').textContent=initGrade.toUpperCase()+' 등급 · −'+disc+'%';}
+  else document.getElementById('cap-grade-info').textContent='';
+  buildCapTable();
+  document.getElementById('cap-preview').style.display='block';
+  document.getElementById('cap-img-wrap').style.display='none';
+  document.getElementById('cap-img-wrap').innerHTML='';
+  document.getElementById('cap-do-btn').style.display='inline-flex';
+  const btnTop=document.getElementById('cap-do-btn-top');
+  if(btnTop){btnTop.style.display='inline-flex';btnTop.textContent='📸 이미지 생성';btnTop.disabled=false;}
+  document.getElementById('cap-dl-btn').style.display='none';
+  document.getElementById('cap-cp-btn').style.display='none';
+  capBlob=null;
+
+  // ── 등급 선택 바 제어 ──
+  const gradeBar=document.getElementById('cap-grade-bar');
+  const gradeBtns=document.querySelectorAll('.cap-grade-btn');
+  if(ctx==='special'){
+    // 고객사는 등급 고정 → 바 숨김
+    if(gradeBar)gradeBar.style.display='none';
+  } else if(ctx==='byline'||ctx==='bycat'||ctx==='apparel'){
+    // 현재 선택 등급만 active, 나머지 disabled
+    if(gradeBar)gradeBar.style.display='flex';
+    const fixedGrade=ctx==='byline'?activeBlGrade:ctx==='bycat'?activeBcGrade:activeApGrade;
+    gradeBtns.forEach(b=>{
+      const isActive=b.dataset.grade===fixedGrade;
+      b.classList.toggle('active',isActive);
+      b.disabled=!isActive;
+    });
+    capGrade=fixedGrade;
+    const disc=fixedGrade?ST.grades[fixedGrade]?.discount||0:0;
+    const info=document.getElementById('cap-grade-info');
+    if(info)info.textContent=fixedGrade?(fixedGrade.toUpperCase()+' 등급 적용 중'):'';
+  } else {
+    // 등급별 단가표 → 자유 선택 가능
+    if(gradeBar)gradeBar.style.display='flex';
+    gradeBtns.forEach(b=>b.disabled=false);
+  }
+
+  document.getElementById('capture-overlay').classList.add('open');
+}
+function doCapture(){
+  const btn=document.getElementById('cap-do-btn');
+  const btnTop=document.getElementById('cap-do-btn-top');
+  [btn,btnTop].forEach(b=>{if(b){b.textContent='생성 중...';b.disabled=true;}});
+  const target=document.getElementById('cap-preview');
+  const targetW=Math.max(target.scrollWidth,900);
+  const targetH=Math.max(target.scrollHeight,200);
+
+  html2canvas(target,{
+    scale:2,
+    backgroundColor:'#ffffff',
+    useCORS:true,
+    allowTaint:true,
+    logging:false,
+    width:targetW,
+    height:targetH,
+    windowWidth:targetW,
+    windowHeight:targetH,
+    onclone:(clonedDoc,clonedEl)=>{
+      // cloned body를 완전히 비우고 clonedEl만 (0,0) 위치에 배치
+      const clonedBody=clonedDoc.body;
+      clonedBody.innerHTML='';
+      clonedBody.style.cssText='margin:0;padding:0;background:#fff;overflow:visible;width:'+targetW+'px';
+      clonedEl.style.cssText='position:static;display:block;width:'+targetW+'px;overflow:visible;background:#fff;box-sizing:border-box';
+      clonedBody.appendChild(clonedEl);
+    },
+  }).then(canvas=>{
+    canvas.toBlob(blob=>{
+      capBlob=blob;
+      const url=URL.createObjectURL(blob);
+      const img=document.createElement('img');
+      img.src=url;
+      img.style.cssText='max-width:100%;border-radius:8px;border:1px solid #dde;margin-top:12px;display:block';
+      const imgWrap=document.getElementById('cap-img-wrap');
+      imgWrap.innerHTML='<p style="font-size:12px;color:var(--green);font-weight:600;padding:12px 4px 0">✅ 이미지 생성 완료!</p>';
+      imgWrap.appendChild(img);imgWrap.style.display='block';
+      target.style.display='none';
+      document.getElementById('cap-do-btn').style.display='none';
+      if(btnTop)btnTop.style.display='none';
+      document.getElementById('cap-dl-btn').style.display='inline-flex';
+      document.getElementById('cap-cp-btn').style.display='inline-flex';
+      const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='inline';
+      [btn,btnTop].forEach(b=>{if(b){b.textContent='📸 이미지 생성';b.disabled=false;}});
+    },'image/png');
+  }).catch(e=>{
+    [btn,btnTop].forEach(b=>{if(b){b.textContent='📸 이미지 생성';b.disabled=false;}});
+    toast('캡처 실패: '+e.message,'error');
+  });
+}
+function capDownload(){
+  if(!capBlob)return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(capBlob);
+  a.download='RECOVERIC_단가표_'+new Date().toISOString().slice(0,10)+'.png';
+  a.click();toast('PNG 다운로드 시작','success');
+}
+function capCopy(){
+  if(!capBlob)return;
+  // PNG ClipboardItem — 카카오톡·슬랙·메모 앱에 바로 붙여넣기 가능
+  if(navigator.clipboard&&window.ClipboardItem){
+    navigator.clipboard.write([new ClipboardItem({'image/png':capBlob})])
+      .then(()=>toast('이미지 복사됨 ✓ 카톡에 붙여넣기 하세요','success'))
+      .catch(()=>{
+        // Clipboard API 실패 시 다운로드 fallback
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(capBlob);
+        a.download='RECOVERIC_단가표_'+new Date().toISOString().slice(0,10)+'.png';
+        a.click();
+        toast('복사 불가 환경 — PNG 다운로드로 대체됩니다','error');
+      });
+  } else {
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(capBlob);
+    a.download='RECOVERIC_단가표_'+new Date().toISOString().slice(0,10)+'.png';
+    a.click();
+    toast('이 브라우저는 클립보드 복사를 지원하지 않아 다운로드합니다','error');
+  }
+}
+function closeCapture(){
+  const prev=document.getElementById('cap-preview');
+  if(prev)prev.style.display='block';
+  const imgWrap=document.getElementById('cap-img-wrap');
+  if(imgWrap){imgWrap.style.display='none';imgWrap.innerHTML='';}
+  const doBtn=document.getElementById('cap-do-btn');if(doBtn)doBtn.style.display='inline-flex';
+  const dlBtn=document.getElementById('cap-dl-btn');if(dlBtn)dlBtn.style.display='none';
+  const cpBtn=document.getElementById('cap-cp-btn');if(cpBtn)cpBtn.style.display='none';
+  const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
+  capBlob=null;
+  document.getElementById('capture-overlay').classList.remove('open');
+}
+
+// ─ Customers ─
+function renderCust(){
+  const s=(document.getElementById('csrch').value||'').toLowerCase();
+  const gf=document.getElementById('cgsf').value;
+  const list=ST.customers.filter(c=>{
+    if(s&&!c.name.toLowerCase().includes(s))return false;
+    if(gf&&c.grade!==gf)return false;
+    return true;
+  });
+  document.getElementById('ccnt').textContent=`총 ${list.length}개`;
+  const grid=document.getElementById('cgrid');
+  if(!list.length){grid.innerHTML='<p style="color:var(--txt3);font-size:13px;padding:20px 0">조건에 맞는 고객사 없음</p>';return;}
+  grid.innerHTML=list.map(c=>{
+    const d=ST.grades[c.grade]?.discount||0;
+    const ex=Object.entries(c.overrides||{}).filter(([,v])=>v!==0);
+    const isSpecial=ex.length>0;
+    const specialBadge=isSpecial?`<span style="font-size:9px;font-weight:800;background:#fff3e0;color:#b06000;border:1px solid #ffc060;padding:2px 8px;border-radius:4px;letter-spacing:.5px">특별단가</span>`:'';
+    return `<div class="cc" style="${isSpecial?'border-color:#ffd080;border-width:2px':''}">
+      <div class="cc-head">
+        <div style="display:flex;align-items:center;gap:7px"><div class="cc-name">${c.name}</div>${specialBadge}</div>
+        <span class="grade-pill ${c.grade}">${c.grade.toUpperCase()}</span>
+      </div>
+      <div class="cc-info">기본 할인 −${d}%${ex.length?` · 품목별 조정 ${ex.length}건`:''}</div>
+      ${ex.length?`<div class="cc-ovr">${ex.map(([k,v])=>`${k} ${v>0?'추가−'+v+'%':'마크업+'+Math.abs(v)+'%'}`).join(' · ')}</div>`:''}
+      <div class="cc-acts">
+        <button class="btn btn-outline btn-sm" onclick="openEditC(${c.id})">편집</button>
+        <button class="btn btn-gold btn-sm" onclick="viewCust(${c.id})">단가 조회</button>
+        ${role==='superadmin'||role==='admin'?`<button class="btn btn-danger btn-sm" onclick="delC(${c.id})">삭제</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function viewCust(id){sv('special',document.getElementById('nb-special'));setTimeout(()=>{pickCust(id);},100);}
+function openAddC(){if(role==='user'){toast('권한 없음','error');return;}editCid=null;openM('고객사 추가',cForm(null),[{label:'저장',cls:'btn-gold',fn:saveC},{label:'취소',cls:'btn-outline',fn:closeM}]);}
+function openEditC(id){if(role==='user'){toast('권한 없음','error');return;}editCid=id;const c=ST.customers.find(x=>x.id===id);openM('고객사 편집',cForm(c),[{label:'저장',cls:'btn-gold',fn:saveC},{label:'취소',cls:'btn-outline',fn:closeM}]);}
+function cForm(c){
+  const rows=ST.fabrics.map(f=>{const v=(c?.overrides||{})[f.name]||0;
+    return `<tr><td style="padding:4px 8px;font-size:12px;color:var(--txt2)">${f.name}</td>
+      <td style="padding:4px 8px"><input type="number" min="-50" max="50" value="${v}" data-fab="${f.name}" class="disc-inp" style="width:65px" placeholder="0"></td>
+      <td style="padding:4px;font-size:11px;color:var(--txt3)">%</td>
+      <td style="padding:4px 8px;font-size:10px;color:var(--txt3)">${v>0?'추가할인':v<0?'⬆마크업':''}</td></tr>`;
+  }).join('');
+  return `<div class="form-row"><div class="fg"><label class="flabel">업체명</label>
+    <input class="finput" id="cf-n" value="${c?.name||''}" placeholder="업체명"></div>
+    <div class="fg"><label class="flabel">등급</label>
+    <select class="fsel" id="cf-g">
+      <option value="silver"${c?.grade==='silver'?' selected':''}>Silver</option>
+      <option value="gold"${c?.grade==='gold'?' selected':''}>Gold</option>
+      <option value="vip"${c?.grade==='vip'?' selected':''}>VIP</option>
+    </select></div></div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:8px;font-weight:600">품목별 추가 할인율 (0 = 등급 기본 할인만)</div>
+    <div style="max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+      <table style="width:100%;border-collapse:collapse">${rows}</table></div>`;
+}
+function saveC(){
+  const name=document.getElementById('cf-n').value.trim();
+  if(!name){toast('업체명 입력 필요','error');return;}
+  const grade=document.getElementById('cf-g').value;
+  const overrides={};
+  document.querySelectorAll('[data-fab]').forEach(inp=>{const v=parseInt(inp.value)||0;if(v!==0)overrides[inp.dataset.fab]=v;});
+  if(editCid){const c=ST.customers.find(x=>x.id===editCid);if(c){c.name=name;c.grade=grade;c.overrides=overrides;}}
+  else ST.customers.push({id:ST.nextCid++,name,grade,overrides});
+  save();fillSpecialSel();renderCust();renderSpecialTbl();closeM();toast('저장됨','success');
+  autoSyncTo();
+}
+function delC(id){if(!confirm('삭제?'))return;ST.customers=ST.customers.filter(c=>c.id!==id);if(specialCid===id){specialCid=null;document.getElementById('sp-search').value='';document.getElementById('sp-cust-info').style.display='none';document.getElementById('sp-empty').style.display='flex';document.getElementById('sp-tbl-wrap').style.display='none';}save();fillSpecialSel();renderCust();renderTbl();toast('삭제됨','success');autoSyncTo();}
+
+// ─ Admin Fabrics ─
+function renderAdminTbl(){
+  // 관리 및 설정에 원단 테이블이 없으므로 호출만 방어
+  const asrch=document.getElementById('asrch');
+  const alf=document.getElementById('alf');
+  const atbody=document.getElementById('atbody');
+  if(!atbody)return; // 테이블 없으면 종료
+  const s=(asrch?.value||'').toLowerCase();
+  const lf=alf?.value||'';
+  const list=ST.fabrics.filter(f=>{
+    if(s&&!f.name.toLowerCase().includes(s))return false;
+    if(lf&&f.level!==lf)return false;
+    return true;
+  });
+  atbody.innerHTML=list.map(f=>{
+    const allLvs=getAllLevels();
+    const lvName=allLvs[f.level]||f.level;
+    const lc=LVCLS[f.level]||'promo';
+    return `<tr>
+      <td class="item-name">${f.name}</td>
+      <td><span class="lv-badge lv-${lc}">${lvName}</span></td>
+      <td class="cat-txt">${f.category}</td>
+      <td class="spec-txt">${f.mg||'—'}</td><td class="spec-txt">${f.baek||'—'}</td>
+      <td class="spec-txt">${f.muji||'—'}</td><td class="spec-txt">${f.rib?f.rib+(f.ribUnit?'/'+f.ribUnit:''):'—'}</td>
+      <td class="spec-txt">${f.width||'—'}</td><td class="spec-txt">${f.weight||'—'}</td>
+      <td><div class="row-acts" style="opacity:1">
+        <button class="copy-xs" onclick="openEditF(${f.id})">편집</button>
+        ${role==='superadmin'?`<button class="copy-xs" onclick="delF(${f.id})" style="border-color:var(--red);color:var(--red)">삭제</button>`:''}
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function openAddF(){editFid=null;openM('원단 추가',fForm(null),[{label:'저장',cls:'btn-gold',fn:saveF},{label:'취소',cls:'btn-outline',fn:closeM}]);}
+function openEditF(id){editFid=id;const f=ST.fabrics.find(x=>x.id===id);openM('원단 편집',fForm(f),[{label:'저장',cls:'btn-gold',fn:saveF},{label:'취소',cls:'btn-outline',fn:closeM}]);}
+function fForm(f){
+  const tags=ST.tags||TAGS;
+  const tcs=tags.map(t=>`<label style="display:inline-flex;align-items:center;gap:3px;margin:2px 6px 2px 0;font-size:12px;cursor:pointer">
+    <input type="checkbox" value="${t}" ${(f?.tags||[]).includes(t)?'checked':''}>${t}</label>`).join('');
+  return `<div class="form-row">
+    <div class="fg"><label class="flabel">라인</label><select class="fsel" id="fl">
+      ${Object.entries(getAllLevels()).map(([k,v])=>`<option value="${k}"${f?.level===k?' selected':''}>${v}</option>`).join('')}
+    </select></div>
+    <div class="fg"><label class="flabel">조직</label><select class="fsel" id="fc" style="width:110px" onchange="document.getElementById('fc-new-wrap').style.display=this.value==='_new'?'flex':'none'">
+      ${[...new Set([...(ST.fabrics.map(x=>x.category)),...(ST.customCats||[])])].sort().map(c=>`<option value="${c}"${f?.category===c?' selected':''}>${c}</option>`).join('')}
+      <option value="_new">직접 입력...</option>
+    </select></div>
+    <div class="fg" id="fc-new-wrap" style="display:none"><label class="flabel">직접 입력</label><input class="finput" id="fc-new" placeholder="새 조직명" style="width:100px"></div>
+    <div class="fg"><label class="flabel">품목명</label><input class="finput" id="fn" value="${f?.name||''}" placeholder="품목명"></div>
+  </div>
+  <div class="form-row">
+    <div class="fg"><label class="flabel">8%MG</label><input class="finput" id="fmg" type="number" value="${f?.mg||''}" style="width:90px"></div>
+    <div class="fg"><label class="flabel">백/백아이</label><input class="finput" id="fbk" type="number" value="${f?.baek||''}" style="width:90px"></div>
+    <div class="fg"><label class="flabel">무지</label><input class="finput" id="fmj" type="number" value="${f?.muji||''}" style="width:90px"></div>
+    <div class="fg"><label class="flabel">부속</label><input class="finput" id="frb" type="number" value="${f?.rib||''}" style="width:90px"></div>
+    <div class="fg"><label class="flabel">단위</label><select class="fsel" id="fru" style="width:70px"><option value="">야드</option><option value="EA"${f?.ribUnit==='EA'?' selected':''}>EA</option></select></div>
+  </div>
+  <div class="form-row">
+    <div class="fg"><label class="flabel">폭</label><input class="finput" id="fwi" value="${f?.width||''}" placeholder="70/74" style="width:70px"></div>
+    <div class="fg"><label class="flabel">g/y</label><input class="finput" id="fwt" type="number" value="${f?.weight||''}" style="width:70px"></div>
+    <div class="fg"><label class="flabel">C%</label><input class="finput" id="fcc" type="number" value="${f?.c||0}" style="width:55px"></div>
+    <div class="fg"><label class="flabel">P%</label><input class="finput" id="fcp" type="number" value="${f?.p||0}" style="width:55px"></div>
+    <div class="fg"><label class="flabel">SP%</label><input class="finput" id="fcs" type="number" value="${f?.sp||0}" style="width:55px"></div>
+    <div class="fg"><label class="flabel">R%</label><input class="finput" id="fcr" type="number" value="${f?.r||0}" style="width:55px"></div>
+  </div>
+  <div style="margin-top:4px"><div class="flabel" style="margin-bottom:6px">의류 태그</div>${tcs}</div>`;
+}
+function saveF(){
+  const catSel=document.getElementById('fc').value;
+  const catVal=catSel==='_new'?(document.getElementById('fc-new')?.value.trim()||''):catSel;
+  const name=document.getElementById('fn').value.trim();
+  if(!name){toast('품목명 필요','error');return;}
+  const tags=[...document.querySelectorAll('#m-content input[type=checkbox]:checked')].map(c=>c.value);
+  const d={level:document.getElementById('fl').value,category:catVal||'기타',name,
+    mg:parseInt(document.getElementById('fmg').value)||null,baek:parseInt(document.getElementById('fbk').value)||null,
+    muji:parseInt(document.getElementById('fmj').value)||null,rib:parseInt(document.getElementById('frb').value)||null,
+    ribUnit:document.getElementById('fru').value||undefined,
+    width:document.getElementById('fwi').value.trim()||null,weight:parseInt(document.getElementById('fwt').value)||null,
+    c:parseInt(document.getElementById('fcc').value)||0,p:parseInt(document.getElementById('fcp').value)||0,
+    sp:parseInt(document.getElementById('fcs').value)||0,r:parseInt(document.getElementById('fcr').value)||0,tags};
+  if(editFid){const idx=ST.fabrics.findIndex(x=>x.id===editFid);if(idx>=0)ST.fabrics[idx]={...ST.fabrics[idx],...d};}
+  else ST.fabrics.push({id:ST.nextFid++,...d});
+  save();fillLevelSelects();fillCatList();
+  renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
+  closeM();toast('저장됨','success');autoSyncTo();
+}
+function delF(id){if(!confirm('삭제?'))return;ST.fabrics=ST.fabrics.filter(f=>f.id!==id);save();fillLevelSelects();fillCatList();renderTbl();renderAdminTbl();toast('삭제됨','success');autoSyncTo();}
+
+// ─ Grade discounts ─
+function loadDisc(){document.getElementById('dsi').value=ST.grades.silver?.discount??3;document.getElementById('dgi').value=ST.grades.gold?.discount??5;document.getElementById('dvi').value=ST.grades.vip?.discount??8;}
+function saveDisc(){ST.grades.silver.discount=+document.getElementById('dsi').value||0;ST.grades.gold.discount=+document.getElementById('dgi').value||0;ST.grades.vip.discount=+document.getElementById('dvi').value||0;save();renderTbl();if(specialCid)renderSpecialTbl();toast('할인율 저장됨','success');autoSyncTo();}
+
+// ─ PINs ─
+function savePins(){
+  const a=document.getElementById('p1').value.trim();const b=document.getElementById('p2').value.trim();const c=document.getElementById('p3').value.trim();
+  if(a&&a.length===4)ST.pins.superadmin=a;if(b&&b.length===4)ST.pins.admin=b;if(c&&c.length===4)ST.pins.user=c;
+  save();document.getElementById('p1').value='';document.getElementById('p2').value='';document.getElementById('p3').value='';
+  toast('PIN 변경 완료','success');
+}
+
+// ─ Google Sheets ─
+function saveSUrl(){ST.sheetsUrl=document.getElementById('surl').value.trim();save();}
+function copyGas(){
+  const text=document.getElementById('gascode').textContent;
+  doCopyText(text)
+    .then(()=>toast('Apps Script 코드 복사됨 ✓\nApps Script 편집창에서 Ctrl+A → Ctrl+V 로 붙여넣기 하세요','success'))
+    .catch(()=>showCopyPopup(text));
+}
+async function syncTo(){
+  const url=ST.sheetsUrl;if(!url){toast('URL 입력 필요','error');return;}
+  const st=document.getElementById('sync-st');
+  st.textContent='저장 중...';
+  try{
+    await gasPost(url,{action:'saveCustomers',customers:ST.customers});
+    await gasPost(url,{action:'saveFabrics',fabrics:ST.fabrics});
+    await gasPost(url,{action:'saveLevels',levels:ST.levels||[]});
+    await gasPost(url,{action:'saveCategories',categories:ST.categories||[]});
+    await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||''});
+    st.textContent='✅ 전체 저장 완료 '+new Date().toLocaleTimeString('ko-KR');
+    toast('Google Sheets 저장 완료','success');
+  }catch(e){st.textContent='❌ 오류: '+e.message;toast('연결 실패','error');}
+}
+async function syncFrom(){
+  const url=ST.sheetsUrl;if(!url){toast('URL 입력 필요','error');return;}
+  document.getElementById('sync-st').textContent='불러오는 중...';
+  try{
+    const r=await fetch(url);const d=await r.json();
+    if(d.customers){ST.customers=d.customers;ST.nextCid=Math.max(...ST.customers.map(c=>c.id||0),0)+1;}
+    if(d.fabrics){ST.fabrics=d.fabrics;ST.nextFid=Math.max(...ST.fabrics.map(f=>f.id||0),0)+1;}
+    if(d.levels&&d.levels.length)ST.levels=d.levels;
+    if(d.categories&&d.categories.length)ST.categories=d.categories;
+    save();fillLevelSelects();fillCatList();fillSpecialSel();renderTbl();renderCust();renderAdminTbl();
+    document.getElementById('sync-st').textContent='✅ 불러오기 완료 ('+new Date().toLocaleTimeString('ko-KR')+')';
+    toast('최신 데이터 불러오기 완료','success');
+  }catch(e){document.getElementById('sync-st').textContent='❌ 오류: '+e.message;toast('연결 실패','error');}
+}
+
+// ─ 자동 동기화 ─
+function showSyncStatus(msg,ok=true){
+  // 사이드바 하단에 작은 상태 표시
+  let el=document.getElementById('auto-sync-status');
+  if(!el){
+    el=document.createElement('div');el.id='auto-sync-status';
+    el.style.cssText='padding:6px 12px;font-size:10px;color:rgba(168,188,212,.7);text-align:center;border-top:1px solid rgba(255,255,255,.06)';
+    document.querySelector('.sidebar-bottom').prepend(el);
+  }
+  el.textContent=msg;
+  el.style.color=ok?'rgba(62,201,138,.8)':'rgba(224,85,85,.8)';
+}
+
+// Apps Script POST: fetch + text/plain 헤더 (file:// 환경에서도 작동)
+function gasPost(url, data){
+  return fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify(data),
+    redirect: 'follow'
+  });
+}
+
+async function autoSyncTo(){
+  const url=ST.sheetsUrl;if(!url)return;
+  if(window._isSyncing)return;
+  window._isSyncing=true;
+  try{
+    const r1=await gasPost(url,{action:'saveCustomers',customers:ST.customers});
+    const r2=await gasPost(url,{action:'saveFabrics',fabrics:ST.fabrics});
+    const r3=await gasPost(url,{action:'saveLevels',levels:ST.levels||[]});
+    const r4=await gasPost(url,{action:'saveCategories',categories:ST.categories||[]});
+    const r5=await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||''});
+    // 응답 상태 확인
+    const statuses=[r1,r2,r3,r4,r5].map(r=>r.status||r.type);
+    console.log('[Sync] 저장 응답:', statuses);
+    window._isDirty=false;
+    window._lastSavedAt=Date.now();
+    showSyncStatus('☁ 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
+    // 저장 완료 8초 후 1회 강제 로드 (Sheets 반영 확인용)
+    setTimeout(()=>{window._lastSavedAt=0;autoLoadFrom();},8000);
+  }catch(e){
+    console.error('[Sync] 저장 실패:', e);
+    showSyncStatus('⚠ 저장 실패',false);
+  }finally{
+    window._isSyncing=false;
+  }
+}
+
+// JSONP 방식으로 GET (file:// 보안 제한 완전 우회)
+function jsonpLoad(url){
+  return new Promise((resolve,reject)=>{
+    const cb='_gasJSONP'+Date.now();
+    const script=document.createElement('script');
+    const timer=setTimeout(()=>{
+      delete window[cb];
+      if(script.parentNode)script.parentNode.removeChild(script);
+      reject(new Error('JSONP 타임아웃'));
+    },15000);
+    window[cb]=(data)=>{
+      clearTimeout(timer);
+      delete window[cb];
+      if(script.parentNode)script.parentNode.removeChild(script);
+      resolve(data);
+    };
+    script.src=url+'?callback='+cb+'&t='+Date.now();
+    script.onerror=()=>{
+      clearTimeout(timer);
+      delete window[cb];
+      reject(new Error('JSONP 실패'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+async function autoLoadFrom(){
+  const url=ST.sheetsUrl;if(!url)return;
+  if(window._isSyncing)return;
+  if(window._lastSavedAt&&(Date.now()-window._lastSavedAt)<15000)return;
+  try{
+    const d=await jsonpLoad(url);
+    let updated=false;
+    if(d.customers&&d.customers.length){
+      const seenCust=new Set();
+      ST.customers=d.customers.filter(c=>{
+        const k=c.name.trim().toLowerCase();
+        if(seenCust.has(k))return false;
+        seenCust.add(k);return true;
+      });
+      ST.nextCid=Math.max(...ST.customers.map(c=>c.id||0),0)+1;
+      updated=true;
+    }
+    if(d.fabrics&&d.fabrics.length){
+      const seenIds=new Set(),seenKeys=new Set();
+      ST.fabrics=d.fabrics.filter(f=>{
+        const k=`${f.level}|${f.name}`;
+        if(seenIds.has(f.id)||seenKeys.has(k))return false;
+        seenIds.add(f.id);seenKeys.add(k);return true;
+      });
+      ST.nextFid=Math.max(...ST.fabrics.map(f=>f.id||0),0)+1;
+      updated=true;
+    }
+    if(d.levels&&d.levels.length){ST.levels=d.levels;updated=true;}
+    if(d.categories&&d.categories.length){ST.categories=d.categories;updated=true;}
+    if(d.grades){ST.grades=d.grades;updated=true;}
+    if(d.seasonName){ST.seasonName=d.seasonName;updated=true;}
+    if(updated){
+      localStorage.setItem('rcv2',JSON.stringify(ST));
+      fillLevelSelects();fillCatList();fillSpecialSel();
+      renderTbl();renderCust();renderByLine();renderByCat();renderByApparel();
+      renderTagBtns();renderTagMgmt();
+      renderSpecialTbl();
+      if(typeof introFid!=='undefined'&&introFid)renderIntro(introFid);
+      initIntroSelects();
+      loadSeasonInput();
+      showSyncStatus('☁ '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 동기화됨');
+    }
+  }catch(e){
+    console.log('[Sync] 불러오기 실패:',e.message);
+  }
+}
+
+// ─ Modal ─
+function openM(title,content,acts){
+  document.getElementById('m-title').textContent=title;
+  document.getElementById('m-content').innerHTML=content;
+  document.getElementById('m-acts').innerHTML=acts.map((a,i)=>`<button class="btn ${a.cls}" onclick="_ma[${i}]()">${a.label}</button>`).join('');
+  window._ma=acts.map(a=>a.fn);
+  const ov=document.getElementById('modal-ov');
+  ov.classList.add('open');
+  // A안: 입력값 변경 감지 → 바깥 클릭 시 확인
+  ov._dirty=false;
+  ov._origValues={};
+  // 초기값 저장
+  setTimeout(()=>{
+    ov.querySelectorAll('input,textarea,select').forEach((el,i)=>{
+      ov._origValues[i]=el.value;
+      el.addEventListener('input',()=>{ov._dirty=true;});
+      el.addEventListener('change',()=>{ov._dirty=true;});
+    });
+  },50);
+}
+function closeM(){document.getElementById('modal-ov').classList.remove('open');}
+document.getElementById('modal-ov').addEventListener('click',e=>{
+  const ov=document.getElementById('modal-ov');
+  if(e.target===ov){
+    if(ov._dirty){
+      if(confirm('입력 중인 내용이 있습니다.\n저장하지 않고 닫겠습니까?'))closeM();
+    } else {
+      closeM();
+    }
+  }
+});
+document.getElementById('modal-ov').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){
+    const tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='select'||tag==='textarea')return;
+    const saveBtn=document.querySelector('#m-acts .btn-gold');
+    if(saveBtn){e.preventDefault();saveBtn.click();}
+  }
+});
+
+// ─ 시즌명 관리 ─
+function loadSeasonInput(){
+  const el=document.getElementById('season-input');
+  if(el)el.value=ST.seasonName||'2026 상반기';
+}
+function saveSeasonName(){
+  const v=(document.getElementById('season-input').value||'').trim();
+  if(!v){toast('시즌명을 입력하세요','error');return;}
+  ST.seasonName=v;
+  save();
+  const t=document.getElementById('season-title');
+  if(t)t.textContent=v;
+  toast('시즌명 저장됨 ✓','success');
+}
+
+// ─ 고객사 특별 단가표 ─
+let specialCid=null, spGradeFilter='';
+function fillSpecialSel(){/* 검색형으로 교체 — 별도 렌더 없음 */}
+
+// 고객사 등급 필터
+function setSpGradeFilter(grade, btn){
+  spGradeFilter=grade;
+  document.querySelectorAll('#view-special .grade-tab[data-grade]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // 기존 선택 고객사 초기화
+  specialCid=null;
+  document.getElementById('sp-search').value='';
+  document.getElementById('sp-search').placeholder='고객사명 검색...';
+  document.getElementById('sp-cust-info').style.display='none';
+  document.getElementById('sp-empty').style.display='flex';
+  document.getElementById('sp-tbl-wrap').style.display='none';
+  // 드롭다운 열어서 해당 등급 고객사 표시
+  showCustDropdown();
+}
+
+function showCustDropdown(){
+  const dd=document.getElementById('sp-dropdown');
+  dd.style.display='block';
+  filterCustList();
+  document.addEventListener('click',closeCustDropdownOutside);
+}
+function closeCustDropdownOutside(e){
+  if(!e.target.closest('#sp-search')&&!e.target.closest('#sp-dropdown')){
+    document.getElementById('sp-dropdown').style.display='none';
+    document.removeEventListener('click',closeCustDropdownOutside);
+  }
+}
+function filterCustList(){
+  const q=(document.getElementById('sp-search').value||'').toLowerCase();
+  const dd=document.getElementById('sp-dropdown');
+  const gColors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
+  const items=ST.customers.filter(c=>{
+    if(spGradeFilter&&c.grade!==spGradeFilter)return false;
+    if(q&&!c.name.toLowerCase().includes(q))return false;
+    return true;
+  });
+  if(!items.length){dd.innerHTML='<div style="padding:12px;text-align:center;font-size:12px;color:var(--txt3)">검색 결과 없음</div>';dd.style.display='block';return;}
+  dd.innerHTML=items.map(c=>{
+    const gc=gColors[c.grade]||'#888';
+    return `<div onclick="pickCust(${c.id})" style="padding:10px 14px;cursor:pointer;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px"
+      onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+      <span style="flex:1">${c.name}</span>
+      <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${gc}22;color:${gc};border:1px solid ${gc}">${c.grade.toUpperCase()}</span>
+    </div>`;
+  }).join('');
+  dd.style.display='block';
+}
+function pickCust(id){
+  specialCid=id;
+  const c=ST.customers.find(x=>x.id===id);if(!c)return;
+  // 검색창은 비우고 — 선택된 고객사명은 오른쪽에 별도 표시
+  document.getElementById('sp-search').value='';
+  document.getElementById('sp-search').placeholder='고객사명 검색...';
+  document.getElementById('sp-dropdown').style.display='none';
+  updSpCustInfo();
+  document.getElementById('sp-empty').style.display='none';
+  const wrap=document.getElementById('sp-tbl-wrap');
+  wrap.style.display='flex';wrap.style.flex='1';wrap.style.flexDirection='column';wrap.style.minHeight='0';
+  renderSpecialTbl();
+}
+function updSpCustInfo(){
+  const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
+  document.getElementById('sp-cust-info').style.display='flex';
+  document.getElementById('sp-cust-name').textContent=c.name;
+  const badge=document.getElementById('sp-grade-badge');
+  const colors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
+  const col=colors[c.grade]||'#888';
+  badge.textContent=c.grade.toUpperCase();
+  badge.style.background=col+'22';badge.style.color=col;badge.style.border='1.5px solid '+col;
+  const d=ST.grades[c.grade]?.discount||0;
+  document.getElementById('sp-grade-txt').textContent=`기본 할인 −${d}% | 빨간색=직접 지정 단가`;
+}
+function changeCustGrade(){
+  const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
+  const grades=['silver','gold','vip'];
+  const labels={silver:'🥈 Silver(−3%)',gold:'🥇 Gold(−5%)',vip:'💎 VIP(−8%)'};
+  openM('등급 변경',`<div style="display:flex;flex-direction:column;gap:10px;padding:8px 0">
+    ${grades.map(g=>`<button onclick="setSpGrade('${g}')" class="btn ${c.grade===g?'btn-gold':'btn-outline'}" style="justify-content:center;padding:12px">${labels[g]}</button>`).join('')}
+  </div>`,[{label:'닫기',cls:'btn-outline',fn:closeM}]);
+}
+function setSpGrade(g){
+  const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
+  c.grade=g;save();autoSyncTo();updSpCustInfo();renderSpecialTbl();closeM();toast('등급 변경됨 ✓','success');
+}
+function delSpecialCust(){
+  const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
+  if(!confirm(`"${c.name}" 고객사를 삭제하시겠습니까?`))return;
+  ST.customers=ST.customers.filter(x=>x.id!==specialCid);
+  specialCid=null;
+  document.getElementById('sp-search').value='';
+  document.getElementById('sp-cust-info').style.display='none';
+  document.getElementById('sp-empty').style.display='flex';
+  document.getElementById('sp-tbl-wrap').style.display='none';
+  save();autoSyncTo();renderCust();toast('삭제됨','success');
+}
+function openAddCust(){
+  editCid=null;
+  openM('고객사 추가',`<div class="fg"><label class="flabel">고객사명</label><input class="finput" id="cn" placeholder="예: LOKWARD" style="width:220px"></div>
+    <div class="fg"><label class="flabel">등급</label><select class="fsel" id="cg"><option value="silver">Silver</option><option value="gold" selected>Gold</option><option value="vip">VIP</option></select></div>`,
+    [{label:'추가',cls:'btn-gold',fn:()=>{
+      const name=document.getElementById('cn').value.trim();
+      if(!name){toast('고객사명 필요','error');return;}
+      const grade=document.getElementById('cg').value;
+      ST.customers.push({id:ST.nextCid++,name,grade,priceOverrides:{}});
+      save();autoSyncTo();renderCust();fillSpecialSel();closeM();toast('고객사 추가됨 ✓','success');
+    }},{label:'취소',cls:'btn-outline',fn:closeM}]);
+}
+
+// 특별 단가 렌더
+function getSpPrice(c,f,field){
+  const ov=(c.priceOverrides||{})[f.name];
+  if(ov&&typeof ov==='object'&&ov[field]!=null)return{price:ov[field],direct:true};
+  const d=ST.grades[c.grade]?.discount||0;
+  const p=f[field];if(!p)return{price:null,direct:false};
+  return{price:applyD(p,d),direct:false};
+}
+function renderSpecialTbl(){
+  if(!specialCid)return;
+  const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
+  // 원단명 검색 필터
+  const fabQ=(document.getElementById('sp-fab-search')?.value||'').toLowerCase();
+  const allLvs=getAllLevels();
+  const lvOrder=[...Object.keys(allLvs)];
+  // 원단명 필터 적용
+  const fabrics=fabQ?ST.fabrics.filter(f=>f.name.toLowerCase().includes(fabQ)):ST.fabrics;
+  const grouped={};fabrics.forEach(f=>{if(!grouped[f.level])grouped[f.level]=[];grouped[f.level].push(f);});
+  const isAdm=role==='superadmin'||role==='admin';
+  const lvIcons={promo:'◆',standard:'■',premium:'★',luxury:'✦',apparel:'▲'};
+  let html='';
+  lvOrder.forEach(lv=>{
+    if(!grouped[lv])return;
+    const lvCls=LVCLS[lv]||'promo';
+    html+=`<tr class="section-row lv-${lvCls}"><td colspan="10">${lvIcons[lv]||'·'} ${allLvs[lv]||lv} · ${grouped[lv].length}종</td></tr>`;
+    grouped[lv].forEach(f=>{
+      const fields=['mg','baek','muji'];
+      const priceCells=fields.map(field=>{
+        if(f.rib&&f.ribUnit==='EA'&&field==='rib')return`<td class="td-price"><span class="price-val">${f.rib.toLocaleString()}/EA</span></td>`;
+        const {price,direct}=getSpPrice(c,f,field);
+        const style=direct?'color:#c02828;font-weight:800':'';
+        const val=price?`<span class="price-val" style="${style}">${price.toLocaleString()}</span>`:'<span class="price-null">—</span>';
+        const restoreBtn=direct&&isAdm?`<button onclick="restoreSpPrice(${f.id},'${field}')" title="등급할인가로 복원" style="margin-left:4px;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:11px;padding:0 2px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--txt3)'">✕</button>`:'';
+        return`<td class="td-price">${val}${restoreBtn}</td>`;
+      });
+      // rib
+      const ribField=(()=>{
+        if(!f.rib)return'<td class="td-price"><span class="price-null">—</span></td>';
+        if(f.ribUnit==='EA')return`<td class="td-price"><span class="price-val">${f.rib.toLocaleString()}/EA</span></td>`;
+        const {price,direct}=getSpPrice(c,f,'rib');
+        const style=direct?'color:#c02828;font-weight:800':'';
+        const val=price?`<span class="price-val" style="${style}">${price.toLocaleString()}</span>`:'<span class="price-null">—</span>';
+        const rb=direct&&isAdm?`<button onclick="restoreSpPrice(${f.id},'rib')" title="복원" style="margin-left:4px;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:11px;padding:0 2px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--txt3)'">✕</button>`:'';
+        return`<td class="td-price">${val}${rb}</td>`;
+      })();
+      html+=`<tr class="data-row" data-fid="${f.id}">
+        <td class="td-name">${f.name}</td><td class="td-cat">${f.category}</td>
+        ${priceCells.join('')}${ribField}
+        <td class="td-spec">${f.width?f.width+'"':'—'}</td>
+        <td class="td-spec">${f.weight?f.weight+'g':'—'}</td>
+        <td class="td-comp">${comp(f)||'—'}</td>
+        <td class="td-copy"><div class="row-acts">
+          <button class="copy-msg" onclick="copySpecialR(${f.id})">복사</button>
+          ${isAdm?`<button class="copy-xs" style="border-color:var(--gold);color:var(--gold)" onclick="openSpSlidePanel(${f.id})">수정</button>`:''}
+        </div></td>
+      </tr>`;
+    });
+  });
+  document.getElementById('sp-tbody').innerHTML=html;
+}
+function restoreSpPrice(fid,field){
+  const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+  const d=ST.grades[c.grade]?.discount||0;
+  const basePrice=f[field]?applyD(f[field],d):null;
+  const fieldLabel={mg:'8%MG',baek:'백/백아이',muji:'무지',rib:'부속(RIB)'}[field]||field;
+  const curPrice=(c.priceOverrides||{})[f.name]?.[field];
+  openM('직접 단가 복원',
+    `<div style="font-size:13px;color:var(--txt);line-height:2">
+      <b>${f.name}</b> — ${fieldLabel}<br>
+      <span style="color:var(--red);font-weight:700">직접 지정가: ${curPrice?curPrice.toLocaleString()+'원':'—'}</span><br>
+      <span style="color:var(--txt2)">→ ${c.grade.toUpperCase()} 등급 할인가: <b>${basePrice?basePrice.toLocaleString()+'원':'—'}</b></span><br><br>
+      <span style="font-size:12px;color:var(--txt2)">직접 지정 단가를 삭제하고 등급 할인가로 복원하시겠습니까?</span>
+    </div>`,
+    [{label:'복원',cls:'btn-gold',fn:()=>{
+      if(!c.priceOverrides)c.priceOverrides={};
+      if(c.priceOverrides[f.name])delete c.priceOverrides[f.name][field];
+      if(c.priceOverrides[f.name]&&!Object.keys(c.priceOverrides[f.name]).length)delete c.priceOverrides[f.name];
+      save();autoSyncTo();renderSpecialTbl();closeM();toast('등급 할인가로 복원됨 ✓','success');
+    }},{label:'취소',cls:'btn-outline',fn:closeM}]
+  );
+}
+
+// 고객사 슬라이드 패널
+let spSlideFid=null;
+function openSpSlidePanel(fid){
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+  const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
+  spSlideFid=fid;
+  if(!c.priceOverrides)c.priceOverrides={};
+  const ov=c.priceOverrides[f.name]||{};
+  const d=ST.grades[c.grade]?.discount||0;
+  const hint=field=>{const p=f[field];return p?'기준: '+applyD(p,d).toLocaleString()+'원 ('+c.grade.toUpperCase()+' 할인가)':'';};
+  document.getElementById('sp-slide-title').textContent=`${f.name} — ${c.name} 직접 단가`;
+  document.getElementById('sp-slide-body').innerHTML=`
+    <p style="font-size:11px;color:var(--txt2);margin-bottom:16px;line-height:1.7">비우면 등급 할인가가 자동 적용됩니다.<br>직접 입력 시 빨간색으로 표시됩니다.</p>
+    <div class="sp-row">
+      <div class="sp-field"><span class="sp-label">8%MG</span><input class="sp-input" id="ssp-mg" type="number" value="${ov.mg||''}" placeholder="${hint('mg')}"></div>
+      <div class="sp-field"><span class="sp-label">백/백아이</span><input class="sp-input" id="ssp-bk" type="number" value="${ov.baek||''}" placeholder="${hint('baek')}"></div>
+    </div>
+    <div class="sp-row">
+      <div class="sp-field"><span class="sp-label">무지</span><input class="sp-input" id="ssp-mj" type="number" value="${ov.muji||''}" placeholder="${hint('muji')}"></div>
+      <div class="sp-field"><span class="sp-label">부속(RIB)</span><input class="sp-input" id="ssp-rb" type="number" value="${ov.rib||''}" placeholder="${hint('rib')}"></div>
+    </div>`;
+  document.getElementById('sp-slide-body').querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveSpSlidePanel();}if(e.key==='Escape')closeSpSlidePanel();});
+  });
+  const panel=document.getElementById('sp-slide-panel');
+  panel.classList.add('open');
+  showSlideDim();
+  const tbl=document.getElementById('sp-tbl-area');
+  if(window.innerWidth>=768)tbl.style.marginRight='340px';
+}
+function closeSpSlidePanel(){
+  document.getElementById('sp-slide-panel').classList.remove('open');
+  const tbl=document.getElementById('sp-tbl-area');if(tbl)tbl.style.marginRight='';
+  spSlideFid=null;
+  hideSlideDim();
+}
+function saveSpSlidePanel(){
+  if(!spSlideFid||!specialCid)return;
+  const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
+  const f=ST.fabrics.find(x=>x.id===spSlideFid);if(!f)return;
+  if(!c.priceOverrides)c.priceOverrides={};
+  if(!c.priceOverrides[f.name])c.priceOverrides[f.name]={};
+  const ov=c.priceOverrides[f.name];
+  const parse=id=>{const v=parseInt(document.getElementById(id).value);return isNaN(v)||v<=0?null:v;};
+  const vals={mg:parse('ssp-mg'),baek:parse('ssp-bk'),muji:parse('ssp-mj'),rib:parse('ssp-rb')};
+  ['mg','baek','muji','rib'].forEach(k=>{if(vals[k]!=null)ov[k]=vals[k];else delete ov[k];});
+  if(!Object.keys(ov).length)delete c.priceOverrides[f.name];
+  save();autoSyncTo();renderSpecialTbl();closeSpSlidePanel();toast('저장됨 ✓','success');
+}
+function copySpecialR(fid){
+  const c=ST.customers.find(x=>x.id===specialCid);
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f||!c)return;
+  const fmt=field=>{
+    if(field==='rib'&&f.ribUnit==='EA')return f.rib?f.rib.toLocaleString()+'원/EA':'—';
+    const {price}=getSpPrice(c,f,field);
+    return price?price.toLocaleString()+'원':'—';
+  };
+  const specLine=[f.width?f.width+'"':null,f.weight?f.weight+'g/y':null].filter(Boolean).join(' x ');
+  let t=`[${f.name}]  RECOVERIC\n# 8%MG : ${fmt('mg')}\n# 백/백아이 : ${fmt('baek')}\n# 무지 : ${fmt('muji')}\n# 부속(RIB) : ${fmt('rib')}\n\n■ 단가 : YD(야드)\n`;
+  if(specLine)t+=`■ ${specLine}\n`;t+=`■ ${comp(f)||'—'}`;
+  doCopyText(t).then(()=>toast('복사됨 ✓','success')).catch(()=>showCopyPopup(t));
+}
+
+// ─ 라인별 단가표 ─
+let activeBl='',activeBlGrade='';
+function renderByLine(){
+  const lvs=ST.levels||[];
+  const allLvs=getAllLevels();
+  const btns=document.getElementById('bl-btns');if(!btns)return;
+  // 라인 컬러 맵
+  const BL_COL={'':'var(--sidebar)',promo:'var(--promo)',standard:'var(--standard)',premium:'var(--premium)',luxury:'var(--luxury)',apparel:'var(--apparel)'};
+  const blActiveStyle=(id)=>activeBl===id?`style="background:${BL_COL[id]||'var(--sidebar)'};border-color:${BL_COL[id]||'var(--sidebar)'};color:#fff"`:'';
+  btns.innerHTML=`<button class="grade-tab${activeBl===''?' active':''}" data-lv="" ${blActiveStyle('')} onclick="setBl('',this)">전체</button>`;
+  lvs.forEach(l=>btns.innerHTML+=`<button class="grade-tab${activeBl===l.id?' active':''}" data-lv="${l.id}" ${blActiveStyle(l.id)} onclick="setBl('${l.id}',this)">${l.name}</button>`);
+  // 등급 탭 active 동기화
+  document.querySelectorAll('#bl-grade-bar .grade-tab').forEach(b=>{
+    b.classList.toggle('active',b.getAttribute('data-grade')===activeBlGrade);
+  });
+  const d=ST.grades[activeBlGrade]?.discount||0;
+  const g=activeBlGrade;
+  const fabs=activeBl?ST.fabrics.filter(f=>f.level===activeBl):ST.fabrics;
+  const tb=document.getElementById('bl-tbody');if(!tb)return;
+  if(!fabs.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">해당 라인 원단 없음</td></tr>';return;}
+  // 항상 라인별 섹션 바 표시
+  const lvOrder=Object.keys(allLvs);
+  const grouped={};
+  fabs.forEach(f=>{if(!grouped[f.level])grouped[f.level]=[];grouped[f.level].push(f);});
+  let html='';
+  lvOrder.forEach(lv=>{
+    if(!grouped[lv])return;
+    const lvCls=LVCLS[lv]||'promo';
+    html+=`<tr class="section-row lv-${lvCls}"><td colspan="10">▸ ${allLvs[lv]||lv} · ${grouped[lv].length}종</td></tr>`;
+    grouped[lv].forEach(f=>html+=blRow(f,d,g));
+  });
+  tb.innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">해당 라인 원단 없음</td></tr>';
+}
+function blRow(f,d,g){
+  const rib=f.rib?(f.ribUnit==='EA'?`<span class="price-val">${f.rib.toLocaleString()}/EA</span>`:fp(f.rib,d,g)):'<span class="price-null">—</span>';
+  return`<tr class="data-row" data-fid="${f.id}">
+    <td class="td-name">${f.name}</td><td class="td-cat">${f.category}</td>
+    <td class="td-price">${fp(f.mg,d,g)}</td><td class="td-price">${fp(f.baek,d,g)}</td>
+    <td class="td-price">${fp(f.muji,d,g)}</td><td class="td-price">${rib}</td>
+    <td class="td-spec">${f.width?f.width+'"':'—'}</td><td class="td-spec">${f.weight?f.weight+'g':'—'}</td>
+    <td class="td-comp">${comp(f)||'—'}</td>
+    <td class="td-copy"><div class="row-acts"><button class="copy-msg" onclick="copyRSimple(${f.id},${d})">복사</button></div></td>
+  </tr>`;
+}
+function setBl(id,btn){
+  activeBl=(id!==undefined&&id!==null)?id:'';
+  renderByLine();
+}
+function setBlGrade(btn,grade){
+  activeBlGrade=grade||'';
+  renderByLine();
+}
+
+// ─ 조직별 단가표 ─
+let activeBc='',activeBcGrade='';
+function renderByCat(){
+  const cats=ST.categories||[];
+  const allLvs=getAllLevels();
+  const btns=document.getElementById('bc-btns');if(!btns)return;
+  const bcActiveStyle=(cat)=>activeBc===cat?`style="background:var(--sidebar);border-color:var(--sidebar);color:#fff"`:'';
+  btns.innerHTML=`<button class="grade-tab${activeBc===''?' active':''}" data-cat="" ${bcActiveStyle('')} onclick="setBc('',this)">전체</button>`;
+  cats.forEach(c=>btns.innerHTML+=`<button class="grade-tab${activeBc===c?' active':''}" data-cat="${c}" ${bcActiveStyle(c)} onclick="setBc('${c}',this)">${c}</button>`);
+  // 등급 탭 active 동기화
+  document.querySelectorAll('#bc-grade-bar .grade-tab').forEach(b=>{
+    b.classList.toggle('active',b.getAttribute('data-grade')===activeBcGrade);
+  });
+  const d=ST.grades[activeBcGrade]?.discount||0;
+  const g=activeBcGrade;
+  const fabs=activeBc?ST.fabrics.filter(f=>f.category===activeBc):ST.fabrics;
+  const tb=document.getElementById('bc-tbody');if(!tb)return;
+  if(!fabs.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">해당 조직 원단 없음</td></tr>';return;}
+  // 라인 순서 기준 정렬 후 표시
+  const lvOrder2=Object.keys(allLvs);
+  const sortedFabs=[...fabs].sort((a,b)=>{
+    const la=lvOrder2.indexOf(a.level),lb=lvOrder2.indexOf(b.level);
+    if(la!==lb)return la-lb;
+    return a.name.localeCompare(b.name,'ko');
+  });
+  const mkRow=f=>{
+    const rib=f.rib?(f.ribUnit==='EA'?`<span class="price-val">${f.rib.toLocaleString()}/EA</span>`:fp(f.rib,d,g)):'<span class="price-null">—</span>';
+    return`<tr class="data-row"><td class="td-name">${f.name}</td><td class="td-cat">${allLvs[f.level]||f.level}</td>
+      <td class="td-price">${fp(f.mg,d,g)}</td><td class="td-price">${fp(f.baek,d,g)}</td>
+      <td class="td-price">${fp(f.muji,d,g)}</td><td class="td-price">${rib}</td>
+      <td class="td-spec">${f.width?f.width+'"':'—'}</td><td class="td-spec">${f.weight?f.weight+'g':'—'}</td>
+      <td class="td-comp">${comp(f)||'—'}</td>
+      <td class="td-copy"><div class="row-acts"><button class="copy-msg" onclick="copyRSimple(${f.id},${d})">복사</button></div></td></tr>`;
+  };
+  // 항상 섹션 바 표시
+  let html='';
+  const grouped2={};sortedFabs.forEach(f=>{if(!grouped2[f.category])grouped2[f.category]=[];grouped2[f.category].push(f);});
+  (activeBc?[activeBc]:cats).forEach(cat=>{if(!grouped2[cat])return;
+    html+=`<tr class="section-row lv-standard"><td colspan="10">▸ ${cat} · ${grouped2[cat].length}종</td></tr>`;
+    grouped2[cat].forEach(f=>html+=mkRow(f));});
+  tb.innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">해당 조직 원단 없음</td></tr>';
+}
+function setBc(cat,btn){
+  activeBc=(cat!==undefined&&cat!==null)?cat:'';
+  renderByCat();
+}
+function setBcGrade(btn,grade){
+  activeBcGrade=grade||'';
+  renderByCat();
+}
+
+// ─ 추천의류별 단가표 ─
+let activeAp='',activeApGrade='';
+function renderByApparel(){
+  const tags=ST.tags||TAGS;
+  const btns=document.getElementById('ap-btns');if(!btns)return;
+  btns.innerHTML=tags.map(t=>`<button class="tag-btn${activeAp===t?' active':''}" onclick="setAp('${t}')">${t}</button>`).join('');
+  // 등급 탭 active 동기화
+  document.querySelectorAll('#ap-grade-bar .grade-tab').forEach(b=>{
+    b.classList.toggle('active',b.getAttribute('data-grade')===activeApGrade);
+  });
+  const d=ST.grades[activeApGrade]?.discount||0;
+  const g=activeApGrade;
+  const allLvs=getAllLevels();
+  const fabs=activeAp?ST.fabrics.filter(f=>(f.tags||[]).includes(activeAp)):[];
+  const tb=document.getElementById('ap-tbody');if(!tb)return;
+  if(!activeAp){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">의류 유형을 선택하세요</td></tr>';return;}
+  if(!fabs.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">해당 태그 원단 없음</td></tr>';return;}
+  // 라인별 섹션으로 구분 표시
+  const lvOrder=Object.keys(allLvs);
+  const grouped={};
+  fabs.forEach(f=>{if(!grouped[f.level])grouped[f.level]=[];grouped[f.level].push(f);});
+  let html='';
+  lvOrder.forEach(lv=>{
+    if(!grouped[lv])return;
+    const lvCls=LVCLS[lv]||'promo';
+    html+=`<tr class="section-row lv-${lvCls}"><td colspan="10">▸ ${allLvs[lv]||lv} · ${grouped[lv].length}종</td></tr>`;
+    grouped[lv].forEach(f=>{
+      const rib=f.rib?(f.ribUnit==='EA'?`<span class="price-val">${f.rib.toLocaleString()}/EA</span>`:fp(f.rib,d,g)):'<span class="price-null">—</span>';
+      html+=`<tr class="data-row">
+        <td class="td-name">${f.name}</td><td class="td-cat">${allLvs[f.level]||f.level}</td><td class="td-cat">${f.category}</td>
+        <td class="td-price">${fp(f.mg,d,g)}</td><td class="td-price">${fp(f.baek,d,g)}</td><td class="td-price">${fp(f.muji,d,g)}</td>
+        <td class="td-spec">${f.width?f.width+'"':'—'}</td><td class="td-spec">${f.weight?f.weight+'g':'—'}</td>
+        <td class="td-comp">${comp(f)||'—'}</td>
+        <td class="td-copy"><div class="row-acts"><button class="copy-msg" onclick="copyRSimple(${f.id},${d})">복사</button></div></td>
+      </tr>`;
+    });
+  });
+  tb.innerHTML=html;
+}
+function setAp(tag){
+  activeAp=activeAp===tag?'':tag;
+  // 배지 업데이트
+  const badge=document.getElementById('ap-tag-count');
+  if(badge){
+    if(activeAp){
+      const cnt=ST.fabrics.filter(f=>(f.tags||[]).includes(activeAp)).length;
+      badge.style.display='inline';
+      badge.textContent=cnt+'품목 태그 설정함';
+    } else {
+      badge.style.display='none';
+    }
+  }
+  renderByApparel();
+}
+function setApGrade(btn,grade){
+  activeApGrade=grade||'';
+  document.querySelectorAll('#ap-grade-bar .grade-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderByApparel();
+}
+
+
+// ─ 원단 소개 ─
+let introFid=null;
+
+// 원단 소개 초기화 (조직 콤보박스 채우기)
+function initIntroSelects(){
+  const catSel=document.getElementById('intro-cat-sel');if(!catSel)return;
+  const cats=[...new Set(ST.fabrics.map(f=>f.category))].sort();
+  catSel.innerHTML='<option value="">조직 전체</option>';
+  cats.forEach(c=>catSel.innerHTML+=`<option value="${c}">${c}</option>`);
+  fillIntroFabSelect('');
+}
+// 조직 선택 시 원단 콤보박스 갱신
+function filterIntroBycat(){
+  const cat=document.getElementById('intro-cat-sel').value;
+  fillIntroFabSelect(cat);
+  // 조직 변경 시 텍스트 검색 초기화
+  const srch=document.getElementById('intro-search');
+  if(srch){srch.value='';srch.placeholder='원단명 직접 검색...';}
+  const dd=document.getElementById('intro-dropdown');
+  if(dd)dd.style.display='none';
+}
+function fillIntroFabSelect(cat){
+  const fabSel=document.getElementById('intro-fab-sel');if(!fabSel)return;
+  const allLvs=getAllLevels();
+  const list=cat?ST.fabrics.filter(f=>f.category===cat):ST.fabrics;
+  fabSel.innerHTML='<option value="">원단 선택...</option>';
+  list.forEach(f=>fabSel.innerHTML+=`<option value="${f.id}">[${allLvs[f.level]||f.level}] ${f.name}</option>`);
+}
+function pickIntroBySelect(val){
+  if(!val)return;
+  pickIntro(+val);
+}
+
+function showIntroDropdown(){
+  const dd=document.getElementById('intro-dropdown');
+  dd.style.display='block';
+  filterIntroList();
+  document.addEventListener('click',closeIntroDropdownOutside);
+}
+function closeIntroDropdownOutside(e){
+  if(!e.target.closest('#intro-search')&&!e.target.closest('#intro-dropdown')){
+    document.getElementById('intro-dropdown').style.display='none';
+    document.removeEventListener('click',closeIntroDropdownOutside);
+  }
+}
+function filterIntroList(){
+  const q=(document.getElementById('intro-search').value||'').toLowerCase();
+  const dd=document.getElementById('intro-dropdown');
+  if(!q){dd.style.display='none';return;} // 빈 검색어면 드롭다운 숨김
+  const allLvs=getAllLevels();
+  const items=ST.fabrics.filter(f=>f.name.toLowerCase().includes(q)||f.category.toLowerCase().includes(q));
+  if(!items.length){dd.innerHTML='<div style="padding:12px;text-align:center;font-size:12px;color:var(--txt3)">검색 결과 없음</div>';return;}
+  dd.innerHTML=items.map(f=>`<div onclick="pickIntro(${f.id})" style="padding:10px 14px;cursor:pointer;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border)"
+    onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">[${allLvs[f.level]||f.level}] ${f.name} <span style="font-size:10px;color:var(--txt3)">${f.category}</span></div>`).join('');
+  dd.style.display='block';
+}
+function pickIntro(fid){
+  introFid=+fid;
+  const f=ST.fabrics.find(x=>x.id===+fid);if(!f)return;
+  // 검색창 비우기 (선택됐음을 placeholder로 표시)
+  document.getElementById('intro-search').value='';
+  document.getElementById('intro-search').placeholder=f.name+' 선택됨';
+  document.getElementById('intro-dropdown').style.display='none';
+  renderIntro(fid);
+}
+function renderIntro(fid){
+  const f=ST.fabrics.find(x=>x.id===+fid);
+  document.getElementById('intro-empty').style.display=f?'none':'flex';
+  document.getElementById('intro-card').style.display=f?'flex':'none';
+  const isAdm=role==='superadmin'||role==='admin';
+  const editBtn=document.getElementById('intro-edit-btn');
+  const editBtn2=document.getElementById('intro-edit-btn2');
+  if(editBtn)editBtn.style.display=f&&isAdm?'inline-flex':'none';
+  if(editBtn2)editBtn2.style.display=f&&isAdm?'inline-flex':'none';
+  if(!f)return;
+  const specLine=[f.width?f.width+'"':null,f.weight?f.weight+'g/y':null].filter(Boolean).join(' x ');
+  const tags=(f.tags||[]).join(' · ')||'—';
+  const url=f.url||'recoveric.com (상세페이지 준비중)';
+  let msg=`[${f.name}]  RECOVERIC\n\n`;
+  msg+=`▸ 소재 : ${comp(f)||'—'}\n`;
+  if(specLine)msg+=`▸ 폭/중량 : ${specLine}\n`;
+  msg+=`▸ 추천의류 : ${tags}\n`;
+  if(f.description)msg+=`\n📌 ${f.description}\n`;
+  msg+=`\n🔗 ${url}\n\n현일텍스 CS팀 드림`;
+  document.getElementById('intro-preview').textContent=msg;
+  const urlEl=document.getElementById('intro-url-box');
+  if(f.url){urlEl.innerHTML=`<a href="${f.url}" target="_blank" style="color:var(--blue)">${f.url}</a>`;}
+  else{urlEl.innerHTML=`<span style="color:var(--txt3)">미입력 (recoveric.com 메인으로 연결)</span>`;}
+  // description 상태 표시
+  const descStatus=document.getElementById('intro-desc-status');
+  if(descStatus){
+    if(f.description){
+      descStatus.innerHTML=`<span style="font-size:11px;color:var(--green)">✓ 특징 설명 입력됨 (${f.description.length}자)</span>`;
+    } else {
+      descStatus.innerHTML=`<span style="font-size:11px;color:var(--red)">⚠ 특징 설명 미입력 — 수정 버튼으로 추가하세요</span>`;
+    }
+  }
+}
+
+// 원단 소개에서 바로 description/url 수정
+function openIntroEdit(){
+  if(!introFid)return;
+  const f=ST.fabrics.find(x=>x.id===+introFid);if(!f)return;
+  openM(`${f.name} — 원단 소개 수정`,
+    `<div class="fg"><label class="flabel">홈페이지 URL</label>
+      <input class="finput" id="ie-url" value="${f.url||''}" placeholder="https://recoveric.com/..." style="width:100%;max-width:400px"></div>
+    <div class="fg"><label class="flabel">특징 설명 <span id="ie-cnt" style="color:var(--txt3)">(${(f.description||'').length}/200자)</span></label>
+      <textarea class="finput" id="ie-desc" rows="4" maxlength="200" oninput="document.getElementById('ie-cnt').textContent='('+this.value.length+'/200자)'" style="width:100%;resize:vertical">${f.description||''}</textarea></div>`,
+    [{label:'저장',cls:'btn-gold',fn:()=>{
+      f.url=document.getElementById('ie-url').value.trim()||null;
+      f.description=document.getElementById('ie-desc').value.trim()||null;
+      save();autoSyncTo();renderIntro(introFid);closeM();toast('저장됨 ✓','success');
+    }},{label:'취소',cls:'btn-outline',fn:closeM}]
+  );
+}
+function copyIntro(){
+  const text=document.getElementById('intro-preview').textContent;
+  doCopyText(text).then(()=>toast('원단 소개 복사됨 ✓','success')).catch(()=>showCopyPopup(text));
+}
+
+// ─ 추천의류 태그 관리 ─
+function renderTagMgmt(){
+  const el=document.getElementById('tag-list');if(!el)return;
+  const tags=ST.tags||TAGS;
+  el.innerHTML=tags.map(t=>`<div style="display:inline-flex;align-items:center;gap:0;border:1.5px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--bg2)">
+    <span style="padding:6px 12px;font-size:12px;font-weight:600;color:var(--txt)">${t}</span>
+    <button onclick="delTag('${t}')" style="padding:6px 8px;background:var(--bg3);border:none;border-left:1px solid var(--border2);cursor:pointer;font-size:11px;color:var(--red)" onmouseover="this.style.background='#fff2f2'" onmouseout="this.style.background='var(--bg3)'">✕</button>
+  </div>`).join('');
+}
+function addTag(){
+  const inp=document.getElementById('new-tag');
+  const name=inp.value.trim();if(!name)return toast('태그 이름을 입력하세요','error');
+  if(!ST.tags)ST.tags=[...TAGS];
+  if(ST.tags.includes(name))return toast('이미 존재하는 태그','error');
+  ST.tags.push(name);inp.value='';
+  save();renderTagMgmt();renderTagBtns();renderByApparel();toast('태그 추가됨','success');
+}
+function delTag(name){
+  if(!confirm(`"${name}" 태그를 삭제하시겠습니까?`))return;
+  if(!ST.tags)ST.tags=[...TAGS];
+  ST.tags=ST.tags.filter(t=>t!==name);
+  ST.fabrics.forEach(f=>{f.tags=(f.tags||[]).filter(t=>t!==name);});
+  save();renderTagMgmt();renderTagBtns();renderByApparel();toast('삭제됨','success');autoSyncTo();
+}
+
+// copyRSimple: 지정 할인율로 복사
+function copyRSimple(id,disc){
+  const f=ST.fabrics.find(x=>x.id===id);if(!f)return;
+  const d=disc||0;
+  const fmt=p=>p?applyD(p,d).toLocaleString()+'원':'—';
+  const ribStr=f.rib?(f.ribUnit==='EA'?f.rib.toLocaleString()+'원/EA':fmt(f.rib)):'—';
+  const specLine=[f.width?f.width+'"':null,f.weight?f.weight+'g/y':null].filter(Boolean).join(' x ');
+  let t=`[${f.name}]  RECOVERIC\n# 8%MG : ${fmt(f.mg)}\n# 백/백아이 : ${fmt(f.baek)}\n# 무지 : ${fmt(f.muji)}\n# 부속(RIB) : ${ribStr}\n\n■ 단가 : YD(야드)\n`;
+  if(specLine)t+=`■ ${specLine}\n`;t+=`■ ${comp(f)||'—'}`;
+  doCopyText(t).then(()=>toast('복사됨 ✓','success')).catch(()=>showCopyPopup(t));
+}
+
+function doCopyText(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(text);
+  return new Promise((resolve,reject)=>{
+    const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0;font-size:16px';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    try{document.execCommand('copy')?resolve():reject();}catch(e){reject(e);}
+    document.body.removeChild(ta);
+  });
+}
+
+
+// ─ 기본 원단 데이터 복원 (되돌리기 지원) ─
+let _fabricsUndo=null;
+function resetFabrics(){
+  openM('기본 원단 데이터 복원',
+    `<div style="background:#fff3cd;border:1.5px solid #ffc107;border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.8;color:#664d00">
+      <b>⚠️ 주의</b><br>
+      현재 원단 데이터를 <b>v4 기본값(34종)</b>으로 교체합니다.<br>
+      수동으로 수정한 단가나 직접 추가한 원단이 있으면 사라집니다.<br><br>
+      복원 직후 <b>"되돌리기"</b> 버튼으로 취소할 수 있습니다. <b>(15초 내)</b><br>
+      <span style="font-size:11px;color:#888">앱을 닫거나 새로고침하면 되돌리기 불가</span>
+    </div>`,
+    [{label:'복원 실행',cls:'btn-gold',fn:()=>{
+      _fabricsUndo=JSON.parse(JSON.stringify(ST.fabrics));
+      ST.fabrics=JSON.parse(JSON.stringify(DFABRICS));
+      ST.nextFid=DFABRICS.length+1;
+      save();
+      renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
+      fillLevelSelects();fillCatList();
+      closeM();
+      // 카운트다운 토스트
+      const t=document.getElementById('toast');
+      const el=document.createElement('div');
+      el.className='ti success';
+      el.style.cssText='display:flex;align-items:center;gap:12px;min-width:300px;flex-wrap:wrap';
+      const countdownId='cd_'+Date.now();
+      el.innerHTML=`<span>기본 원단 복원됨 ✓ &nbsp;<b id="${countdownId}" style="color:var(--red)">15초</b> 내 취소 가능</span>
+        <button onclick="undoFabrics(this.closest('.ti'))" style="padding:5px 12px;border-radius:6px;background:#fff;border:1.5px solid var(--green);color:var(--green);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">↩ 되돌리기</button>`;
+      t.appendChild(el);
+      // 카운트다운
+      let sec=15;
+      const cdTimer=setInterval(()=>{
+        sec--;
+        const cdEl=document.getElementById(countdownId);
+        if(cdEl)cdEl.textContent=sec+'초';
+        if(sec<=0){clearInterval(cdTimer);if(el.parentNode)el.remove();_fabricsUndo=null;}
+      },1000);
+    }},{label:'취소',cls:'btn-outline',fn:closeM}]
+  );
+}
+function undoFabrics(toastEl){
+  if(!_fabricsUndo){toast('되돌리기 시간이 만료됐습니다','error');return;}
+  ST.fabrics=_fabricsUndo;
+  _fabricsUndo=null;
+  save();
+  renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
+  fillLevelSelects();fillCatList();
+  if(toastEl)toastEl.remove();
+  toast('되돌리기 완료 ✓','success');
+}
+
+// ─ Toast ─
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  const el=document.createElement('div');el.className='ti '+(type||'');el.textContent=msg;
+  t.appendChild(el);setTimeout(()=>el.remove(),3000);
+}
+
+// ─ Boot ─
+load();
+
+// ─ PIN 키보드 입력 ─
+document.addEventListener('keydown',e=>{
+  const login=document.getElementById('login');
+  if(getComputedStyle(login).display==='none')return;
+  if(e.key>='0'&&e.key<='9')pi(e.key);
+  else if(e.key==='Backspace')pd();
+  else if(e.key==='Escape'){pb='';upd();document.getElementById('pin-err').textContent='';}
+});
+
+// ─ 모달 내 Enter 키 저장 ─
+document.getElementById('modal-ov').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){
+    // select, textarea, 체크박스에서는 무시
+    const tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='select'||tag==='textarea')return;
+    const saveBtn=document.querySelector('#m-acts .btn-gold');
+    if(saveBtn){e.preventDefault();saveBtn.click();}
+  }
+});
+</script>
+</body>
+</html>
