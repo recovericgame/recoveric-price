@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.43</title>
+<title>RECOVERIC 단가관리 시스템 v4.44</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.43</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.44</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2501,26 +2501,33 @@ function gasPost(url, data){
 async function autoSyncTo(){
   const url=ST.sheetsUrl;if(!url)return;
   if(window._isSyncing)return;
-  window._isSyncing=true;
+  // dirty 플래그 스냅샷 후 즉시 초기화 (중복 실행 방지)
   const dirtyF=window._dirtyFabrics;
   const dirtyC=window._dirtyCustomers;
   const dirtyS=window._dirtySettings;
-  if(!dirtyF&&!dirtyC&&!dirtyS){window._isSyncing=false;return;}
+  if(!dirtyF&&!dirtyC&&!dirtyS)return;
+  window._dirtyFabrics=false;
+  window._dirtyCustomers=false;
+  window._dirtySettings=false;
+  window._isSyncing=true;
   console.log('[SyncTo] 저장 시작 - fabrics:'+dirtyF+', customers:'+dirtyC+', settings:'+dirtyS);
   try{
-    if(dirtyC){await gasPost(url,{action:'saveCustomers',customers:ST.customers});window._dirtyCustomers=false;}
-    if(dirtyF){await gasPost(url,{action:'saveFabrics',fabrics:ST.fabrics});window._dirtyFabrics=false;}
+    if(dirtyC)await gasPost(url,{action:'saveCustomers',customers:ST.customers});
+    if(dirtyF)await gasPost(url,{action:'saveFabrics',fabrics:ST.fabrics});
     if(dirtyS){
       await gasPost(url,{action:'saveLevels',levels:ST.levels||[]});
       await gasPost(url,{action:'saveCategories',categories:ST.categories||[]});
       await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||''});
-      window._dirtySettings=false;
     }
     console.log('[SyncTo] 저장 완료');
     window._lastSavedAt=Date.now();
     showSyncStatus('☁ 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
     setTimeout(()=>{window._lastSavedAt=0;},25000);
   }catch(e){
+    // 실패 시 dirty 복원 (재시도 가능하도록)
+    if(dirtyF)window._dirtyFabrics=true;
+    if(dirtyC)window._dirtyCustomers=true;
+    if(dirtyS)window._dirtySettings=true;
     console.error('[SyncTo] 저장 실패:', e);
     showSyncStatus('⚠ 저장 실패',false);
   }finally{
@@ -2530,10 +2537,7 @@ async function autoSyncTo(){
 
 async function autoLoadFrom(){
   const url=ST.sheetsUrl;if(!url)return;
-  if(window._isSyncing){console.log('[LoadFrom] 건너뜀: isSyncing');return;}
-  const waited=window._lastSavedAt?(Date.now()-window._lastSavedAt):99999;
-  if(waited<25000){console.log('[LoadFrom] 건너뜀: 저장 후 '+Math.round(waited/1000)+'초');return;}
-  console.log('[LoadFrom] Sheets에서 불러오기 시작...');
+  if(window._isSyncing)return; // 저장 중일 때만 차단
   try{
     const r=await fetch(url+'?t='+Date.now(),{cache:'no-store'});
     const d=await r.json();
