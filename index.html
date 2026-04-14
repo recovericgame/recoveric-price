@@ -787,8 +787,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         </div>
         <button id="intro-edit-btn" onclick="openIntroEdit()" style="display:none" class="btn btn-outline btn-sm">✎ 설명·URL 수정</button>
       </div>
-      <div id="intro-empty" style="flex:1;overflow-y:auto">
-        <div id="intro-list-wrap"></div>
+      <div id="intro-empty" style="flex:1;overflow-y:auto;min-height:0">
+        <div id="intro-list-wrap" style="display:flex;flex-direction:column;gap:10px"></div>
       </div>
       <div id="intro-card" style="display:none;gap:16px;flex-wrap:wrap">
         <div style="flex:1;min-width:280px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow)">
