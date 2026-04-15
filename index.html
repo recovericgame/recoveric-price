@@ -2584,14 +2584,10 @@ async function autoLoadFrom(){
         seenCust.add(k);return true;
       }).map(c=>({...c,grade:(c.grade||'silver').toLowerCase()}));
       // 변경 감지: 내용이 다를 때만 교체
-      // 단, Sheets 데이터가 로컬보다 적으면 스테일 데이터일 수 있으므로 차단
-      const localCnt=(ST.customers||[]).length;
-      if(next.length>=localCnt&&JSON.stringify(next)!==JSON.stringify(ST.customers||[])){
+      if(JSON.stringify(next)!==JSON.stringify(ST.customers||[])){
         ST.customers=next;
         ST.nextCid=Math.max(...ST.customers.map(c=>c.id||0),0)+1;
         updated=true;
-      } else if(next.length<localCnt){
-        console.log('[LoadFrom] 고객사 수 감소 감지('+localCnt+'→'+next.length+') — 스테일 데이터 차단');
       }
     }
     if(d.fabrics&&d.fabrics.length){
@@ -3542,17 +3538,6 @@ document.addEventListener('keydown',e=>{
   if(e.key>='0'&&e.key<='9')pi(e.key);
   else if(e.key==='Backspace')pd();
   else if(e.key==='Escape'){pb='';upd();document.getElementById('pin-err').textContent='';}
-});
-
-// ─ 모달 내 Enter 키 저장 ─
-document.getElementById('modal-ov').addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&!e.shiftKey){
-    // select, textarea, 체크박스에서는 무시
-    const tag=(e.target.tagName||'').toLowerCase();
-    if(tag==='select'||tag==='textarea')return;
-    const saveBtn=document.querySelector('#m-acts .btn-gold');
-    if(saveBtn){e.preventDefault();saveBtn.click();}
-  }
 });
 </script>
 </body>
