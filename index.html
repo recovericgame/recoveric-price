@@ -1373,10 +1373,11 @@ function pi(d){if(pb.length>=4)return;pb+=d;upd();if(pb.length===4)setTimeout(ch
 function pd(){pb=pb.slice(0,-1);upd();document.getElementById('pin-err').textContent='';}
 function upd(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pb.length);}
 function chk(){
+  if(!ST.pins)ST.pins={superadmin:'0327',admin:'9764',user:'0000'};
   const p=ST.pins;
-  if(pb===p.superadmin)enter('superadmin','최고관리자','superadmin');
-  else if(pb===p.admin)enter('admin','관리자','admin');
-  else if(pb===p.user)enter('user','일반','user');
+  if(pb&&pb===p.superadmin)enter('superadmin','최고관리자','superadmin');
+  else if(pb&&p.admin&&pb===p.admin)enter('admin','관리자','admin');
+  else if(pb&&p.user&&pb===p.user)enter('user','일반','user');
   else{document.getElementById('pin-err').textContent='PIN이 틀렸습니다';pb='';upd();}
 }
 function enter(r,label,cls){
@@ -2461,10 +2462,23 @@ function saveDisc(){ST.grades.silver.discount=+document.getElementById('dsi').va
 
 // ─ PINs ─
 function savePins(){
-  const a=document.getElementById('p1').value.trim();const b=document.getElementById('p2').value.trim();const c=document.getElementById('p3').value.trim();
-  if(a&&a.length===4)ST.pins.superadmin=a;if(b&&b.length===4)ST.pins.admin=b;if(c&&c.length===4)ST.pins.user=c;
-  saveSettingsDirty();document.getElementById('p1').value='';document.getElementById('p2').value='';document.getElementById('p3').value='';
-  toast('PIN 변경 완료','success');
+  const a=document.getElementById('p1').value.trim();
+  const b=document.getElementById('p2').value.trim();
+  const c=document.getElementById('p3').value.trim();
+  if(!a&&!b&&!c){toast('변경할 PIN을 입력하세요','error');return;}
+  if(a&&a.length!==4){toast('PIN은 4자리 숫자입니다','error');return;}
+  if(b&&b.length!==4){toast('PIN은 4자리 숫자입니다','error');return;}
+  if(c&&c.length!==4){toast('PIN은 4자리 숫자입니다','error');return;}
+  // 입력된 항목만 갱신, 나머지는 기존값 유지 (누락 방지)
+  if(!ST.pins)ST.pins={superadmin:'0327',admin:'9764',user:'0000'};
+  if(a)ST.pins.superadmin=a;
+  if(b)ST.pins.admin=b;
+  if(c)ST.pins.user=c;
+  document.getElementById('p1').value='';
+  document.getElementById('p2').value='';
+  document.getElementById('p3').value='';
+  saveSettingsDirty();
+  toast('PIN 변경 완료 ✓','success');
 }
 
 // ─ Google Sheets ─
@@ -2620,7 +2634,11 @@ async function autoLoadFrom(){
     }
     if(d.grades&&JSON.stringify(d.grades)!==JSON.stringify(ST.grades)){ST.grades=d.grades;updated=true;}
     if(d.seasonName&&d.seasonName!==ST.seasonName){ST.seasonName=d.seasonName;updated=true;}
-    if(d.pins&&JSON.stringify(d.pins)!==JSON.stringify(ST.pins)){ST.pins=d.pins;updated=true;}
+    if(d.pins){
+      // 안전 병합: 누락된 키는 기존값 유지 (완전 교체 금지)
+      const merged={...ST.pins,...d.pins};
+      if(JSON.stringify(merged)!==JSON.stringify(ST.pins)){ST.pins=merged;updated=true;}
+    }
     if(d.tags&&d.tags.length){
       // 병합: Sheets + 로컬에만 있는 태그 보존 (양쪽 합집합)
       const merged=[...new Set([...(ST.tags||[]),...d.tags])];
