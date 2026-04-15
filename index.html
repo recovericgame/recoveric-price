@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.46</title>
+<title>RECOVERIC 단가관리 시스템 v4.47</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.46</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.47</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -591,14 +591,13 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       <div class="view-header">
         <div class="view-title">고객사 <span>특별 단가표</span></div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-gold btn-sm" onclick="openCapture('special')">📸 캡처</button>
-          <button class="btn btn-outline btn-sm" onclick="copyAllSpecial()">📋 전체 텍스트 복사</button>
+          <button class="btn btn-gold btn-sm" onclick="openCapture('special')" id="sp-capture-btn" style="display:none">📸 단가표 캡처</button>
+          <button class="btn btn-outline btn-sm" onclick="copyAllSpecial()" id="sp-copy-btn" style="display:none">📋 전체 텍스트 복사</button>
           <button class="btn btn-navy btn-sm" id="sp-add-btn" onclick="openAddCust()">+ 고객사 추가</button>
         </div>
       </div>
-      <!-- 고객사 검색형 콤보박스 -->
-      <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--shadow)">
-        <!-- 1차: 등급 필터 -->
+      <!-- 필터 + 고객사 검색 바 -->
+      <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow)">
         <div style="display:flex;align-items:center;gap:6px">
           <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap">등급</span>
           <div style="display:flex;gap:4px">
@@ -609,22 +608,22 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
           </div>
         </div>
         <div style="width:1px;height:28px;background:var(--border)"></div>
-        <!-- 2차: 고객사 검색 -->
-        <span style="font-size:12px;font-weight:700;color:var(--txt2);white-space:nowrap">고객사 선택</span>
+        <span style="font-size:12px;font-weight:700;color:var(--txt2);white-space:nowrap">고객사 검색</span>
         <div style="position:relative;flex:1;min-width:200px;max-width:320px">
           <input type="text" id="sp-search" class="search-input" placeholder="고객사명 검색..." oninput="filterCustList()" onfocus="showCustDropdown()" autocomplete="off" style="padding-left:12px">
           <div id="sp-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border2);border-radius:8px;box-shadow:var(--shadow-md);z-index:50;max-height:200px;overflow-y:auto;margin-top:4px"></div>
         </div>
+        <!-- 고객사 선택 후 정보 -->
         <div id="sp-cust-info" style="display:none;align-items:center;gap:10px;flex-wrap:wrap">
-          <button onclick="backToSpList()" style="padding:4px 8px;border-radius:6px;font-size:11px;color:var(--txt2);border:1.5px solid var(--border);background:none;cursor:pointer">← 목록</button>
+          <button onclick="backToSpList()" style="padding:4px 10px;border-radius:6px;font-size:11px;color:var(--txt2);border:1.5px solid var(--border);background:none;cursor:pointer">← 목록으로</button>
           <span style="font-size:13px;font-weight:700;color:var(--txt)" id="sp-cust-name"></span>
           <button id="sp-grade-badge" onclick="changeCustGrade()" style="padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:none"></button>
           <span style="font-size:11px;color:var(--txt2)" id="sp-grade-txt"></span>
           <button onclick="delSpecialCust()" style="padding:4px 10px;border-radius:6px;font-size:11px;color:var(--red);border:1.5px solid var(--red);background:none;cursor:pointer">삭제</button>
         </div>
       </div>
-      <!-- 고객사 카드 목록 (선택 전) -->
-      <div id="sp-empty" style="flex:1;overflow-y:auto;min-height:0">
+      <!-- 고객사 카드 목록 -->
+      <div id="sp-empty" style="flex:1;overflow-y:auto;min-height:0;padding-top:4px">
         <div id="sp-cust-cards" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
       <!-- 특별 단가 테이블 + 슬라이드 패널 -->
@@ -1454,8 +1453,9 @@ function sv(name,btn,skipHistory){
   else if(name==='cust')renderCust();
   else if(name==='admin'){renderAdminTbl();fillLevelSelects();fillCatList();renderTagMgmt();loadSeasonInput();}
   else if(name==='special'){
-    if(!specialCid)renderSpCustCards();
-    else renderSpecialTbl();
+    // 사이드바에서 진입 시 항상 카드 목록으로 초기화
+    backToSpList();
+    renderSpCustCards();
   }
   else if(name==='intro'){
     // 원단 소개 완전 초기화
@@ -2651,6 +2651,13 @@ function fillSpecialSel(){renderSpCustCards();}
 
 function renderSpCustCards(){
   const wrap=document.getElementById('sp-cust-cards');if(!wrap)return;
+  // 카드 목록 상태 → 캡처/복사 버튼 숨기기
+  if(!specialCid){
+    const capBtn=document.getElementById('sp-capture-btn');
+    const copyBtn=document.getElementById('sp-copy-btn');
+    if(capBtn)capBtn.style.display='none';
+    if(copyBtn)copyBtn.style.display='none';
+  }
   const isAdm=role==='superadmin'||role==='admin';
   const colors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
   const labels={silver:'SILVER',gold:'GOLD',vip:'VIP'};
@@ -2687,6 +2694,11 @@ function backToSpList(){
   document.getElementById('sp-cust-info').style.display='none';
   document.getElementById('sp-tbl-wrap').style.display='none';
   document.getElementById('sp-empty').style.display='flex';
+  // 카드 목록으로 돌아갈 때 캡처/복사 버튼 숨기기
+  const capBtn=document.getElementById('sp-capture-btn');
+  const copyBtn=document.getElementById('sp-copy-btn');
+  if(capBtn)capBtn.style.display='none';
+  if(copyBtn)copyBtn.style.display='none';
   renderSpCustCards();
 }
 function pickCustAndCapture(id){
@@ -2752,6 +2764,11 @@ function pickCust(id){
   document.getElementById('sp-empty').style.display='none';
   const wrap=document.getElementById('sp-tbl-wrap');
   wrap.style.display='flex';wrap.style.flex='1';wrap.style.flexDirection='column';wrap.style.minHeight='0';
+  // 단가표 진입 시 캡처/복사 버튼 표시
+  const capBtn=document.getElementById('sp-capture-btn');
+  const copyBtn=document.getElementById('sp-copy-btn');
+  if(capBtn)capBtn.style.display='inline-flex';
+  if(copyBtn)copyBtn.style.display='inline-flex';
   renderSpecialTbl();
 }
 function updSpCustInfo(){
