@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.65</title>
+<title>RECOVERIC 단가관리 시스템 v4.66</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.65</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.66</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -896,219 +896,17 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         <div class="view-title">Google Sheets <span>연동</span></div>
       </div>
       <div class="info-box">
-        <b>💡 협업 방식 안내:</b> Google Sheets가 데이터 저장소 역할을 합니다.<br>
-        이 HTML 앱 → Sheets 저장 / 불러오기로 동기화되며, 팀원들은 <b>Sheets를 직접 공유받아 열람·수정</b>할 수 있습니다.<br>
-        앱을 새로 열었을 때 "Sheets에서 불러오기"를 누르면 최신 데이터가 반영됩니다.
+        <b>⚡ Firebase 실시간 동기화:</b> 변경사항이 즉시 모든 기기에 반영됩니다.<br>
+        데이터베이스: <b>recoveric-price-default-rtdb.firebaseio.com</b>
       </div>
       <div class="card">
-        <div class="card-title">1단계: Google Sheet 만들고 공유하기</div>
-        <div class="step-list">
-          <div class="step-item"><div class="step-num">1</div><div class="step-txt"><a href="https://sheets.new" target="_blank" style="color:var(--blue)">sheets.new</a> 에서 새 스프레드시트를 만드세요</div></div>
-          <div class="step-item"><div class="step-num">2</div><div class="step-txt">오른쪽 위 <b>공유</b> 버튼 → 팀원 이메일 추가 → <b>편집자</b> 권한 부여 (팀원들이 직접 단가 수정도 가능)</div></div>
-          <div class="step-item"><div class="step-num">3</div><div class="step-txt">링크 공유 설정: <b>링크가 있는 사용자 → 편집자</b> 로 설정하면 이메일 없이도 공유 가능</div></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">2단계: Apps Script 설정 (최초 1회)</div>
-        <div class="step-list">
-          <div class="step-item"><div class="step-num">1</div><div class="step-txt">Sheets에서 <b>확장 프로그램 → Apps Script</b> 클릭</div></div>
-          <div class="step-item"><div class="step-num">2</div><div class="step-txt">기존 코드 전체 삭제 후 아래 코드를 붙여넣고 저장 (💾 Ctrl+S)</div></div>
-        </div>
-        <div class="code-wrap" id="gascode">// ══ RECOVERIC 단가관리 연동 스크립트 v4 ══
-// 현일텍스 주식회사 / recoveric.com
-// [설치] Apps Script → 전체선택(Ctrl+A) → 붙여넣기(Ctrl+V) → 저장 → 배포(웹 앱, 모든 사용자)
-
-function doPost(e) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  // text/plain;charset=utf-8 로 전송된 JSON 파싱
-  let data;
-  try {
-    data = JSON.parse(e.postData.contents);
-  } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({ok:false,err:err.message})).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  if (data.action === 'saveCustomers') {
-    const sh = ss.getSheetByName('고객사') || ss.insertSheet('고객사');
-    sh.clearContents();
-    sh.appendRow(['업체명','등급','특별단가(JSON)','저장일시']);
-    (data.customers||[]).forEach(c =>
-      sh.appendRow([c.name, c.grade, JSON.stringify(c.priceOverrides||{}), new Date().toLocaleString('ko-KR')])
-    );
-  }
-
-  if (data.action === 'saveFabrics') {
-    const sh = ss.getSheetByName('단가표') || ss.insertSheet('단가표');
-    sh.clearContents();
-    sh.appendRow(['ID','레벨','조직','품목명','8%MG','백백아이','무지','부속','부속단위','폭','gy','C','P','SP','R','태그','URL','설명']);
-    (data.fabrics||[]).forEach(f => {
-      if (!f.name || f.name === '품목명') return;
-      if (!f.level || f.level === 'level') return;
-      sh.appendRow([f.id,f.level,f.category||'',f.name,f.mg||'',f.baek||'',f.muji||'',f.rib||'',f.ribUnit||'',f.width||'',f.weight||'',f.c||0,f.p||0,f.sp||0,f.r||0,(f.tags||[]).join(','),f.url||'',f.description||'']);
-    });
-  }
-
-  if (data.action === 'saveLevels') {
-    const sh = ss.getSheetByName('라인설정') || ss.insertSheet('라인설정');
-    sh.clearContents();
-    sh.appendRow(['키(ID)','이름']);
-    (data.levels||[]).forEach(l => sh.appendRow([l.id, l.name]));
-  }
-
-  if (data.action === 'saveCategories') {
-    const sh = ss.getSheetByName('조직설정') || ss.insertSheet('조직설정');
-    sh.clearContents();
-    sh.appendRow(['조직명']);
-    (data.categories||[]).forEach(c => sh.appendRow([c]));
-  }
-
-  if (data.action === 'saveSettings') {
-    const sh = ss.getSheetByName('설정') || ss.insertSheet('설정');
-    sh.clearContents();
-    sh.appendRow(['키','값']);
-    sh.appendRow(['silver_discount', data.grades?.silver?.discount||0]);
-    sh.appendRow(['gold_discount',   data.grades?.gold?.discount||0]);
-    sh.appendRow(['vip_discount',    data.grades?.vip?.discount||0]);
-    sh.appendRow(['seasonName',      data.seasonName||'']);
-    if (data.tags)  sh.appendRow(['tags',  JSON.stringify(data.tags)]);
-    if (data.pins)  sh.appendRow(['pins',  JSON.stringify(data.pins)]);
-  }
-
-  // saveAll: 전체 일괄 저장 (no-cors 방식에서 사용)
-  if (data.action === 'saveAll') {
-    if (data.customers) {
-      const sh = ss.getSheetByName('고객사') || ss.insertSheet('고객사');
-      sh.clearContents();
-      sh.appendRow(['업체명','등급','특별단가(JSON)','저장일시']);
-      (data.customers||[]).forEach(c => sh.appendRow([c.name,c.grade,JSON.stringify(c.priceOverrides||{}),new Date().toLocaleString('ko-KR')]));
-    }
-    if (data.fabrics) {
-      const sh = ss.getSheetByName('단가표') || ss.insertSheet('단가표');
-      sh.clearContents();
-      sh.appendRow(['ID','레벨','조직','품목명','8%MG','백백아이','무지','부속','부속단위','폭','gy','C','P','SP','R','태그','URL','설명']);
-      (data.fabrics||[]).forEach(f => {
-        if (!f.name || f.name === '품목명') return;
-        if (!f.level || f.level === 'level') return;
-        sh.appendRow([f.id,f.level,f.category||'',f.name,f.mg||'',f.baek||'',f.muji||'',f.rib||'',f.ribUnit||'',f.width||'',f.weight||'',f.c||0,f.p||0,f.sp||0,f.r||0,(f.tags||[]).join(','),f.url||'',f.description||'']);
-      });
-    }
-    if (data.levels) {
-      const sh = ss.getSheetByName('라인설정') || ss.insertSheet('라인설정');
-      sh.clearContents(); sh.appendRow(['키(ID)','이름']);
-      (data.levels||[]).forEach(l => sh.appendRow([l.id,l.name]));
-    }
-    if (data.categories) {
-      const sh = ss.getSheetByName('조직설정') || ss.insertSheet('조직설정');
-      sh.clearContents(); sh.appendRow(['조직명']);
-      (data.categories||[]).forEach(c => sh.appendRow([c]));
-    }
-    if (data.grades) {
-      const sh = ss.getSheetByName('설정') || ss.insertSheet('설정');
-      sh.clearContents(); sh.appendRow(['키','값']);
-      sh.appendRow(['silver_discount', data.grades?.silver?.discount||0]);
-      sh.appendRow(['gold_discount',   data.grades?.gold?.discount||0]);
-      sh.appendRow(['vip_discount',    data.grades?.vip?.discount||0]);
-      sh.appendRow(['seasonName',      data.seasonName||'']);
-      if (data.tags) sh.appendRow(['tags', JSON.stringify(data.tags)]);
-      if (data.pins) sh.appendRow(['pins', JSON.stringify(data.pins)]);
-    }
-  }
-
-  // 모든 변경사항 즉시 커밋
-  try { SpreadsheetApp.flush(); } catch(ex) {}
-
-  return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
-}
-
-function doGet(e) {
-  const ss     = SpreadsheetApp.getActiveSpreadsheet();
-  const result = {};
-  // 캐시 무력화: SpreadsheetApp.flush() 후 읽기
-  try { SpreadsheetApp.flush(); } catch(ex) {}
-
-  const cs = ss.getSheetByName('고객사');
-  if (cs && cs.getLastRow() > 1) {
-    result.customers = cs.getDataRange().getValues().slice(1)
-      .filter(row => row[0])
-      .map((row, i) => ({id:i+1, name:row[0], grade:row[1], priceOverrides:JSON.parse(row[2]||'{}')}));
-  }
-
-  const fs = ss.getSheetByName('단가표');
-  if (fs && fs.getLastRow() > 1) {
-    result.fabrics = fs.getDataRange().getValues().slice(1)
-      .filter(row => row[0] && row[3] && row[3] !== '품목명')
-      .filter(row => row[1] && row[1] !== 'level')
-      .map(row => ({id:+row[0],level:row[1],category:row[2]||'',name:row[3],
-        mg:row[4]||null,baek:row[5]||null,muji:row[6]||null,rib:row[7]||null,
-        ribUnit:row[8]||undefined,width:row[9]||null,weight:row[10]||null,
-        c:+row[11]||0,p:+row[12]||0,sp:+row[13]||0,r:+row[14]||0,
-        tags:row[15]?String(row[15]).split(',').filter(Boolean):[],
-        url:row[16]||null,description:row[17]||null}));
-  }
-
-  // 라인설정: 항상 배열 반환 (빈 배열 = 전체 삭제 신호)
-  const ls = ss.getSheetByName('라인설정');
-  result.levels = (ls && ls.getLastRow() > 1)
-    ? ls.getDataRange().getValues().slice(1).filter(row=>row[0]).map(row=>({id:row[0],name:row[1]}))
-    : [];
-
-  // 조직설정: 항상 배열 반환
-  const cs2 = ss.getSheetByName('조직설정');
-  result.categories = (cs2 && cs2.getLastRow() > 1)
-    ? cs2.getDataRange().getValues().slice(1).filter(row=>row[0]).map(row=>row[0])
-    : [];
-
-  const stSheet = ss.getSheetByName('설정');
-  if (stSheet && stSheet.getLastRow() > 1) {
-    const rows = stSheet.getDataRange().getValues().slice(1);
-    const map = {};
-    rows.forEach(r => { if(r[0]) map[r[0]] = r[1]; });
-    if (map.silver_discount !== undefined) {
-      result.grades = {
-        silver: { discount: +map.silver_discount||0 },
-        gold:   { discount: +map.gold_discount||0 },
-        vip:    { discount: +map.vip_discount||0 },
-      };
-    }
-    if (map.seasonName) result.seasonName = map.seasonName;
-    // 태그: 항상 배열 반환 (빈 배열 = 전체 삭제 신호)
-    if (map.tags) { try { result.tags = JSON.parse(map.tags); } catch(e) { result.tags=[]; } }
-    else { result.tags = []; }
-    if (map.pins)  { try { result.pins  = JSON.parse(map.pins);  } catch(e) {} }
-  } else {
-    result.tags = [];
-  }
-
-  const json = JSON.stringify(result);
-  const cb = e.parameter && e.parameter.callback;
-  if (cb) {
-    return ContentService.createTextOutput(cb + '(' + json + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
-  return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
-}</div>
-        <div style="margin:10px 0 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-gold" onclick="copyGas()" style="font-size:13px;padding:10px 20px">
-            📋 Apps Script 코드 전체 복사
-          </button>
-          <span style="font-size:12px;color:var(--txt2)">← 클릭 후 Apps Script 편집창에 붙여넣기(Ctrl+A → Ctrl+V)</span>
-        </div>
-        <div class="step-list">
-          <div class="step-item"><div class="step-num">3</div><div class="step-txt"><b>배포 → 새 배포</b> 클릭 → 유형: 웹 앱 → 액세스: <b>모든 사용자</b> → <b>배포</b></div></div>
-          <div class="step-item"><div class="step-num">4</div><div class="step-txt">생성된 URL을 아래에 붙여넣기 (한 번만 설정하면 팀원 모두 동일 URL 사용)</div></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">3단계: URL 입력 및 동기화</div>
-        <div class="fg" style="margin-bottom:14px">
-          <label class="flabel">Apps Script 웹 앱 URL</label>
-          <input class="finput" id="surl" placeholder="https://script.google.com/macros/s/..." oninput="saveSUrl()" style="width:100%;max-width:600px;font-size:12px">
-        </div>
+        <div class="card-title">동기화 관리</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-green btn-sm" onclick="syncTo()">⬆ Sheets에 저장</button>
-          <button class="btn btn-outline btn-sm" onclick="syncFrom()">⬇ Sheets에서 불러오기</button>
+          <button class="btn btn-green btn-sm" onclick="syncTo()">⬆ Firebase에 저장 (강제)</button>
+          <button class="btn btn-outline btn-sm" onclick="syncFrom()">⬇ Firebase에서 불러오기</button>
         </div>
         <p id="sync-st" style="font-size:12px;margin-top:10px;color:var(--txt2)"></p>
-        <div style="margin-top:16px;padding:14px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--txt2);line-height:1.8">
+     <div style="margin-top:16px;padding:14px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--txt2);line-height:1.8">
           <b style="color:var(--txt)">📋 직원 공유 방법:</b><br>
           ① 이 HTML 파일을 카카오톡/메일로 팀원에게 전달<br>
           ② 팀원이 파일을 열어 PIN 입력 후 접속<br>
@@ -1305,10 +1103,10 @@ function save(){
   try{ localStorage.setItem('rcv2',JSON.stringify(ST)); }catch(e){}
 }
 // 변경된 데이터 타입만 추적
-function saveFabricsDirty(){save();window._dirtyFabrics=true;window._lastSavedF=Date.now();autoSyncTo();}
-function saveCustomersDirty(){save();window._dirtyCustomers=true;window._lastSavedC=Date.now();autoSyncTo();}
-function saveSettingsDirty(){save();window._dirtySettings=true;window._lastSavedS=Date.now();autoSyncTo();}
-function saveAllDirty(){save();window._dirtyFabrics=true;window._dirtyCustomers=true;window._dirtySettings=true;window._lastSavedF=window._lastSavedC=window._lastSavedS=Date.now();autoSyncTo();}
+function saveFabricsDirty(){save();fbWrite();}
+function saveCustomersDirty(){save();fbWrite();}
+function saveSettingsDirty(){save();fbWrite();}
+function saveAllDirty(){save();fbWrite();}
 function migrate(old){
   // 항상 최신 기본값에서 시작
   const s=JSON.parse(JSON.stringify(DSTATE));
@@ -1421,15 +1219,12 @@ function init(){
   initIntroSelects();
   renderTbl();renderCust();renderAdminTbl();loadDisc();
   renderByLine();renderByCat();renderByApparel();
-  document.getElementById('surl').value=ST.sheetsUrl||'';
+  // Firebase URL은 코드에 고정됨 (설정 불필요)
   const fc=document.getElementById('float-capture');
   if(fc)fc.classList.add('visible');
-  autoLoadFrom();
-  // 30초마다 자동 갱신 (저장 직후에는 건너뜀)
+  fbRead();
   if(window._autoRefreshTimer)clearInterval(window._autoRefreshTimer);
-  window._autoRefreshTimer=setInterval(()=>{
-    if(role&&!window._isSyncing)autoLoadFrom();
-  },5000);
+  window._autoRefreshTimer=setInterval(()=>{if(role)fbRead();},5000);
   // 초기 진입 hash 처리
   if(window._initialView&&window._initialView!=='price'){
     sv(window._initialView,null,false);
@@ -2517,41 +2312,113 @@ function copyGas(){
     .catch(()=>showCopyPopup(text));
 }
 async function syncTo(){
-  const url=ST.sheetsUrl;if(!url){toast('URL 입력 필요','error');return;}
   const st=document.getElementById('sync-st');
   st.textContent='저장 중...';
-  try{
-    await gasPost(url,{action:'saveCustomers',customers:ST.customers});
-    await gasPost(url,{action:'saveFabrics',fabrics:ST.fabrics});
-    await gasPost(url,{action:'saveLevels',levels:ST.levels||[]});
-    await gasPost(url,{action:'saveCategories',categories:ST.categories||[]});
-    await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||'',tags:ST.tags||[],pins:ST.pins});
-    st.textContent='✅ 전체 저장 완료 '+new Date().toLocaleTimeString('ko-KR');
-    toast('Google Sheets 저장 완료','success');
-  }catch(e){st.textContent='❌ 오류: '+e.message;toast('연결 실패','error');}
+  _fbLastWrite=0;
+  await fbWrite();
+  st.textContent='✅ 전체 저장 완료 '+new Date().toLocaleTimeString('ko-KR');
+  toast('Firebase 저장 완료','success');
 }
 async function syncFrom(){
-  const url=ST.sheetsUrl;if(!url){toast('URL 입력 필요','error');return;}
   document.getElementById('sync-st').textContent='불러오는 중...';
-  try{
-    const r=await fetch(url);const d=await r.json();
-    if(d.customers){ST.customers=d.customers.map(c=>({...c,grade:(c.grade||'silver').toLowerCase()}));ST.nextCid=Math.max(...ST.customers.map(c=>c.id||0),0)+1;}
-    if(d.fabrics){ST.fabrics=d.fabrics;ST.nextFid=Math.max(...ST.fabrics.map(f=>f.id||0),0)+1;}
-    if(d.levels&&d.levels.length)ST.levels=d.levels;
-    if(d.categories&&d.categories.length)ST.categories=d.categories;
-    if(d.pins){ST.pins={...ST.pins,...d.pins};}
-    if(d.grades)ST.grades=d.grades;
-    if(d.seasonName)ST.seasonName=d.seasonName;
-    if(d.tags&&d.tags.length)ST.tags=d.tags;
-    save();fillLevelSelects();fillCatList();fillSpecialSel();renderTbl();renderCust();renderAdminTbl();renderSpCustCards();
-    document.getElementById('sync-st').textContent='✅ 불러오기 완료 ('+new Date().toLocaleTimeString('ko-KR')+')';
-    toast('최신 데이터 불러오기 완료','success');
-  }catch(e){document.getElementById('sync-st').textContent='❌ 오류: '+e.message;toast('연결 실패','error');}
+  _fbLastWrite=0;
+  await fbRead();
+  document.getElementById('sync-st').textContent='✅ 불러오기 완료 ('+new Date().toLocaleTimeString('ko-KR')+')';
+  toast('최신 데이터 불러오기 완료','success');
 }
 
-// ─ 자동 동기화 ─
+// ─ Firebase Realtime Database 동기화 ─
+const FB_URL='https://recoveric-price-default-rtdb.firebaseio.com';
+let _fbPending=false,_fbQueued=false,_fbLastWrite=0;
+
+function getFBState(){
+  return {
+    customers:ST.customers||[],fabrics:ST.fabrics||[],
+    levels:ST.levels||[],categories:ST.categories||[],
+    tags:ST.tags||[],grades:ST.grades,
+    seasonName:ST.seasonName||'',pins:ST.pins||{},
+    updatedAt:Date.now()
+  };
+}
+
+async function fbWrite(){
+  if(_fbPending){_fbQueued=true;return;}
+  _fbPending=true;_fbQueued=false;
+  try{
+    const r=await fetch(FB_URL+'/rcv.json',{
+      method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(getFBState())
+    });
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    _fbLastWrite=Date.now();
+    console.log('[Firebase] 저장 완료');
+    showSyncStatus('☁ 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
+  }catch(e){
+    console.error('[Firebase] 저장 실패:',e.message);
+    showSyncStatus('⚠ 저장 실패',false);
+  }finally{
+    _fbPending=false;
+    if(_fbQueued)fbWrite();
+  }
+}
+
+async function fbRead(){
+  if(_fbPending)return;
+  if(_fbLastWrite&&Date.now()-_fbLastWrite<5000)return;
+  try{
+    const r=await fetch(FB_URL+'/rcv.json?t='+Date.now());
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(!d)return;
+    if(_fbPending)return;
+    if(_fbLastWrite&&Date.now()-_fbLastWrite<5000)return;
+    let updated=false;
+    if(d.customers!==undefined){
+      const next=(d.customers||[]).map(c=>({...c,grade:(c.grade||'silver').toLowerCase()}));
+      if(JSON.stringify(next)!==JSON.stringify(ST.customers||[])){
+        ST.customers=next;ST.nextCid=Math.max(...next.map(c=>c.id||0),0)+1;updated=true;
+      }
+    }
+    if(d.fabrics!==undefined){
+      const next=d.fabrics||[];
+      if(JSON.stringify(next)!==JSON.stringify(ST.fabrics||[])){
+        ST.fabrics=next;ST.nextFid=Math.max(...next.map(f=>f.id||0),0)+1;updated=true;
+      }
+    }
+    if(d.levels!==undefined){
+      const next=d.levels||[];
+      if(JSON.stringify(next)!==JSON.stringify(ST.levels||[])){ST.levels=next;updated=true;}
+    }
+    if(d.categories!==undefined){
+      const next=d.categories||[];
+      if(JSON.stringify(next)!==JSON.stringify(ST.categories||[])){ST.categories=next;updated=true;}
+    }
+    if(d.tags!==undefined){
+      const next=d.tags||[];
+      if(JSON.stringify(next)!==JSON.stringify(ST.tags||[])){ST.tags=next;updated=true;}
+    }
+    if(d.grades&&JSON.stringify(d.grades)!==JSON.stringify(ST.grades)){ST.grades=d.grades;updated=true;}
+    if(d.seasonName&&d.seasonName!==ST.seasonName){ST.seasonName=d.seasonName;updated=true;}
+    if(d.pins){
+      const merged={...ST.pins,...d.pins};
+      if(JSON.stringify(merged)!==JSON.stringify(ST.pins)){ST.pins=merged;updated=true;}
+    }
+    if(updated){
+      console.log('[Firebase] 데이터 업데이트');
+      localStorage.setItem('rcv2',JSON.stringify(ST));
+      fillLevelSelects();fillCatList();fillSpecialSel();
+      renderTbl();renderCust();renderByLine();renderByCat();renderByApparel();
+      renderTagBtns();renderTagMgmt();renderAdminTbl();
+      renderSpecialTbl();renderSpCustCards();
+      if(typeof introFid!=='undefined'&&introFid)renderIntro(introFid);
+      initIntroSelects();loadSeasonInput();
+      showSyncStatus('☁ '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 동기화됨');
+    }
+  }catch(e){console.log('[Firebase] 읽기 실패:',e.message);}
+}
+
+// ─ 자동 동기화 상태 표시 ─
 function showSyncStatus(msg,ok=true){
-  // 사이드바 하단에 작은 상태 표시
   let el=document.getElementById('auto-sync-status');
   if(!el){
     el=document.createElement('div');el.id='auto-sync-status';
@@ -2562,131 +2429,6 @@ function showSyncStatus(msg,ok=true){
   el.style.color=ok?'rgba(62,201,138,.8)':'rgba(224,85,85,.8)';
 }
 
-// Apps Script POST: fetch + text/plain 헤더 (file:// 환경에서도 작동)
-function gasPost(url, data){
-  return fetch(url, {
-    method: 'POST',
-    headers: {'Content-Type': 'text/plain;charset=utf-8'},
-    body: JSON.stringify(data),
-    redirect: 'follow'
-  });
-}
-
-async function autoSyncTo(){
-  const url=ST.sheetsUrl;if(!url)return;
-  if(window._isSyncing)return;
-  // dirty 플래그 스냅샷 후 즉시 초기화 (중복 실행 방지)
-  const dirtyF=window._dirtyFabrics;
-  const dirtyC=window._dirtyCustomers;
-  const dirtyS=window._dirtySettings;
-  if(!dirtyF&&!dirtyC&&!dirtyS)return;
-  window._dirtyFabrics=false;
-  window._dirtyCustomers=false;
-  window._dirtySettings=false;
-  window._isSyncing=true;
-  console.log('[SyncTo] 저장 시작 - fabrics:'+dirtyF+', customers:'+dirtyC+', settings:'+dirtyS);
-  try{
-    if(dirtyC)await gasPost(url,{action:'saveCustomers',customers:ST.customers});
-    if(dirtyF)await gasPost(url,{action:'saveFabrics',fabrics:ST.fabrics});
-    if(dirtyS){
-      await gasPost(url,{action:'saveLevels',levels:ST.levels||[]});
-      await gasPost(url,{action:'saveCategories',categories:ST.categories||[]});
-      await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||'',tags:ST.tags||[],pins:ST.pins});
-    }
-    console.log('[SyncTo] 저장 완료');
-    showSyncStatus('☁ 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
-  }catch(e){
-    // 실패 시 dirty 복원 (재시도 가능하도록)
-    if(dirtyF)window._dirtyFabrics=true;
-    if(dirtyC)window._dirtyCustomers=true;
-    if(dirtyS)window._dirtySettings=true;
-    console.error('[SyncTo] 저장 실패:', e);
-    showSyncStatus('⚠ 저장 실패',false);
-  }finally{
-    window._isSyncing=false;
-  }
-}
-
-async function autoLoadFrom(){
-  const url=ST.sheetsUrl;if(!url)return;
-  if(window._isSyncing)return;
-  // dirty 사전 체크 (빠른 종료)
-  if(window._dirtyFabrics||window._dirtyCustomers||window._dirtySettings)return;
-  try{
-    const r=await fetch(url+'?t='+Date.now(),{cache:'no-store'});
-    const d=await r.json();
-    console.log('[LoadFrom] Sheets 응답 - customers:'+d.customers?.length+', fabrics:'+d.fabrics?.length);
-    // fetch 완료 후 가드·dirty 재평가 (fetch 도중 변경이 발생했을 수 있음)
-    if(window._dirtyFabrics||window._dirtyCustomers||window._dirtySettings)return;
-    const _now2=Date.now();
-    const _gC=window._lastSavedC&&_now2-window._lastSavedC<20000;
-    const _gF=window._lastSavedF&&_now2-window._lastSavedF<20000;
-    const _gS=window._lastSavedS&&_now2-window._lastSavedS<20000;
-    let updated=false;
-    if(!_gC&&d.customers&&d.customers.length){
-      const seenCust=new Set();
-      const next=d.customers.filter(c=>{
-        const k=c.name.trim().toLowerCase();
-        if(seenCust.has(k))return false;
-        seenCust.add(k);return true;
-      }).map(c=>({...c,grade:(c.grade||'silver').toLowerCase()}));
-      // 변경 감지: 내용이 다를 때만 교체
-      if(JSON.stringify(next)!==JSON.stringify(ST.customers||[])){
-        ST.customers=next;
-        ST.nextCid=Math.max(...ST.customers.map(c=>c.id||0),0)+1;
-        updated=true;
-      }
-    }
-    if(!_gF&&d.fabrics&&d.fabrics.length){
-      const seenIds=new Set(),seenKeys=new Set();
-      const next=d.fabrics.filter(f=>{
-        const k=`${f.level}|${f.name}`;
-        if(seenIds.has(f.id)||seenKeys.has(k))return false;
-        seenIds.add(f.id);seenKeys.add(k);return true;
-      });
-      // 변경 감지: 개수 또는 내용이 다를 때만 교체
-      if(JSON.stringify(next)!==JSON.stringify(ST.fabrics||[])){
-        ST.fabrics=next;
-        ST.nextFid=Math.max(...ST.fabrics.map(f=>f.id||0),0)+1;
-        updated=true;
-      }
-    }
-    if(!_gS&&d.levels!==undefined){
-      // 단순 교체: Sheets가 정답 (삭제도 반영)
-      const next=d.levels||[];
-      if(JSON.stringify(next)!==JSON.stringify(ST.levels||[])){ST.levels=next;updated=true;}
-    }
-    if(!_gS&&d.categories!==undefined){
-      const next=d.categories||[];
-      if(JSON.stringify(next)!==JSON.stringify(ST.categories||[])){ST.categories=next;updated=true;}
-    }
-    if(!_gS&&d.grades&&JSON.stringify(d.grades)!==JSON.stringify(ST.grades)){ST.grades=d.grades;updated=true;}
-    if(!_gS&&d.seasonName&&d.seasonName!==ST.seasonName){ST.seasonName=d.seasonName;updated=true;}
-    if(!_gS&&d.pins){
-      // 안전 병합: 누락된 키는 기존값 유지 (완전 교체 금지)
-      const merged={...ST.pins,...d.pins};
-      if(JSON.stringify(merged)!==JSON.stringify(ST.pins)){ST.pins=merged;updated=true;}
-    }
-    if(!_gS&&d.tags!==undefined){
-      const next=d.tags||[];
-      if(JSON.stringify(next)!==JSON.stringify(ST.tags||[])){ST.tags=next;updated=true;}
-    }
-    if(updated){
-      console.log('[LoadFrom] 데이터 업데이트 - 화면 갱신');
-      localStorage.setItem('rcv2',JSON.stringify(ST));
-      fillLevelSelects();fillCatList();fillSpecialSel();
-      renderTbl();renderCust();renderByLine();renderByCat();renderByApparel();
-      renderTagBtns();renderTagMgmt();renderAdminTbl();
-      renderSpecialTbl();renderSpCustCards();
-      if(typeof introFid!=='undefined'&&introFid)renderIntro(introFid);
-      initIntroSelects();
-      loadSeasonInput();
-      showSyncStatus('☁ '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 동기화됨');
-    }
-  }catch(e){
-    console.log('[Sync] 불러오기 실패:',e.message);
-  }
-}
 
 // ─ Modal ─
 function openM(title,content,acts){
