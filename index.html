@@ -1008,6 +1008,7 @@ function doPost(e) {
       sh.appendRow(['gold_discount',   data.grades?.gold?.discount||0]);
       sh.appendRow(['vip_discount',    data.grades?.vip?.discount||0]);
       sh.appendRow(['seasonName',      data.seasonName||'']);
+      if (data.tags) sh.appendRow(['tags', JSON.stringify(data.tags)]);
     }
   }
 
@@ -2579,8 +2580,8 @@ async function autoLoadFrom(){
       localStorage.setItem('rcv2',JSON.stringify(ST));
       fillLevelSelects();fillCatList();fillSpecialSel();
       renderTbl();renderCust();renderByLine();renderByCat();renderByApparel();
-      renderTagBtns();renderTagMgmt();
-      renderSpecialTbl();
+      renderTagBtns();renderTagMgmt();renderAdminTbl();
+      renderSpecialTbl();renderSpCustCards();
       if(typeof introFid!=='undefined'&&introFid)renderIntro(introFid);
       initIntroSelects();
       loadSeasonInput();
@@ -2689,6 +2690,7 @@ function renderSpCustCards(){
       <div style="display:flex;gap:8px;flex-shrink:0" onclick="event.stopPropagation()">
         <button class="btn btn-gold btn-sm" onclick="pickCust(${c.id})" style="font-size:12px;padding:7px 16px">단가표 보기</button>
         ${isAdm?`<button class="btn btn-outline btn-sm" onclick="pickCustAndCapture(${c.id})" style="font-size:12px;padding:7px 14px" title="단가표 이미지 캡처">📸 캡처</button>`:''}
+        ${isAdm?`<button class="btn btn-sm" onclick="confirmDelCust(${c.id})" style="font-size:12px;padding:7px 12px;background:#fff2f2;border:1.5px solid var(--red);color:var(--red);border-radius:8px;cursor:pointer;transition:.15s" onmouseover="this.style.background='#ffe0e0'" onmouseout="this.style.background='#fff2f2'">삭제</button>`:''}
       </div>
     </div>`;
   }).join('');
@@ -2798,16 +2800,48 @@ function setSpGrade(g){
   const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
   c.grade=g;saveCustomersDirty();updSpCustInfo();renderSpecialTbl();closeM();toast('등급 변경됨 ✓','success');
 }
+// 카드 목록에서 삭제 (팝업)
+function confirmDelCust(id){
+  const c=ST.customers.find(x=>x.id===id);if(!c)return;
+  const col={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'}[c.grade]||'#888';
+  openM('고객사 삭제',
+    `<div style="text-align:center;padding:8px 0">
+      <div style="font-size:32px;margin-bottom:12px">🗑</div>
+      <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:8px">
+        <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col};margin-right:6px">${(c.grade||'').toUpperCase()}</span>${c.name}
+      </div>
+      <div style="font-size:13px;color:var(--txt2);margin-bottom:4px">고객사를 삭제하시겠습니까?</div>
+      <div style="font-size:12px;color:var(--red)">삭제 후 복구할 수 없습니다.</div>
+    </div>`,
+    [{label:'삭제',cls:'btn-danger',fn:()=>{
+      ST.customers=ST.customers.filter(x=>x.id!==id);
+      if(specialCid===id)backToSpList();
+      saveCustomersDirty();fillSpecialSel();renderCust();renderSpCustCards();closeM();toast('삭제됨','success');
+    }},{label:'취소',cls:'btn-outline',fn:closeM}]
+  );
+}
 function delSpecialCust(){
   const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
-  if(!confirm(`"${c.name}" 고객사를 삭제하시겠습니까?`))return;
-  ST.customers=ST.customers.filter(x=>x.id!==specialCid);
-  specialCid=null;
-  document.getElementById('sp-search').value='';
-  document.getElementById('sp-cust-info').style.display='none';
-  document.getElementById('sp-empty').style.display='flex';
-  document.getElementById('sp-tbl-wrap').style.display='none';
-  saveCustomersDirty();renderCust();renderSpCustCards();toast('삭제됨','success');
+  const col={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'}[c.grade]||'#888';
+  openM('고객사 삭제',
+    `<div style="text-align:center;padding:8px 0">
+      <div style="font-size:32px;margin-bottom:12px">🗑</div>
+      <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:8px">
+        <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col};margin-right:6px">${(c.grade||'').toUpperCase()}</span>${c.name}
+      </div>
+      <div style="font-size:13px;color:var(--txt2);margin-bottom:4px">고객사를 삭제하시겠습니까?</div>
+      <div style="font-size:12px;color:var(--red)">삭제 후 복구할 수 없습니다.</div>
+    </div>`,
+    [{label:'삭제',cls:'btn-danger',fn:()=>{
+      ST.customers=ST.customers.filter(x=>x.id!==specialCid);
+      specialCid=null;
+      document.getElementById('sp-search').value='';
+      document.getElementById('sp-cust-info').style.display='none';
+      document.getElementById('sp-empty').style.display='block';
+      document.getElementById('sp-tbl-wrap').style.display='none';
+      saveCustomersDirty();fillSpecialSel();renderCust();renderSpCustCards();closeM();toast('삭제됨','success');
+    }},{label:'취소',cls:'btn-outline',fn:closeM}]
+  );
 }
 function openAddCust(){
   editCid=null;
