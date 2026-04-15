@@ -1301,10 +1301,10 @@ function save(){
   try{ localStorage.setItem('rcv2',JSON.stringify(ST)); }catch(e){}
 }
 // 변경된 데이터 타입만 추적
-function saveFabricsDirty(){save();window._dirtyFabrics=true;autoSyncTo();}
-function saveCustomersDirty(){save();window._dirtyCustomers=true;autoSyncTo();}
-function saveSettingsDirty(){save();window._dirtySettings=true;autoSyncTo();}
-function saveAllDirty(){save();window._dirtyFabrics=true;window._dirtyCustomers=true;window._dirtySettings=true;autoSyncTo();}
+function saveFabricsDirty(){save();window._dirtyFabrics=true;window._lastSavedF=Date.now();autoSyncTo();}
+function saveCustomersDirty(){save();window._dirtyCustomers=true;window._lastSavedC=Date.now();autoSyncTo();}
+function saveSettingsDirty(){save();window._dirtySettings=true;window._lastSavedS=Date.now();autoSyncTo();}
+function saveAllDirty(){save();window._dirtyFabrics=true;window._dirtyCustomers=true;window._dirtySettings=true;window._lastSavedF=window._lastSavedC=window._lastSavedS=Date.now();autoSyncTo();}
 function migrate(old){
   // 항상 최신 기본값에서 시작
   const s=JSON.parse(JSON.stringify(DSTATE));
@@ -2567,10 +2567,6 @@ async function autoSyncTo(){
       await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||'',tags:ST.tags||[],pins:ST.pins});
     }
     console.log('[SyncTo] 저장 완료');
-    // 타입별 저장 시각 기록 (각 타입만 15초 차단)
-    if(dirtyC)window._lastSavedC=Date.now();
-    if(dirtyF)window._lastSavedF=Date.now();
-    if(dirtyS)window._lastSavedS=Date.now();
     showSyncStatus('☁ 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
   }catch(e){
     // 실패 시 dirty 복원 (재시도 가능하도록)
@@ -2589,9 +2585,9 @@ async function autoLoadFrom(){
   if(window._isSyncing)return;
   // 타입별 저장 직후 15초 차단 (각 타입 독립적으로 처리)
   const _now=Date.now();
-  const _gC=window._lastSavedC&&_now-window._lastSavedC<15000; // 고객사 가드
-  const _gF=window._lastSavedF&&_now-window._lastSavedF<15000; // 원단 가드
-  const _gS=window._lastSavedS&&_now-window._lastSavedS<15000; // 설정 가드
+  const _gC=window._lastSavedC&&_now-window._lastSavedC<20000; // 고객사 가드
+  const _gF=window._lastSavedF&&_now-window._lastSavedF<20000; // 원단 가드
+  const _gS=window._lastSavedS&&_now-window._lastSavedS<20000; // 설정 가드
   // 로컬 미저장 변경사항 있으면 해당 타입 차단
   if(window._dirtyFabrics||window._dirtyCustomers||window._dirtySettings)return;
   try{
