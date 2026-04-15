@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.76</title>
+<title>RECOVERIC 단가관리 시스템 v4.77</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -424,7 +424,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.76</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.77</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1700,7 +1700,7 @@ function saveSlidePanel(){
     if(!catVal){toast('조직명을 입력하세요','error');return;}
     const name=nameEl.value.trim();
     if(!name){toast('품목명을 입력하세요','error');return;}
-    const tags=[...document.querySelectorAll('#slide-panel-body input[type=checkbox]:checked')].map(c=>c.value);
+    const tags=[...document.querySelectorAll('#slide-panel-body input[type=checkbox]:checked')].map(c=>c.value).filter(v=>v&&v!=='on');
     ST.fabrics[idx]=Object.assign({},f,{
       level:lvEl.value, category:catVal, name,
       mg:parseInt(g('sp-mg')?.value)||null,
@@ -2349,7 +2349,7 @@ function saveF(){
   const catVal=catSel==='_new'?(document.getElementById('fc-new')?.value.trim()||''):catSel;
   const name=document.getElementById('fn').value.trim();
   if(!name){toast('품목명 필요','error');return;}
-  const tags=[...document.querySelectorAll('#m-content input[type=checkbox]:checked')].map(c=>c.value);
+  const tags=[...document.querySelectorAll('#m-content input[type=checkbox]:checked')].map(c=>c.value).filter(v=>v&&v!=='on');
   const d={level:document.getElementById('fl').value,category:catVal||'기타',name,
     mg:parseInt(document.getElementById('fmg').value)||null,baek:parseInt(document.getElementById('fbk').value)||null,
     muji:parseInt(document.getElementById('fmj').value)||null,rib:parseInt(document.getElementById('frb').value)||null,
@@ -2480,7 +2480,7 @@ async function fbRead(){
       }
     }
     if(d.fabrics!==undefined){
-      const next=d.fabrics||[];
+      const next=(d.fabrics||[]).map(f=>({...f,tags:(f.tags||[]).filter(t=>t&&t!=='on')}));
       if(JSON.stringify(next)!==JSON.stringify(ST.fabrics||[])){
         ST.fabrics=next;ST.nextFid=Math.max(...next.map(f=>f.id||0),0)+1;updated=true;
       }
