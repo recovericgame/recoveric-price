@@ -970,7 +970,8 @@ function doPost(e) {
     sh.appendRow(['gold_discount',   data.grades?.gold?.discount||0]);
     sh.appendRow(['vip_discount',    data.grades?.vip?.discount||0]);
     sh.appendRow(['seasonName',      data.seasonName||'']);
-    if (data.tags) sh.appendRow(['tags', JSON.stringify(data.tags)]);
+    if (data.tags)  sh.appendRow(['tags',  JSON.stringify(data.tags)]);
+    if (data.pins)  sh.appendRow(['pins',  JSON.stringify(data.pins)]);
   }
 
   // saveAll: 전체 일괄 저장 (no-cors 방식에서 사용)
@@ -1009,6 +1010,7 @@ function doPost(e) {
       sh.appendRow(['vip_discount',    data.grades?.vip?.discount||0]);
       sh.appendRow(['seasonName',      data.seasonName||'']);
       if (data.tags) sh.appendRow(['tags', JSON.stringify(data.tags)]);
+      if (data.pins) sh.appendRow(['pins', JSON.stringify(data.pins)]);
     }
   }
 
@@ -1069,7 +1071,8 @@ function doGet(e) {
       };
     }
     if (map.seasonName) result.seasonName = map.seasonName;
-    if (map.tags) { try { result.tags = JSON.parse(map.tags); } catch(e) {} }
+    if (map.tags)  { try { result.tags  = JSON.parse(map.tags);  } catch(e) {} }
+    if (map.pins)  { try { result.pins  = JSON.parse(map.pins);  } catch(e) {} }
   }
 
   const json = JSON.stringify(result);
@@ -1421,7 +1424,7 @@ function init(){
   if(window._autoRefreshTimer)clearInterval(window._autoRefreshTimer);
   window._autoRefreshTimer=setInterval(()=>{
     if(role&&!window._isSyncing)autoLoadFrom();
-  },10000);
+  },5000);
   // 초기 진입 hash 처리
   if(window._initialView&&window._initialView!=='price'){
     sv(window._initialView,null,false);
@@ -1592,8 +1595,19 @@ function editLevel(id){
 }
 function delLevel(id){
   if(ST.fabrics.some(f=>f.level===id)){toast('사용 중인 라인은 삭제할 수 없습니다','error');return;}
-  ST.levels=ST.levels.filter(l=>l.id!==id);
-  saveSettingsDirty();fillLevelSelects();toast('삭제됨','success');
+  const lv=ST.levels.find(l=>l.id===id);if(!lv)return;
+  openM('라인 삭제',
+    `<div style="text-align:center;padding:8px 0">
+      <div style="font-size:28px;margin-bottom:12px">🗑</div>
+      <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:8px">${lv.name}</div>
+      <div style="font-size:13px;color:var(--txt2);margin-bottom:4px">라인을 삭제하시겠습니까?</div>
+      <div style="font-size:12px;color:var(--red)">삭제 후 복구할 수 없습니다.</div>
+    </div>`,
+    [{label:'삭제',cls:'btn-danger',fn:()=>{
+      ST.levels=ST.levels.filter(l=>l.id!==id);
+      saveSettingsDirty();fillLevelSelects();closeM();toast('삭제됨','success');
+    }},{label:'취소',cls:'btn-outline',fn:closeM}]
+  );
 }
 function addCat(){
   const name=document.getElementById('new-cat').value.trim();
@@ -1619,8 +1633,18 @@ function editCat(oldName){
 }
 function delCat(name){
   if(ST.fabrics.some(f=>f.category===name)){toast('사용 중인 조직은 삭제할 수 없습니다','error');return;}
-  ST.categories=(ST.categories||[]).filter(c=>c!==name);
-  saveSettingsDirty();fillCatList();toast('삭제됨','success');
+  openM('조직 삭제',
+    `<div style="text-align:center;padding:8px 0">
+      <div style="font-size:28px;margin-bottom:12px">🗑</div>
+      <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:8px">${name}</div>
+      <div style="font-size:13px;color:var(--txt2);margin-bottom:4px">조직을 삭제하시겠습니까?</div>
+      <div style="font-size:12px;color:var(--red)">삭제 후 복구할 수 없습니다.</div>
+    </div>`,
+    [{label:'삭제',cls:'btn-danger',fn:()=>{
+      ST.categories=(ST.categories||[]).filter(c=>c!==name);
+      saveSettingsDirty();fillCatList();closeM();toast('삭제됨','success');
+    }},{label:'취소',cls:'btn-outline',fn:closeM}]
+  );
 }
 function fillCatFilter(){
   const cats=[...new Set(ST.fabrics.map(f=>f.category))];
@@ -2522,7 +2546,7 @@ async function autoSyncTo(){
     if(dirtyS){
       await gasPost(url,{action:'saveLevels',levels:ST.levels||[]});
       await gasPost(url,{action:'saveCategories',categories:ST.categories||[]});
-      await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||'',tags:ST.tags||[]});
+      await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||'',tags:ST.tags||[],pins:ST.pins});
     }
     console.log('[SyncTo] 저장 완료');
     window._lastSavedAt=Date.now();
@@ -2592,8 +2616,9 @@ async function autoLoadFrom(){
       const cur=JSON.stringify(ST.categories||[]);
       if(JSON.stringify(merged)!==cur){ST.categories=merged;updated=true;}
     }
-    if(d.grades){ST.grades=d.grades;updated=true;}
-    if(d.seasonName){ST.seasonName=d.seasonName;updated=true;}
+    if(d.grades&&JSON.stringify(d.grades)!==JSON.stringify(ST.grades)){ST.grades=d.grades;updated=true;}
+    if(d.seasonName&&d.seasonName!==ST.seasonName){ST.seasonName=d.seasonName;updated=true;}
+    if(d.pins&&JSON.stringify(d.pins)!==JSON.stringify(ST.pins)){ST.pins=d.pins;updated=true;}
     if(d.tags&&d.tags.length){
       // 병합: Sheets + 로컬에만 있는 태그 보존 (양쪽 합집합)
       const merged=[...new Set([...(ST.tags||[]),...d.tags])];
@@ -3405,11 +3430,20 @@ function addTag(){
   saveSettingsDirty();renderTagMgmt();renderTagBtns();renderByApparel();toast('태그 추가됨','success');
 }
 function delTag(name){
-  if(!confirm(`"${name}" 태그를 삭제하시겠습니까?`))return;
-  if(!ST.tags)ST.tags=[...TAGS];
-  ST.tags=ST.tags.filter(t=>t!==name);
-  ST.fabrics.forEach(f=>{f.tags=(f.tags||[]).filter(t=>t!==name);});
-  saveSettingsDirty();renderTagMgmt();renderTagBtns();renderByApparel();toast('삭제됨','success');
+  openM('태그 삭제',
+    `<div style="text-align:center;padding:8px 0">
+      <div style="font-size:28px;margin-bottom:12px">🗑</div>
+      <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:8px">${name}</div>
+      <div style="font-size:13px;color:var(--txt2);margin-bottom:4px">태그를 삭제하시겠습니까?</div>
+      <div style="font-size:12px;color:var(--red)">삭제 시 모든 원단에서 해당 태그가 제거됩니다.</div>
+    </div>`,
+    [{label:'삭제',cls:'btn-danger',fn:()=>{
+      if(!ST.tags)ST.tags=[...TAGS];
+      ST.tags=ST.tags.filter(t=>t!==name);
+      ST.fabrics.forEach(f=>{f.tags=(f.tags||[]).filter(t=>t!==name);});
+      saveSettingsDirty();renderTagMgmt();renderTagBtns();renderByApparel();closeM();toast('삭제됨','success');
+    }},{label:'취소',cls:'btn-outline',fn:closeM}]
+  );
 }
 
 // copyRSimple: 지정 할인율로 복사
