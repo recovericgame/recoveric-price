@@ -2552,29 +2552,54 @@ async function autoLoadFrom(){
     let updated=false;
     if(d.customers&&d.customers.length){
       const seenCust=new Set();
-      ST.customers=d.customers.filter(c=>{
+      const next=d.customers.filter(c=>{
         const k=c.name.trim().toLowerCase();
         if(seenCust.has(k))return false;
         seenCust.add(k);return true;
       }).map(c=>({...c,grade:(c.grade||'silver').toLowerCase()}));
-      ST.nextCid=Math.max(...ST.customers.map(c=>c.id||0),0)+1;
-      updated=true;
+      // 변경 감지: 개수 또는 내용이 다를 때만 교체
+      if(JSON.stringify(next)!==JSON.stringify(ST.customers||[])){
+        ST.customers=next;
+        ST.nextCid=Math.max(...ST.customers.map(c=>c.id||0),0)+1;
+        updated=true;
+      }
     }
     if(d.fabrics&&d.fabrics.length){
       const seenIds=new Set(),seenKeys=new Set();
-      ST.fabrics=d.fabrics.filter(f=>{
+      const next=d.fabrics.filter(f=>{
         const k=`${f.level}|${f.name}`;
         if(seenIds.has(f.id)||seenKeys.has(k))return false;
         seenIds.add(f.id);seenKeys.add(k);return true;
       });
-      ST.nextFid=Math.max(...ST.fabrics.map(f=>f.id||0),0)+1;
-      updated=true;
+      // 변경 감지: 개수 또는 내용이 다를 때만 교체
+      if(JSON.stringify(next)!==JSON.stringify(ST.fabrics||[])){
+        ST.fabrics=next;
+        ST.nextFid=Math.max(...ST.fabrics.map(f=>f.id||0),0)+1;
+        updated=true;
+      }
     }
-    if(d.levels&&d.levels.length){ST.levels=d.levels;updated=true;}
-    if(d.categories&&d.categories.length){ST.categories=d.categories;updated=true;}
+    if(d.levels&&d.levels.length){
+      // 병합: Sheets 기준 + 로컬에만 있는 라인 보존
+      const sheetIds=new Set(d.levels.map(l=>l.id));
+      const localOnly=(ST.levels||[]).filter(l=>!sheetIds.has(l.id));
+      const merged=[...d.levels,...localOnly];
+      const cur=JSON.stringify(ST.levels||[]);
+      if(JSON.stringify(merged)!==cur){ST.levels=merged;updated=true;}
+    }
+    if(d.categories&&d.categories.length){
+      // 병합: Sheets + 로컬에만 있는 조직 보존 (양쪽 합집합)
+      const merged=[...new Set([...(ST.categories||[]),...d.categories])];
+      const cur=JSON.stringify(ST.categories||[]);
+      if(JSON.stringify(merged)!==cur){ST.categories=merged;updated=true;}
+    }
     if(d.grades){ST.grades=d.grades;updated=true;}
     if(d.seasonName){ST.seasonName=d.seasonName;updated=true;}
-    if(d.tags&&d.tags.length){ST.tags=d.tags;updated=true;}
+    if(d.tags&&d.tags.length){
+      // 병합: Sheets + 로컬에만 있는 태그 보존 (양쪽 합집합)
+      const merged=[...new Set([...(ST.tags||[]),...d.tags])];
+      const cur=JSON.stringify(ST.tags||[]);
+      if(JSON.stringify(merged)!==cur){ST.tags=merged;updated=true;}
+    }
     if(updated){
       console.log('[LoadFrom] 데이터 업데이트 - 화면 갱신');
       localStorage.setItem('rcv2',JSON.stringify(ST));
