@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.47</title>
+<title>RECOVERIC 단가관리 시스템 v4.48</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.47</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.48</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -623,7 +623,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         </div>
       </div>
       <!-- 고객사 카드 목록 -->
-      <div id="sp-empty" style="flex:1;overflow-y:auto;min-height:0;padding-top:4px">
+      <div id="sp-empty" style="flex:1;overflow-y:auto;min-height:0;padding-top:4px;display:block">
         <div id="sp-cust-cards" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
       <!-- 특별 단가 테이블 + 슬라이드 패널 -->
@@ -2693,8 +2693,7 @@ function backToSpList(){
   closeSpSlidePanel();
   document.getElementById('sp-cust-info').style.display='none';
   document.getElementById('sp-tbl-wrap').style.display='none';
-  document.getElementById('sp-empty').style.display='flex';
-  // 카드 목록으로 돌아갈 때 캡처/복사 버튼 숨기기
+  document.getElementById('sp-empty').style.display='block';
   const capBtn=document.getElementById('sp-capture-btn');
   const copyBtn=document.getElementById('sp-copy-btn');
   if(capBtn)capBtn.style.display='none';
