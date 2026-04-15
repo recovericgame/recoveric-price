@@ -2337,7 +2337,7 @@ function saveC(){
   document.querySelectorAll('[data-fab]').forEach(inp=>{const v=parseInt(inp.value)||0;if(v!==0)overrides[inp.dataset.fab]=v;});
   if(editCid){const c=ST.customers.find(x=>x.id===editCid);if(c){c.name=name;c.grade=grade;c.overrides=overrides;}}
   else ST.customers.push({id:ST.nextCid++,name,grade,overrides});
-  save();fillSpecialSel();renderCust();renderSpecialTbl();closeM();toast('저장됨','success');
+  saveCustomersDirty();fillSpecialSel();renderCust();renderSpecialTbl();closeM();toast('저장됨','success');
 
 }
 function delC(id){if(!confirm('삭제?'))return;ST.customers=ST.customers.filter(c=>c.id!==id);if(specialCid===id){specialCid=null;document.getElementById('sp-search').value='';document.getElementById('sp-cust-info').style.display='none';document.getElementById('sp-empty').style.display='flex';document.getElementById('sp-tbl-wrap').style.display='none';}saveCustomersDirty();fillSpecialSel();renderCust();renderTbl();toast('삭제됨','success');}
@@ -2423,7 +2423,7 @@ function saveF(){
     sp:parseInt(document.getElementById('fcs').value)||0,r:parseInt(document.getElementById('fcr').value)||0,tags};
   if(editFid){const idx=ST.fabrics.findIndex(x=>x.id===editFid);if(idx>=0)ST.fabrics[idx]={...ST.fabrics[idx],...d};}
   else ST.fabrics.push({id:ST.nextFid++,...d});
-  save();fillLevelSelects();fillCatList();
+  saveFabricsDirty();fillLevelSelects();fillCatList();
   renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
   closeM();toast('저장됨','success');
 }
@@ -2437,7 +2437,7 @@ function saveDisc(){ST.grades.silver.discount=+document.getElementById('dsi').va
 function savePins(){
   const a=document.getElementById('p1').value.trim();const b=document.getElementById('p2').value.trim();const c=document.getElementById('p3').value.trim();
   if(a&&a.length===4)ST.pins.superadmin=a;if(b&&b.length===4)ST.pins.admin=b;if(c&&c.length===4)ST.pins.user=c;
-  save();document.getElementById('p1').value='';document.getElementById('p2').value='';document.getElementById('p3').value='';
+  saveSettingsDirty();document.getElementById('p1').value='';document.getElementById('p2').value='';document.getElementById('p3').value='';
   toast('PIN 변경 완료','success');
 }
 
@@ -2472,7 +2472,7 @@ async function syncFrom(){
     if(d.fabrics){ST.fabrics=d.fabrics;ST.nextFid=Math.max(...ST.fabrics.map(f=>f.id||0),0)+1;}
     if(d.levels&&d.levels.length)ST.levels=d.levels;
     if(d.categories&&d.categories.length)ST.categories=d.categories;
-    save();fillLevelSelects();fillCatList();fillSpecialSel();renderTbl();renderCust();renderAdminTbl();
+    save();fillLevelSelects();fillCatList();fillSpecialSel();renderTbl();renderCust();renderAdminTbl();renderSpCustCards();
     document.getElementById('sync-st').textContent='✅ 불러오기 완료 ('+new Date().toLocaleTimeString('ko-KR')+')';
     toast('최신 데이터 불러오기 완료','success');
   }catch(e){document.getElementById('sync-st').textContent='❌ 오류: '+e.message;toast('연결 실패','error');}
@@ -2639,7 +2639,7 @@ function saveSeasonName(){
   const v=(document.getElementById('season-input').value||'').trim();
   if(!v){toast('시즌명을 입력하세요','error');return;}
   ST.seasonName=v;
-  save();
+  saveSettingsDirty();
   const t=document.getElementById('season-title');
   if(t)t.textContent=v;
   toast('시즌명 저장됨 ✓','success');
@@ -3323,7 +3323,7 @@ function addTag(){
   if(!ST.tags)ST.tags=[...TAGS];
   if(ST.tags.includes(name))return toast('이미 존재하는 태그','error');
   ST.tags.push(name);inp.value='';
-  save();renderTagMgmt();renderTagBtns();renderByApparel();toast('태그 추가됨','success');
+  saveSettingsDirty();renderTagMgmt();renderTagBtns();renderByApparel();toast('태그 추가됨','success');
 }
 function delTag(name){
   if(!confirm(`"${name}" 태그를 삭제하시겠습니까?`))return;
@@ -3371,7 +3371,7 @@ function resetFabrics(){
       _fabricsUndo=JSON.parse(JSON.stringify(ST.fabrics));
       ST.fabrics=JSON.parse(JSON.stringify(DFABRICS));
       ST.nextFid=DFABRICS.length+1;
-      save();
+      saveFabricsDirty();
       renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
       fillLevelSelects();fillCatList();
       closeM();
@@ -3399,7 +3399,7 @@ function undoFabrics(toastEl){
   if(!_fabricsUndo){toast('되돌리기 시간이 만료됐습니다','error');return;}
   ST.fabrics=_fabricsUndo;
   _fabricsUndo=null;
-  save();
+  saveFabricsDirty();
   renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
   fillLevelSelects();fillCatList();
   if(toastEl)toastEl.remove();
