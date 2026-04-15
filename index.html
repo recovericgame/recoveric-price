@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.72</title>
+<title>RECOVERIC 단가관리 시스템 v4.74</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -424,7 +424,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.72</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.74</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -979,15 +979,15 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         <div class="cap-body">
           <table class="cap-tbl" id="captbl">
             <colgroup>
-              <col style="width:17%"><!-- 품목명 -->
-              <col style="width:9%"> <!-- 구분 -->
+              <col style="width:22%"><!-- 품목명 -->
+              <col style="width:8%"> <!-- 구분 -->
               <col style="width:9%"> <!-- 8%MG -->
               <col style="width:10%"><!-- 백/백아이 -->
               <col style="width:9%"> <!-- 무지 -->
               <col style="width:10%"><!-- 부속RIB -->
-              <col style="width:8%"> <!-- 폭 -->
+              <col style="width:7%"> <!-- 폭 -->
               <col style="width:6%"> <!-- g/y -->
-              <col style="width:22%"><!-- 혼용률 -->
+              <col style="width:19%"><!-- 혼용률 -->
             </colgroup>
             <thead><tr>
               <th style="text-align:left">품목명</th>
@@ -1792,8 +1792,8 @@ function downloadExcel(){
   try{
     const ws=XLSX.utils.aoa_to_sheet(rows);
     ws['!cols']=[{wch:16},{wch:10},{wch:8},{wch:10},{wch:8},{wch:8},{wch:8},{wch:8},{wch:6},{wch:8},{wch:6},{wch:4},{wch:4},{wch:4},{wch:4},{wch:24}];
-    const wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,'단가표',ws);
+    const wb={SheetNames:['Sheet1'],Sheets:{}};
+    wb.Sheets['Sheet1']=ws;
     const fname='RECOVERIC_단가표_'+new Date().toISOString().slice(0,10)+'.xlsx';
     XLSX.writeFile(wb,fname);
     toast('엑셀 다운로드 완료 ✓','success');
