@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.68</title>
+<title>RECOVERIC 단가관리 시스템 v4.69</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.68</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.69</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -824,16 +824,19 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         <div class="grade-row">
           <div class="grade-card">
             <div class="grade-card-name silver">⬤ Silver 등급</div>
-            <div class="disc-row"><input class="disc-inp" id="dsi" type="number" min="0" max="50" value="3" onchange="saveDisc()"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
+            <div class="disc-row"><input class="disc-inp" id="dsi" type="number" min="0" max="50" value="3"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
           </div>
           <div class="grade-card">
             <div class="grade-card-name gold">⬤ Gold 등급</div>
-            <div class="disc-row"><input class="disc-inp" id="dgi" type="number" min="0" max="50" value="5" onchange="saveDisc()"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
+            <div class="disc-row"><input class="disc-inp" id="dgi" type="number" min="0" max="50" value="5"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
           </div>
           <div class="grade-card">
             <div class="grade-card-name vip">⬤ VIP 등급</div>
-            <div class="disc-row"><input class="disc-inp" id="dvi" type="number" min="0" max="50" value="8" onchange="saveDisc()"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
+            <div class="disc-row"><input class="disc-inp" id="dvi" type="number" min="0" max="50" value="8"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
           </div>
+        </div>
+        <div style="margin-top:14px">
+          <button class="btn btn-gold btn-sm" onclick="saveDisc()">저장</button>
         </div>
       </div>
       <div class="card" id="pin-card">
