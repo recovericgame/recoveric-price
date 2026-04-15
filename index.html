@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.59</title>
+<title>RECOVERIC 단가관리 시스템 v4.64</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.59</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.64</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2367,7 +2367,19 @@ function saveC(){
   saveCustomersDirty();fillSpecialSel();renderCust();renderSpecialTbl();closeM();toast('저장됨','success');
 
 }
-function delC(id){if(!confirm('삭제?'))return;ST.customers=ST.customers.filter(c=>c.id!==id);if(specialCid===id){specialCid=null;document.getElementById('sp-search').value='';document.getElementById('sp-cust-info').style.display='none';document.getElementById('sp-empty').style.display='flex';document.getElementById('sp-tbl-wrap').style.display='none';}saveCustomersDirty();fillSpecialSel();renderCust();renderTbl();toast('삭제됨','success');}
+function delC(id){
+  const c=ST.customers.find(x=>x.id===id);if(!c)return;
+  openM('고객사 삭제',
+    `<div style="text-align:center;padding:8px 0"><div style="font-size:28px;margin-bottom:10px">🗑</div>
+     <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:6px">${c.name}</div>
+     <div style="font-size:12px;color:var(--red)">삭제 후 복구할 수 없습니다.</div></div>`,
+    [{label:'삭제',cls:'btn-danger',fn:()=>{
+      ST.customers=ST.customers.filter(x=>x.id!==id);
+      if(specialCid===id){specialCid=null;document.getElementById('sp-search').value='';document.getElementById('sp-cust-info').style.display='none';document.getElementById('sp-empty').style.display='flex';document.getElementById('sp-tbl-wrap').style.display='none';}
+      saveCustomersDirty();fillSpecialSel();renderCust();renderTbl();closeM();toast('삭제됨','success');
+    }},{label:'취소',cls:'btn-outline',fn:closeM}]
+  );
+}
 
 // ─ Admin Fabrics ─
 function renderAdminTbl(){
@@ -2454,7 +2466,18 @@ function saveF(){
   renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
   closeM();toast('저장됨','success');
 }
-function delF(id){if(!confirm('삭제?'))return;ST.fabrics=ST.fabrics.filter(f=>f.id!==id);saveFabricsDirty();fillLevelSelects();fillCatList();renderTbl();renderAdminTbl();toast('삭제됨','success');}
+function delF(id){
+  const f=ST.fabrics.find(x=>x.id===id);if(!f)return;
+  openM('원단 삭제',
+    `<div style="text-align:center;padding:8px 0"><div style="font-size:28px;margin-bottom:10px">🗑</div>
+     <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:6px">${f.name}</div>
+     <div style="font-size:12px;color:var(--red)">삭제 후 복구할 수 없습니다.</div></div>`,
+    [{label:'삭제',cls:'btn-danger',fn:()=>{
+      ST.fabrics=ST.fabrics.filter(x=>x.id!==id);
+      saveFabricsDirty();fillLevelSelects();fillCatList();renderTbl();renderAdminTbl();closeM();toast('삭제됨','success');
+    }},{label:'취소',cls:'btn-outline',fn:closeM}]
+  );
+}
 
 // ─ Grade discounts ─
 function loadDisc(){document.getElementById('dsi').value=ST.grades.silver?.discount??3;document.getElementById('dgi').value=ST.grades.gold?.discount??5;document.getElementById('dvi').value=ST.grades.vip?.discount??8;}
@@ -2583,17 +2606,18 @@ async function autoSyncTo(){
 async function autoLoadFrom(){
   const url=ST.sheetsUrl;if(!url)return;
   if(window._isSyncing)return;
-  // 타입별 저장 직후 15초 차단 (각 타입 독립적으로 처리)
-  const _now=Date.now();
-  const _gC=window._lastSavedC&&_now-window._lastSavedC<20000; // 고객사 가드
-  const _gF=window._lastSavedF&&_now-window._lastSavedF<20000; // 원단 가드
-  const _gS=window._lastSavedS&&_now-window._lastSavedS<20000; // 설정 가드
-  // 로컬 미저장 변경사항 있으면 해당 타입 차단
+  // dirty 사전 체크 (빠른 종료)
   if(window._dirtyFabrics||window._dirtyCustomers||window._dirtySettings)return;
   try{
     const r=await fetch(url+'?t='+Date.now(),{cache:'no-store'});
     const d=await r.json();
     console.log('[LoadFrom] Sheets 응답 - customers:'+d.customers?.length+', fabrics:'+d.fabrics?.length);
+    // fetch 완료 후 가드·dirty 재평가 (fetch 도중 변경이 발생했을 수 있음)
+    if(window._dirtyFabrics||window._dirtyCustomers||window._dirtySettings)return;
+    const _now2=Date.now();
+    const _gC=window._lastSavedC&&_now2-window._lastSavedC<20000;
+    const _gF=window._lastSavedF&&_now2-window._lastSavedF<20000;
+    const _gS=window._lastSavedS&&_now2-window._lastSavedS<20000;
     let updated=false;
     if(!_gC&&d.customers&&d.customers.length){
       const seenCust=new Set();
