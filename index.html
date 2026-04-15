@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.66</title>
+<title>RECOVERIC 단가관리 시스템 v4.68</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.66</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.68</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2400,8 +2400,7 @@ async function fbRead(){
     if(d.grades&&JSON.stringify(d.grades)!==JSON.stringify(ST.grades)){ST.grades=d.grades;updated=true;}
     if(d.seasonName&&d.seasonName!==ST.seasonName){ST.seasonName=d.seasonName;updated=true;}
     if(d.pins){
-      const merged={...ST.pins,...d.pins};
-      if(JSON.stringify(merged)!==JSON.stringify(ST.pins)){ST.pins=merged;updated=true;}
+      if(JSON.stringify(d.pins)!==JSON.stringify(ST.pins)){ST.pins=d.pins;updated=true;}
     }
     if(updated){
       console.log('[Firebase] 데이터 업데이트');
@@ -2411,7 +2410,7 @@ async function fbRead(){
       renderTagBtns();renderTagMgmt();renderAdminTbl();
       renderSpecialTbl();renderSpCustCards();
       if(typeof introFid!=='undefined'&&introFid)renderIntro(introFid);
-      initIntroSelects();loadSeasonInput();
+      initIntroSelects();loadSeasonInput();loadDisc();
       showSyncStatus('☁ '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 동기화됨');
     }
   }catch(e){console.log('[Firebase] 읽기 실패:',e.message);}
@@ -3191,7 +3190,8 @@ function openIntroEdit(){
       if(!fab){toast('원단을 찾을 수 없습니다','error');closeM();return;}
       fab.url=document.getElementById('ie-url').value.trim()||null;
       fab.description=document.getElementById('ie-desc').value.trim()||null;
-      saveFabricsDirty();renderIntro(introFid);closeM();toast('저장됨 ✓','success');
+      const cat=document.getElementById('intro-cat-sel')?.value||'';
+      saveFabricsDirty();renderIntro(introFid);renderIntroList(cat);closeM();toast('저장됨 ✓','success');
     }},{label:'취소',cls:'btn-outline',fn:closeM}]
   );
 }
