@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.45</title>
+<title>RECOVERIC 단가관리 시스템 v4.46</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.45</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.46</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -616,17 +616,16 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
           <div id="sp-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border2);border-radius:8px;box-shadow:var(--shadow-md);z-index:50;max-height:200px;overflow-y:auto;margin-top:4px"></div>
         </div>
         <div id="sp-cust-info" style="display:none;align-items:center;gap:10px;flex-wrap:wrap">
+          <button onclick="backToSpList()" style="padding:4px 8px;border-radius:6px;font-size:11px;color:var(--txt2);border:1.5px solid var(--border);background:none;cursor:pointer">← 목록</button>
           <span style="font-size:13px;font-weight:700;color:var(--txt)" id="sp-cust-name"></span>
           <button id="sp-grade-badge" onclick="changeCustGrade()" style="padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:none"></button>
           <span style="font-size:11px;color:var(--txt2)" id="sp-grade-txt"></span>
           <button onclick="delSpecialCust()" style="padding:4px 10px;border-radius:6px;font-size:11px;color:var(--red);border:1.5px solid var(--red);background:none;cursor:pointer">삭제</button>
         </div>
       </div>
-      <!-- 빈 상태 -->
-      <div id="sp-empty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--txt3);gap:12px">
-        <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        <p style="font-size:14px;font-weight:600">고객사를 선택하면 해당 단가표가 표시됩니다</p>
-        <p style="font-size:12px">수정 버튼 클릭 시 직접 가격 입력 가능 (관리자 이상)</p>
+      <!-- 고객사 카드 목록 (선택 전) -->
+      <div id="sp-empty" style="flex:1;overflow-y:auto;min-height:0">
+        <div id="sp-cust-cards" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
       <!-- 특별 단가 테이블 + 슬라이드 패널 -->
       <div id="sp-tbl-wrap" style="display:none;flex:1;min-height:0;position:relative;flex-direction:column">
@@ -972,6 +971,7 @@ function doPost(e) {
     sh.appendRow(['gold_discount',   data.grades?.gold?.discount||0]);
     sh.appendRow(['vip_discount',    data.grades?.vip?.discount||0]);
     sh.appendRow(['seasonName',      data.seasonName||'']);
+    if (data.tags) sh.appendRow(['tags', JSON.stringify(data.tags)]);
   }
 
   // saveAll: 전체 일괄 저장 (no-cors 방식에서 사용)
@@ -1069,6 +1069,7 @@ function doGet(e) {
       };
     }
     if (map.seasonName) result.seasonName = map.seasonName;
+    if (map.tags) { try { result.tags = JSON.parse(map.tags); } catch(e) {} }
   }
 
   const json = JSON.stringify(result);
@@ -1452,7 +1453,10 @@ function sv(name,btn,skipHistory){
   else if(name==='apparel'){activeAp='';activeApGrade='';renderByApparel();}
   else if(name==='cust')renderCust();
   else if(name==='admin'){renderAdminTbl();fillLevelSelects();fillCatList();renderTagMgmt();loadSeasonInput();}
-  else if(name==='special'){renderSpecialTbl();}
+  else if(name==='special'){
+    if(!specialCid)renderSpCustCards();
+    else renderSpecialTbl();
+  }
   else if(name==='intro'){
     // 원단 소개 완전 초기화
     const catSel=document.getElementById('intro-cat-sel');
@@ -2454,7 +2458,7 @@ async function syncTo(){
     await gasPost(url,{action:'saveFabrics',fabrics:ST.fabrics});
     await gasPost(url,{action:'saveLevels',levels:ST.levels||[]});
     await gasPost(url,{action:'saveCategories',categories:ST.categories||[]});
-    await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||''});
+    await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||'',tags:ST.tags||[]});
     st.textContent='✅ 전체 저장 완료 '+new Date().toLocaleTimeString('ko-KR');
     toast('Google Sheets 저장 완료','success');
   }catch(e){st.textContent='❌ 오류: '+e.message;toast('연결 실패','error');}
@@ -2516,7 +2520,7 @@ async function autoSyncTo(){
     if(dirtyS){
       await gasPost(url,{action:'saveLevels',levels:ST.levels||[]});
       await gasPost(url,{action:'saveCategories',categories:ST.categories||[]});
-      await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||''});
+      await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||'',tags:ST.tags||[]});
     }
     console.log('[SyncTo] 저장 완료');
     window._lastSavedAt=Date.now();
@@ -2568,6 +2572,7 @@ async function autoLoadFrom(){
     if(d.categories&&d.categories.length){ST.categories=d.categories;updated=true;}
     if(d.grades){ST.grades=d.grades;updated=true;}
     if(d.seasonName){ST.seasonName=d.seasonName;updated=true;}
+    if(d.tags&&d.tags.length){ST.tags=d.tags;updated=true;}
     if(updated){
       console.log('[LoadFrom] 데이터 업데이트 - 화면 갱신');
       localStorage.setItem('rcv2',JSON.stringify(ST));
@@ -2642,7 +2647,52 @@ function saveSeasonName(){
 
 // ─ 고객사 특별 단가표 ─
 let specialCid=null, spGradeFilter='';
-function fillSpecialSel(){/* 검색형으로 교체 — 별도 렌더 없음 */}
+function fillSpecialSel(){renderSpCustCards();}
+
+function renderSpCustCards(){
+  const wrap=document.getElementById('sp-cust-cards');if(!wrap)return;
+  const isAdm=role==='superadmin'||role==='admin';
+  const colors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
+  const labels={silver:'SILVER',gold:'GOLD',vip:'VIP'};
+  if(!ST.customers.length){
+    wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--txt3);font-size:13px">등록된 고객사가 없습니다.<br>+ 고객사 추가 버튼으로 추가하세요.</div>';
+    return;
+  }
+  wrap.innerHTML=ST.customers.map(c=>{
+    const col=colors[c.grade]||'#888';
+    const ovCnt=Object.keys(c.priceOverrides||{}).length;
+    return `<div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:box-shadow .15s;box-shadow:var(--shadow)"
+      onclick="pickCust(${c.id})"
+      onmouseover="this.style.boxShadow='var(--shadow-md)';this.style.borderColor='var(--border2)'"
+      onmouseout="this.style.boxShadow='var(--shadow)';this.style.borderColor='var(--border)'">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:14px;font-weight:700;color:var(--txt)">${c.name}</span>
+          <span style="padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col}">${labels[c.grade]||c.grade}</span>
+          ${ovCnt?`<span style="font-size:10px;color:var(--red);font-weight:600">직접단가 ${ovCnt}개</span>`:'<span style="font-size:10px;color:var(--txt3)">등급할인 적용</span>'}
+        </div>
+        <div style="font-size:11px;color:var(--txt3);margin-top:3px">기본 할인 −${ST.grades[c.grade]?.discount||0}%${ovCnt?' · '+ovCnt+'개 품목 직접 단가 적용':''}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
+        <button class="btn btn-gold btn-sm" onclick="pickCust(${c.id})" style="font-size:11px;padding:5px 12px">단가표 보기</button>
+        ${isAdm?`<button class="btn btn-outline btn-sm" onclick="pickCustAndCapture(${c.id})" style="font-size:11px;padding:5px 10px">📸</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function backToSpList(){
+  specialCid=null;
+  closeSpSlidePanel();
+  document.getElementById('sp-cust-info').style.display='none';
+  document.getElementById('sp-tbl-wrap').style.display='none';
+  document.getElementById('sp-empty').style.display='flex';
+  renderSpCustCards();
+}
+function pickCustAndCapture(id){
+  pickCust(id);
+  setTimeout(()=>openCapture('special'),300);
+}
 
 // 고객사 등급 필터
 function setSpGradeFilter(grade, btn){
@@ -2695,7 +2745,6 @@ function filterCustList(){
 function pickCust(id){
   specialCid=id;
   const c=ST.customers.find(x=>x.id===id);if(!c)return;
-  // 검색창은 비우고 — 선택된 고객사명은 오른쪽에 별도 표시
   document.getElementById('sp-search').value='';
   document.getElementById('sp-search').placeholder='고객사명 검색...';
   document.getElementById('sp-dropdown').style.display='none';
@@ -2738,7 +2787,7 @@ function delSpecialCust(){
   document.getElementById('sp-cust-info').style.display='none';
   document.getElementById('sp-empty').style.display='flex';
   document.getElementById('sp-tbl-wrap').style.display='none';
-  saveCustomersDirty();renderCust();toast('삭제됨','success');
+  saveCustomersDirty();renderCust();renderSpCustCards();toast('삭제됨','success');
 }
 function openAddCust(){
   editCid=null;
@@ -2749,7 +2798,7 @@ function openAddCust(){
       if(!name){toast('고객사명 필요','error');return;}
       const grade=document.getElementById('cg').value;
       ST.customers.push({id:ST.nextCid++,name,grade,priceOverrides:{}});
-      saveCustomersDirty();renderCust();fillSpecialSel();closeM();toast('고객사 추가됨 ✓','success');
+      saveCustomersDirty();renderCust();fillSpecialSel();renderSpCustCards();closeM();toast('고객사 추가됨 ✓','success');
     }},{label:'취소',cls:'btn-outline',fn:closeM}]);
 }
 
@@ -2845,17 +2894,43 @@ function openSpSlidePanel(fid){
   if(!c.priceOverrides)c.priceOverrides={};
   const ov=c.priceOverrides[f.name]||{};
   const d=ST.grades[c.grade]?.discount||0;
-  const hint=field=>{const p=f[field];return p?'기준: '+applyD(p,d).toLocaleString()+'원 ('+c.grade.toUpperCase()+' 할인가)':'';};
+  const gradeLabel=c.grade.toUpperCase();
+  // 표준가 + 할인가 정보
+  const priceInfo=field=>{
+    const std=f[field];
+    if(!std)return '';
+    const discounted=applyD(std,d);
+    return `<div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
+      <span style="font-size:10px;color:var(--txt3)">표준가 <b style="color:var(--txt2)">${std.toLocaleString()}원</b></span>
+      <span style="font-size:10px;color:var(--txt3)">${gradeLabel}할인가 <b style="color:var(--blue)">${discounted.toLocaleString()}원</b></span>
+    </div>`;
+  };
   document.getElementById('sp-slide-title').textContent=`${f.name} — ${c.name} 직접 단가`;
   document.getElementById('sp-slide-body').innerHTML=`
     <p style="font-size:11px;color:var(--txt2);margin-bottom:16px;line-height:1.7">비우면 등급 할인가가 자동 적용됩니다.<br>직접 입력 시 빨간색으로 표시됩니다.</p>
     <div class="sp-row">
-      <div class="sp-field"><span class="sp-label">8%MG</span><input class="sp-input" id="ssp-mg" type="number" value="${ov.mg||''}" placeholder="${hint('mg')}"></div>
-      <div class="sp-field"><span class="sp-label">백/백아이</span><input class="sp-input" id="ssp-bk" type="number" value="${ov.baek||''}" placeholder="${hint('baek')}"></div>
+      <div class="sp-field">
+        <span class="sp-label">8%MG</span>
+        <input class="sp-input" id="ssp-mg" type="number" value="${ov.mg||''}" placeholder="${f.mg?applyD(f.mg,d).toLocaleString()+'원':'-'}">
+        ${priceInfo('mg')}
+      </div>
+      <div class="sp-field">
+        <span class="sp-label">백/백아이</span>
+        <input class="sp-input" id="ssp-bk" type="number" value="${ov.baek||''}" placeholder="${f.baek?applyD(f.baek,d).toLocaleString()+'원':'-'}">
+        ${priceInfo('baek')}
+      </div>
     </div>
     <div class="sp-row">
-      <div class="sp-field"><span class="sp-label">무지</span><input class="sp-input" id="ssp-mj" type="number" value="${ov.muji||''}" placeholder="${hint('muji')}"></div>
-      <div class="sp-field"><span class="sp-label">부속(RIB)</span><input class="sp-input" id="ssp-rb" type="number" value="${ov.rib||''}" placeholder="${hint('rib')}"></div>
+      <div class="sp-field">
+        <span class="sp-label">무지</span>
+        <input class="sp-input" id="ssp-mj" type="number" value="${ov.muji||''}" placeholder="${f.muji?applyD(f.muji,d).toLocaleString()+'원':'-'}">
+        ${priceInfo('muji')}
+      </div>
+      <div class="sp-field">
+        <span class="sp-label">부속(RIB)</span>
+        <input class="sp-input" id="ssp-rb" type="number" value="${ov.rib||''}" placeholder="${f.rib?f.rib.toLocaleString()+'원':'-'}">
+        ${f.rib?`<div style="margin-top:4px"><span style="font-size:10px;color:var(--txt3)">표준가 <b style="color:var(--txt2)">${f.rib.toLocaleString()}원</b></span></div>`:''}
+      </div>
     </div>`;
   document.getElementById('sp-slide-body').querySelectorAll('input').forEach(inp=>{
     inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveSpSlidePanel();}if(e.key==='Escape')closeSpSlidePanel();});
