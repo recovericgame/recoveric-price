@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.75</title>
+<title>RECOVERIC 단가관리 시스템 v4.76</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -424,7 +424,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.75</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.76</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2378,7 +2378,7 @@ function delF(id){
 
 // ─ Grade discounts ─
 function loadDisc(){document.getElementById('dsi').value=ST.grades.silver?.discount??3;document.getElementById('dgi').value=ST.grades.gold?.discount??5;document.getElementById('dvi').value=ST.grades.vip?.discount??8;}
-function saveDisc(){ST.grades.silver.discount=+document.getElementById('dsi').value||0;ST.grades.gold.discount=+document.getElementById('dgi').value||0;ST.grades.vip.discount=+document.getElementById('dvi').value||0;saveSettingsDirty();renderTbl();if(specialCid)renderSpecialTbl();toast('할인율 저장됨','success');}
+function saveDisc(){ST.grades.silver.discount=+document.getElementById('dsi').value||0;ST.grades.gold.discount=+document.getElementById('dgi').value||0;ST.grades.vip.discount=+document.getElementById('dvi').value||0;_fbLastWrite=Date.now();save();fbWrite();renderTbl();if(specialCid)renderSpecialTbl();toast('할인율 저장됨','success');}
 
 // ─ PINs ─
 function savePins(){
@@ -2397,7 +2397,9 @@ function savePins(){
   document.getElementById('p1').value='';
   document.getElementById('p2').value='';
   document.getElementById('p3').value='';
-  saveSettingsDirty();
+  _fbLastWrite=Date.now(); // 폴링 차단 먼저
+  save();
+  fbWrite();
   toast('PIN 변경 완료 ✓','success');
 }
 
@@ -2576,7 +2578,8 @@ function saveSeasonName(){
   const v=(document.getElementById('season-input').value||'').trim();
   if(!v){toast('시즌명을 입력하세요','error');return;}
   ST.seasonName=v;
-  saveSettingsDirty();
+  _fbLastWrite=Date.now();
+  save();fbWrite();
   const t=document.getElementById('season-title');
   if(t)t.textContent=v;
   toast('시즌명 저장됨 ✓','success');
