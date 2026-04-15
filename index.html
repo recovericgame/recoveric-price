@@ -76,8 +76,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .logout-btn:hover{background:rgba(255,255,255,.06);color:var(--red)}
 
 /* ─── MAIN ─── */
-#main{flex:1;overflow-y:auto;display:flex;flex-direction:column;background:var(--bg)}
-.view{display:none;flex-direction:column;flex:1;padding:20px 24px;animation:fadeUp .2s}
+#main{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;background:var(--bg)}
+.view{display:none;flex-direction:column;flex:1;min-height:0;padding:20px 24px;animation:fadeUp .2s}
 .view.active{display:flex}
 /* 단가표 뷰는 패딩 줄여서 테이블 최대 활용 */
 #view-price{padding:16px 20px;gap:8px}
@@ -1453,9 +1453,10 @@ function sv(name,btn,skipHistory){
   else if(name==='cust')renderCust();
   else if(name==='admin'){renderAdminTbl();fillLevelSelects();fillCatList();renderTagMgmt();loadSeasonInput();}
   else if(name==='special'){
-    // 사이드바에서 진입 시 항상 카드 목록으로 초기화
-    backToSpList();
-    renderSpCustCards();
+    // 사이드바에서 진입 시 등급 필터 초기화 + 카드 목록으로 리셋
+    spGradeFilter='';
+    document.querySelectorAll('#view-special .grade-tab[data-grade]').forEach(b=>b.classList.toggle('active',b.dataset.grade===''));
+    backToSpList(); // 내부에서 renderSpCustCards() 호출함
   }
   else if(name==='intro'){
     // 원단 소개 완전 초기화
@@ -2554,7 +2555,7 @@ async function autoLoadFrom(){
         const k=c.name.trim().toLowerCase();
         if(seenCust.has(k))return false;
         seenCust.add(k);return true;
-      });
+      }).map(c=>({...c,grade:(c.grade||'silver').toLowerCase()}));
       ST.nextCid=Math.max(...ST.customers.map(c=>c.id||0),0)+1;
       updated=true;
     }
@@ -2661,7 +2662,7 @@ function renderSpCustCards(){
   const colors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
   const labels={silver:'SILVER',gold:'GOLD',vip:'VIP'};
   // 등급 필터 적용
-  const list=spGradeFilter?ST.customers.filter(c=>c.grade===spGradeFilter):ST.customers;
+  const list=spGradeFilter?ST.customers.filter(c=>(c.grade||'').toLowerCase()===spGradeFilter):ST.customers;
   if(!ST.customers.length){
     wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--txt3);font-size:13px">등록된 고객사가 없습니다.<br>+ 고객사 추가 버튼으로 추가하세요.</div>';
     return;
@@ -2712,7 +2713,7 @@ function pickCustAndCapture(id){
 
 // 고객사 등급 필터
 function setSpGradeFilter(grade, btn){
-  spGradeFilter=grade;
+  spGradeFilter=grade.toLowerCase();
   document.querySelectorAll('#view-special .grade-tab[data-grade]').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   // 카드 목록 상태면 필터 적용해서 카드 재렌더
@@ -2741,7 +2742,7 @@ function filterCustList(){
   const dd=document.getElementById('sp-dropdown');
   const gColors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
   const items=ST.customers.filter(c=>{
-    if(spGradeFilter&&c.grade!==spGradeFilter)return false;
+    if(spGradeFilter&&(c.grade||'').toLowerCase()!==spGradeFilter)return false;
     if(q&&!c.name.toLowerCase().includes(q))return false;
     return true;
   });
