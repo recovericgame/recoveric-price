@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.49</title>
+<title>RECOVERIC 단가관리 시스템 v4.59</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.49</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.59</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2565,7 +2565,6 @@ async function autoSyncTo(){
     console.log('[SyncTo] 저장 완료');
     window._lastSavedAt=Date.now();
     showSyncStatus('☁ 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
-    setTimeout(()=>{window._lastSavedAt=0;},25000);
   }catch(e){
     // 실패 시 dirty 복원 (재시도 가능하도록)
     if(dirtyF)window._dirtyFabrics=true;
@@ -2581,8 +2580,8 @@ async function autoSyncTo(){
 async function autoLoadFrom(){
   const url=ST.sheetsUrl;if(!url)return;
   if(window._isSyncing)return;
-  // 저장 직후 12초간 로딩 차단 (Sheets 전파 대기 — 레이스 컨디션 방지)
-  if(window._lastSavedAt&&Date.now()-window._lastSavedAt<12000)return;
+  // 저장 직후 15초간 로딩 차단 (Sheets 전파 대기 — 레이스 컨디션 방지)
+  if(window._lastSavedAt&&Date.now()-window._lastSavedAt<15000)return;
   // 로컬 미저장 변경사항 있으면 차단 (덮어쓰기 방지)
   if(window._dirtyFabrics||window._dirtyCustomers||window._dirtySettings)return;
   try{
