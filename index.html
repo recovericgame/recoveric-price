@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.64</title>
+<title>RECOVERIC 단가관리 시스템 v4.65</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.64</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.65</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1046,17 +1046,17 @@ function doGet(e) {
         url:row[16]||null,description:row[17]||null}));
   }
 
+  // 라인설정: 항상 배열 반환 (빈 배열 = 전체 삭제 신호)
   const ls = ss.getSheetByName('라인설정');
-  if (ls && ls.getLastRow() > 1) {
-    result.levels = ls.getDataRange().getValues().slice(1)
-      .filter(row => row[0]).map(row => ({id:row[0], name:row[1]}));
-  }
+  result.levels = (ls && ls.getLastRow() > 1)
+    ? ls.getDataRange().getValues().slice(1).filter(row=>row[0]).map(row=>({id:row[0],name:row[1]}))
+    : [];
 
+  // 조직설정: 항상 배열 반환
   const cs2 = ss.getSheetByName('조직설정');
-  if (cs2 && cs2.getLastRow() > 1) {
-    result.categories = cs2.getDataRange().getValues().slice(1)
-      .filter(row => row[0]).map(row => row[0]);
-  }
+  result.categories = (cs2 && cs2.getLastRow() > 1)
+    ? cs2.getDataRange().getValues().slice(1).filter(row=>row[0]).map(row=>row[0])
+    : [];
 
   const stSheet = ss.getSheetByName('설정');
   if (stSheet && stSheet.getLastRow() > 1) {
@@ -1071,8 +1071,12 @@ function doGet(e) {
       };
     }
     if (map.seasonName) result.seasonName = map.seasonName;
-    if (map.tags)  { try { result.tags  = JSON.parse(map.tags);  } catch(e) {} }
+    // 태그: 항상 배열 반환 (빈 배열 = 전체 삭제 신호)
+    if (map.tags) { try { result.tags = JSON.parse(map.tags); } catch(e) { result.tags=[]; } }
+    else { result.tags = []; }
     if (map.pins)  { try { result.pins  = JSON.parse(map.pins);  } catch(e) {} }
+  } else {
+    result.tags = [];
   }
 
   const json = JSON.stringify(result);
@@ -2647,19 +2651,14 @@ async function autoLoadFrom(){
         updated=true;
       }
     }
-    if(!_gS&&d.levels&&d.levels.length){
-      // 병합: Sheets 기준 + 로컬에만 있는 라인 보존
-      const sheetIds=new Set(d.levels.map(l=>l.id));
-      const localOnly=(ST.levels||[]).filter(l=>!sheetIds.has(l.id));
-      const merged=[...d.levels,...localOnly];
-      const cur=JSON.stringify(ST.levels||[]);
-      if(JSON.stringify(merged)!==cur){ST.levels=merged;updated=true;}
+    if(!_gS&&d.levels!==undefined){
+      // 단순 교체: Sheets가 정답 (삭제도 반영)
+      const next=d.levels||[];
+      if(JSON.stringify(next)!==JSON.stringify(ST.levels||[])){ST.levels=next;updated=true;}
     }
-    if(!_gS&&d.categories&&d.categories.length){
-      // 병합: Sheets + 로컬에만 있는 조직 보존 (양쪽 합집합)
-      const merged=[...new Set([...(ST.categories||[]),...d.categories])];
-      const cur=JSON.stringify(ST.categories||[]);
-      if(JSON.stringify(merged)!==cur){ST.categories=merged;updated=true;}
+    if(!_gS&&d.categories!==undefined){
+      const next=d.categories||[];
+      if(JSON.stringify(next)!==JSON.stringify(ST.categories||[])){ST.categories=next;updated=true;}
     }
     if(!_gS&&d.grades&&JSON.stringify(d.grades)!==JSON.stringify(ST.grades)){ST.grades=d.grades;updated=true;}
     if(!_gS&&d.seasonName&&d.seasonName!==ST.seasonName){ST.seasonName=d.seasonName;updated=true;}
@@ -2668,11 +2667,9 @@ async function autoLoadFrom(){
       const merged={...ST.pins,...d.pins};
       if(JSON.stringify(merged)!==JSON.stringify(ST.pins)){ST.pins=merged;updated=true;}
     }
-    if(!_gS&&d.tags&&d.tags.length){
-      // 병합: Sheets + 로컬에만 있는 태그 보존 (양쪽 합집합)
-      const merged=[...new Set([...(ST.tags||[]),...d.tags])];
-      const cur=JSON.stringify(ST.tags||[]);
-      if(JSON.stringify(merged)!==cur){ST.tags=merged;updated=true;}
+    if(!_gS&&d.tags!==undefined){
+      const next=d.tags||[];
+      if(JSON.stringify(next)!==JSON.stringify(ST.tags||[])){ST.tags=next;updated=true;}
     }
     if(updated){
       console.log('[LoadFrom] 데이터 업데이트 - 화면 갱신');
