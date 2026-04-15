@@ -2567,6 +2567,8 @@ async function autoSyncTo(){
 async function autoLoadFrom(){
   const url=ST.sheetsUrl;if(!url)return;
   if(window._isSyncing)return;
+  // 저장 직후 12초간 로딩 차단 (Sheets 전파 대기 — 레이스 컨디션 방지)
+  if(window._lastSavedAt&&Date.now()-window._lastSavedAt<12000)return;
   // 로컬 미저장 변경사항 있으면 차단 (덮어쓰기 방지)
   if(window._dirtyFabrics||window._dirtyCustomers||window._dirtySettings)return;
   try{
@@ -2581,11 +2583,15 @@ async function autoLoadFrom(){
         if(seenCust.has(k))return false;
         seenCust.add(k);return true;
       }).map(c=>({...c,grade:(c.grade||'silver').toLowerCase()}));
-      // 변경 감지: 개수 또는 내용이 다를 때만 교체
-      if(JSON.stringify(next)!==JSON.stringify(ST.customers||[])){
+      // 변경 감지: 내용이 다를 때만 교체
+      // 단, Sheets 데이터가 로컬보다 적으면 스테일 데이터일 수 있으므로 차단
+      const localCnt=(ST.customers||[]).length;
+      if(next.length>=localCnt&&JSON.stringify(next)!==JSON.stringify(ST.customers||[])){
         ST.customers=next;
         ST.nextCid=Math.max(...ST.customers.map(c=>c.id||0),0)+1;
         updated=true;
+      } else if(next.length<localCnt){
+        console.log('[LoadFrom] 고객사 수 감소 감지('+localCnt+'→'+next.length+') — 스테일 데이터 차단');
       }
     }
     if(d.fabrics&&d.fabrics.length){
