@@ -2498,7 +2498,7 @@ async function syncTo(){
     await gasPost(url,{action:'saveFabrics',fabrics:ST.fabrics});
     await gasPost(url,{action:'saveLevels',levels:ST.levels||[]});
     await gasPost(url,{action:'saveCategories',categories:ST.categories||[]});
-    await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||'',tags:ST.tags||[]});
+    await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||'',tags:ST.tags||[],pins:ST.pins});
     st.textContent='✅ 전체 저장 완료 '+new Date().toLocaleTimeString('ko-KR');
     toast('Google Sheets 저장 완료','success');
   }catch(e){st.textContent='❌ 오류: '+e.message;toast('연결 실패','error');}
@@ -2508,10 +2508,14 @@ async function syncFrom(){
   document.getElementById('sync-st').textContent='불러오는 중...';
   try{
     const r=await fetch(url);const d=await r.json();
-    if(d.customers){ST.customers=d.customers;ST.nextCid=Math.max(...ST.customers.map(c=>c.id||0),0)+1;}
+    if(d.customers){ST.customers=d.customers.map(c=>({...c,grade:(c.grade||'silver').toLowerCase()}));ST.nextCid=Math.max(...ST.customers.map(c=>c.id||0),0)+1;}
     if(d.fabrics){ST.fabrics=d.fabrics;ST.nextFid=Math.max(...ST.fabrics.map(f=>f.id||0),0)+1;}
     if(d.levels&&d.levels.length)ST.levels=d.levels;
     if(d.categories&&d.categories.length)ST.categories=d.categories;
+    if(d.pins){ST.pins={...ST.pins,...d.pins};}
+    if(d.grades)ST.grades=d.grades;
+    if(d.seasonName)ST.seasonName=d.seasonName;
+    if(d.tags&&d.tags.length)ST.tags=d.tags;
     save();fillLevelSelects();fillCatList();fillSpecialSel();renderTbl();renderCust();renderAdminTbl();renderSpCustCards();
     document.getElementById('sync-st').textContent='✅ 불러오기 완료 ('+new Date().toLocaleTimeString('ko-KR')+')';
     toast('최신 데이터 불러오기 완료','success');
@@ -2563,7 +2567,10 @@ async function autoSyncTo(){
       await gasPost(url,{action:'saveSettings',grades:ST.grades,seasonName:ST.seasonName||'',tags:ST.tags||[],pins:ST.pins});
     }
     console.log('[SyncTo] 저장 완료');
-    window._lastSavedAt=Date.now();
+    // 타입별 저장 시각 기록 (각 타입만 15초 차단)
+    if(dirtyC)window._lastSavedC=Date.now();
+    if(dirtyF)window._lastSavedF=Date.now();
+    if(dirtyS)window._lastSavedS=Date.now();
     showSyncStatus('☁ 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
   }catch(e){
     // 실패 시 dirty 복원 (재시도 가능하도록)
@@ -2580,16 +2587,19 @@ async function autoSyncTo(){
 async function autoLoadFrom(){
   const url=ST.sheetsUrl;if(!url)return;
   if(window._isSyncing)return;
-  // 저장 직후 15초간 로딩 차단 (Sheets 전파 대기 — 레이스 컨디션 방지)
-  if(window._lastSavedAt&&Date.now()-window._lastSavedAt<15000)return;
-  // 로컬 미저장 변경사항 있으면 차단 (덮어쓰기 방지)
+  // 타입별 저장 직후 15초 차단 (각 타입 독립적으로 처리)
+  const _now=Date.now();
+  const _gC=window._lastSavedC&&_now-window._lastSavedC<15000; // 고객사 가드
+  const _gF=window._lastSavedF&&_now-window._lastSavedF<15000; // 원단 가드
+  const _gS=window._lastSavedS&&_now-window._lastSavedS<15000; // 설정 가드
+  // 로컬 미저장 변경사항 있으면 해당 타입 차단
   if(window._dirtyFabrics||window._dirtyCustomers||window._dirtySettings)return;
   try{
     const r=await fetch(url+'?t='+Date.now(),{cache:'no-store'});
     const d=await r.json();
     console.log('[LoadFrom] Sheets 응답 - customers:'+d.customers?.length+', fabrics:'+d.fabrics?.length);
     let updated=false;
-    if(d.customers&&d.customers.length){
+    if(!_gC&&d.customers&&d.customers.length){
       const seenCust=new Set();
       const next=d.customers.filter(c=>{
         const k=c.name.trim().toLowerCase();
@@ -2603,7 +2613,7 @@ async function autoLoadFrom(){
         updated=true;
       }
     }
-    if(d.fabrics&&d.fabrics.length){
+    if(!_gF&&d.fabrics&&d.fabrics.length){
       const seenIds=new Set(),seenKeys=new Set();
       const next=d.fabrics.filter(f=>{
         const k=`${f.level}|${f.name}`;
@@ -2617,7 +2627,7 @@ async function autoLoadFrom(){
         updated=true;
       }
     }
-    if(d.levels&&d.levels.length){
+    if(!_gS&&d.levels&&d.levels.length){
       // 병합: Sheets 기준 + 로컬에만 있는 라인 보존
       const sheetIds=new Set(d.levels.map(l=>l.id));
       const localOnly=(ST.levels||[]).filter(l=>!sheetIds.has(l.id));
@@ -2625,20 +2635,20 @@ async function autoLoadFrom(){
       const cur=JSON.stringify(ST.levels||[]);
       if(JSON.stringify(merged)!==cur){ST.levels=merged;updated=true;}
     }
-    if(d.categories&&d.categories.length){
+    if(!_gS&&d.categories&&d.categories.length){
       // 병합: Sheets + 로컬에만 있는 조직 보존 (양쪽 합집합)
       const merged=[...new Set([...(ST.categories||[]),...d.categories])];
       const cur=JSON.stringify(ST.categories||[]);
       if(JSON.stringify(merged)!==cur){ST.categories=merged;updated=true;}
     }
-    if(d.grades&&JSON.stringify(d.grades)!==JSON.stringify(ST.grades)){ST.grades=d.grades;updated=true;}
-    if(d.seasonName&&d.seasonName!==ST.seasonName){ST.seasonName=d.seasonName;updated=true;}
-    if(d.pins){
+    if(!_gS&&d.grades&&JSON.stringify(d.grades)!==JSON.stringify(ST.grades)){ST.grades=d.grades;updated=true;}
+    if(!_gS&&d.seasonName&&d.seasonName!==ST.seasonName){ST.seasonName=d.seasonName;updated=true;}
+    if(!_gS&&d.pins){
       // 안전 병합: 누락된 키는 기존값 유지 (완전 교체 금지)
       const merged={...ST.pins,...d.pins};
       if(JSON.stringify(merged)!==JSON.stringify(ST.pins)){ST.pins=merged;updated=true;}
     }
-    if(d.tags&&d.tags.length){
+    if(!_gS&&d.tags&&d.tags.length){
       // 병합: Sheets + 로컬에만 있는 태그 보존 (양쪽 합집합)
       const merged=[...new Set([...(ST.tags||[]),...d.tags])];
       const cur=JSON.stringify(ST.tags||[]);
