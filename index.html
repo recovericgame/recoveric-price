@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.48</title>
+<title>RECOVERIC 단가관리 시스템 v4.49</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -418,7 +418,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.48</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.49</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2651,7 +2651,6 @@ function fillSpecialSel(){renderSpCustCards();}
 
 function renderSpCustCards(){
   const wrap=document.getElementById('sp-cust-cards');if(!wrap)return;
-  // 카드 목록 상태 → 캡처/복사 버튼 숨기기
   if(!specialCid){
     const capBtn=document.getElementById('sp-capture-btn');
     const copyBtn=document.getElementById('sp-copy-btn');
@@ -2661,28 +2660,34 @@ function renderSpCustCards(){
   const isAdm=role==='superadmin'||role==='admin';
   const colors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
   const labels={silver:'SILVER',gold:'GOLD',vip:'VIP'};
+  // 등급 필터 적용
+  const list=spGradeFilter?ST.customers.filter(c=>c.grade===spGradeFilter):ST.customers;
   if(!ST.customers.length){
     wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--txt3);font-size:13px">등록된 고객사가 없습니다.<br>+ 고객사 추가 버튼으로 추가하세요.</div>';
     return;
   }
-  wrap.innerHTML=ST.customers.map(c=>{
+  if(!list.length){
+    wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--txt3);font-size:13px">해당 등급의 고객사가 없습니다.</div>';
+    return;
+  }
+  wrap.innerHTML=list.map(c=>{
     const col=colors[c.grade]||'#888';
     const ovCnt=Object.keys(c.priceOverrides||{}).length;
-    return `<div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:box-shadow .15s;box-shadow:var(--shadow)"
+    return `<div style="width:100%;box-sizing:border-box;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:box-shadow .15s;box-shadow:var(--shadow)"
       onclick="pickCust(${c.id})"
       onmouseover="this.style.boxShadow='var(--shadow-md)';this.style.borderColor='var(--border2)'"
       onmouseout="this.style.boxShadow='var(--shadow)';this.style.borderColor='var(--border)'">
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:14px;font-weight:700;color:var(--txt)">${c.name}</span>
+          <span style="font-size:15px;font-weight:700;color:var(--txt)">${c.name}</span>
           <span style="padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col}">${labels[c.grade]||c.grade}</span>
-          ${ovCnt?`<span style="font-size:10px;color:var(--red);font-weight:600">직접단가 ${ovCnt}개</span>`:'<span style="font-size:10px;color:var(--txt3)">등급할인 적용</span>'}
+          ${ovCnt?`<span style="font-size:11px;color:var(--red);font-weight:600">직접단가 ${ovCnt}개 품목</span>`:'<span style="font-size:11px;color:var(--txt3)">등급할인 자동 적용</span>'}
         </div>
-        <div style="font-size:11px;color:var(--txt3);margin-top:3px">기본 할인 −${ST.grades[c.grade]?.discount||0}%${ovCnt?' · '+ovCnt+'개 품목 직접 단가 적용':''}</div>
+        <div style="font-size:12px;color:var(--txt3);margin-top:4px">기본 할인 −${ST.grades[c.grade]?.discount||0}%${ovCnt?' · '+ovCnt+'개 품목에 직접 단가 적용':''}</div>
       </div>
-      <div style="display:flex;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
-        <button class="btn btn-gold btn-sm" onclick="pickCust(${c.id})" style="font-size:11px;padding:5px 12px">단가표 보기</button>
-        ${isAdm?`<button class="btn btn-outline btn-sm" onclick="pickCustAndCapture(${c.id})" style="font-size:11px;padding:5px 10px">📸</button>`:''}
+      <div style="display:flex;gap:8px;flex-shrink:0" onclick="event.stopPropagation()">
+        <button class="btn btn-gold btn-sm" onclick="pickCust(${c.id})" style="font-size:12px;padding:7px 16px">단가표 보기</button>
+        ${isAdm?`<button class="btn btn-outline btn-sm" onclick="pickCustAndCapture(${c.id})" style="font-size:12px;padding:7px 14px" title="단가표 이미지 캡처">📸 캡처</button>`:''}
       </div>
     </div>`;
   }).join('');
@@ -2710,15 +2715,13 @@ function setSpGradeFilter(grade, btn){
   spGradeFilter=grade;
   document.querySelectorAll('#view-special .grade-tab[data-grade]').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  // 기존 선택 고객사 초기화
-  specialCid=null;
-  document.getElementById('sp-search').value='';
-  document.getElementById('sp-search').placeholder='고객사명 검색...';
-  document.getElementById('sp-cust-info').style.display='none';
-  document.getElementById('sp-empty').style.display='flex';
-  document.getElementById('sp-tbl-wrap').style.display='none';
-  // 드롭다운 열어서 해당 등급 고객사 표시
-  showCustDropdown();
+  // 카드 목록 상태면 필터 적용해서 카드 재렌더
+  if(!specialCid){
+    renderSpCustCards();
+  } else {
+    // 단가표 보는 중이면 목록으로 돌아가서 필터 적용
+    backToSpList();
+  }
 }
 
 function showCustDropdown(){
