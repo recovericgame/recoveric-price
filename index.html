@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.83</title>
+<title>RECOVERIC 단가관리 시스템 v4.84</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -388,6 +388,16 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 /* 선택된 행 하이라이트 */
 .price-tbl tbody tr.data-row.sel-selected{background:rgba(200,144,10,.06)!important}
 .price-tbl tbody tr.data-row.sel-selected .td-name{color:var(--gold);font-weight:800}
+/* ─ 토글 스위치 ─ */
+.toggle-label{position:relative;display:inline-flex;align-items:center;cursor:pointer}
+.toggle-label input{position:absolute;opacity:0;width:0;height:0}
+.toggle-track{width:38px;height:22px;background:var(--border2);border-radius:11px;transition:.2s;position:relative;border:1px solid var(--border2);flex-shrink:0}
+.toggle-thumb{position:absolute;left:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.toggle-label input:checked + .toggle-track{background:var(--gold);border-color:var(--gold)}
+.toggle-label input:checked + .toggle-track .toggle-thumb{left:18px}
+.grade-card.disabled{opacity:.42;background:var(--bg3)!important}
+.grade-card.disabled .disc-inp{background:var(--border);color:var(--txt3);pointer-events:none}
+.grade-tab.grade-disabled{opacity:.3!important;cursor:not-allowed!important;pointer-events:none!important;filter:grayscale(1)}
 .slide-panel{position:fixed;top:0;right:0;bottom:0;width:360px;background:var(--bg2);border-left:1.5px solid var(--border2);box-shadow:-4px 0 24px rgba(20,40,100,.1);transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:500;display:flex;flex-direction:column;overflow:hidden}
 .slide-panel.open{transform:translateX(0)}
 .slide-panel-dim{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:499;display:none}
@@ -472,7 +482,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.83</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.84</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -885,18 +895,37 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       </div>
       <div class="card">
         <div class="card-title">등급별 기본 할인율</div>
+        <p style="font-size:12px;color:var(--txt2);margin-bottom:12px">사용안함으로 설정하면 해당 등급 탭이 비활성화됩니다.</p>
         <div class="grade-row">
-          <div class="grade-card">
-            <div class="grade-card-name silver">⬤ Silver 등급</div>
-            <div class="disc-row"><input class="disc-inp" id="dsi" type="number" min="0" max="50" value="3"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
+          <div class="grade-card" id="gc-silver">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div class="grade-card-name silver" style="margin-bottom:0">⬤ Silver 등급</div>
+              <label class="toggle-label">
+                <input type="checkbox" id="gen-silver" onchange="onGradeToggle('silver')" checked>
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            <div class="disc-row" id="disc-row-silver"><input class="disc-inp" id="dsi" type="number" min="0" max="50" value="3"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
           </div>
-          <div class="grade-card">
-            <div class="grade-card-name gold">⬤ Gold 등급</div>
-            <div class="disc-row"><input class="disc-inp" id="dgi" type="number" min="0" max="50" value="5"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
+          <div class="grade-card" id="gc-gold">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div class="grade-card-name gold" style="margin-bottom:0">⬤ Gold 등급</div>
+              <label class="toggle-label">
+                <input type="checkbox" id="gen-gold" onchange="onGradeToggle('gold')" checked>
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            <div class="disc-row" id="disc-row-gold"><input class="disc-inp" id="dgi" type="number" min="0" max="50" value="5"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
           </div>
-          <div class="grade-card">
-            <div class="grade-card-name vip">⬤ VIP 등급</div>
-            <div class="disc-row"><input class="disc-inp" id="dvi" type="number" min="0" max="50" value="8"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
+          <div class="grade-card" id="gc-vip">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div class="grade-card-name vip" style="margin-bottom:0">⬤ VIP 등급</div>
+              <label class="toggle-label">
+                <input type="checkbox" id="gen-vip" onchange="onGradeToggle('vip')" checked>
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            <div class="disc-row" id="disc-row-vip"><input class="disc-inp" id="dvi" type="number" min="0" max="50" value="8"><span style="font-size:14px;color:var(--txt2);font-weight:600">%</span></div>
           </div>
         </div>
         <div style="margin-top:14px">
@@ -1174,7 +1203,7 @@ const DFABRICS=[
 const DSTATE={
   dataVersion:4,
   pins:{superadmin:'0327',admin:'9764',user:'0000'},
-  grades:{silver:{discount:3},gold:{discount:5},vip:{discount:8}},
+  grades:{silver:{discount:3,enabled:true},gold:{discount:5,enabled:true},vip:{discount:8,enabled:true}},
   seasonName:'2026 상반기',
   fabrics:DFABRICS,
   customers:[
@@ -1214,7 +1243,13 @@ function migrate(old){
   const s=JSON.parse(JSON.stringify(DSTATE));
   // 사용자 설정값만 보존 (기본 원단 데이터는 v4 기준으로 리셋)
   if(old.pins)s.pins=old.pins;
-  if(old.grades)s.grades=old.grades;
+  if(old.grades){
+    s.grades=old.grades;
+    // enabled 플래그 없으면 기본값 true 보완
+    ['silver','gold','vip'].forEach(g=>{
+      if(s.grades[g]&&s.grades[g].enabled===undefined)s.grades[g].enabled=true;
+    });
+  }
   if(old.sheetsUrl)s.sheetsUrl=old.sheetsUrl;
   if(old.seasonName)s.seasonName=old.seasonName;
   if(old.tags&&old.tags.length)s.tags=old.tags;
@@ -1321,7 +1356,7 @@ function init(){
   fillLevelSelects();fillCatList();renderTagBtns();renderTagMgmt();
   fillSpecialSel();
   initIntroSelects();
-  renderTbl();renderCust();renderAdminTbl();loadDisc();
+  renderTbl();renderCust();renderAdminTbl();loadDisc();applyGradeTabsDisabled();
   renderByLine();renderByCat();renderByApparel();
   // Firebase URL은 코드에 고정됨 (설정 불필요)
   const fc=document.getElementById('float-capture');
@@ -2680,8 +2715,47 @@ function delF(id){
 }
 
 // ─ Grade discounts ─
-function loadDisc(){document.getElementById('dsi').value=ST.grades.silver?.discount??3;document.getElementById('dgi').value=ST.grades.gold?.discount??5;document.getElementById('dvi').value=ST.grades.vip?.discount??8;}
-function saveDisc(){ST.grades.silver.discount=+document.getElementById('dsi').value||0;ST.grades.gold.discount=+document.getElementById('dgi').value||0;ST.grades.vip.discount=+document.getElementById('dvi').value||0;_fbLastWrite=Date.now();save();fbWrite();renderTbl();if(specialCid)renderSpecialTbl();toast('할인율 저장됨','success');}
+function loadDisc(){
+  ['silver','gold','vip'].forEach(g=>{
+    const grade=ST.grades[g]||{discount:g==='silver'?3:g==='gold'?5:8,enabled:true};
+    const enabled=grade.enabled!==false;
+    const inp=document.getElementById({silver:'dsi',gold:'dgi',vip:'dvi'}[g]);
+    const chk=document.getElementById('gen-'+g);
+    const card=document.getElementById('gc-'+g);
+    if(inp)inp.value=grade.discount||(g==='silver'?3:g==='gold'?5:8);
+    if(chk)chk.checked=enabled;
+    if(card)card.classList.toggle('disabled',!enabled);
+  });
+  applyGradeTabsDisabled();
+}
+function onGradeToggle(g){
+  const chk=document.getElementById('gen-'+g);
+  const card=document.getElementById('gc-'+g);
+  if(card)card.classList.toggle('disabled',!chk.checked);
+}
+function saveDisc(){
+  ['silver','gold','vip'].forEach(g=>{
+    if(!ST.grades[g])ST.grades[g]={};
+    const inp=document.getElementById({silver:'dsi',gold:'dgi',vip:'dvi'}[g]);
+    const chk=document.getElementById('gen-'+g);
+    ST.grades[g].discount=inp?+inp.value||0:ST.grades[g].discount;
+    ST.grades[g].enabled=chk?chk.checked:true;
+  });
+  _fbLastWrite=Date.now();save();fbWrite();
+  applyGradeTabsDisabled();
+  renderTbl();if(specialCid)renderSpecialTbl();
+  toast('등급 설정 저장됨 ✓','success');
+}
+// 등급 탭 비활성화 적용 (모든 뷰의 등급 탭)
+function applyGradeTabsDisabled(){
+  ['silver','gold','vip'].forEach(g=>{
+    const enabled=ST.grades[g]?.enabled!==false;
+    document.querySelectorAll(`.grade-tab[data-grade="${g}"]`).forEach(btn=>{
+      btn.classList.toggle('grade-disabled',!enabled);
+      if(!enabled){btn.title='사용안함 (관리 및 설정에서 활성화)';} else {btn.title='';}
+    });
+  });
+}
 
 // ─ PINs ─
 function savePins(){
@@ -2800,7 +2874,11 @@ async function fbRead(){
       const next=d.tags||[];
       if(JSON.stringify(next)!==JSON.stringify(ST.tags||[])){ST.tags=next;updated=true;}
     }
-    if(d.grades&&JSON.stringify(d.grades)!==JSON.stringify(ST.grades)){ST.grades=d.grades;updated=true;}
+    if(d.grades&&JSON.stringify(d.grades)!==JSON.stringify(ST.grades)){
+      ST.grades=d.grades;
+      ['silver','gold','vip'].forEach(g=>{if(ST.grades[g]&&ST.grades[g].enabled===undefined)ST.grades[g].enabled=true;});
+      updated=true;
+    }
     if(d.seasonName&&d.seasonName!==ST.seasonName){ST.seasonName=d.seasonName;updated=true;}
     if(d.pins){
       if(JSON.stringify(d.pins)!==JSON.stringify(ST.pins)){ST.pins=d.pins;updated=true;}
@@ -2810,7 +2888,7 @@ async function fbRead(){
       localStorage.setItem('rcv2',JSON.stringify(ST));
       fillLevelSelects();fillCatList();fillSpecialSel();
       renderTbl();renderCust();renderByLine();renderByCat();renderByApparel();
-      renderTagBtns();renderTagMgmt();renderAdminTbl();
+      renderTagBtns();renderTagMgmt();renderAdminTbl();applyGradeTabsDisabled();
       renderSpecialTbl();renderSpCustCards();
       if(typeof introFid!=='undefined'&&introFid)renderIntro(introFid);
       initIntroSelects();loadSeasonInput();loadDisc();
