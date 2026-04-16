@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.78</title>
+<title>RECOVERIC 단가관리 시스템 v4.79</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -424,7 +424,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.78</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.79</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -3500,6 +3500,19 @@ function toast(msg,type=''){
 
 // ─ Boot ─
 load();
+// 로그인 전 Firebase에서 PIN 동기화
+(async function(){
+  try{
+    const r=await fetch(FB_URL+'/rcv.json?t='+Date.now());
+    if(!r.ok)return;
+    const d=await r.json();
+    if(d&&d.pins){
+      if(!ST.pins)ST.pins={superadmin:'0327',admin:'9764',user:'0000'};
+      ST.pins={...ST.pins,...d.pins};
+      localStorage.setItem('rcv2',JSON.stringify(ST));
+    }
+  }catch(e){console.log('[Boot] PIN 동기화 실패:',e.message);}
+})();
 
 // ─ PIN 키보드 입력 ─
 document.addEventListener('keydown',e=>{
