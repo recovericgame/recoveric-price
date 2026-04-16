@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.85</title>
+<title>RECOVERIC 단가관리 시스템 v4.86</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -482,7 +482,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.85</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.86</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1941,7 +1941,14 @@ let selGrade='';          // 선택발송 등급
 // 현재 뷰에서 활성 등급 읽기
 function getActiveGradeForView(view){
   if(view==='price') return activeGrade||'';
-  if(view==='special') return activeSpGrade||'';
+  if(view==='special'){
+    // 고객사 특별단가표: 선택된 고객사의 등급 반환
+    if(specialCid){
+      const c=ST.customers.find(x=>x.id===specialCid);
+      return c?c.grade:'';
+    }
+    return '';
+  }
   if(view==='byline') return activeBlGrade||'';
   if(view==='bycat') return activeBcGrade||'';
   if(view==='apparel') return activeApGrade||'';
@@ -1969,6 +1976,10 @@ function toggleSelMode(view){
   if(selMode&&selView===view){
     exitSelMode();
   } else {
+    // 고객사 특별단가표는 고객사 선택 필수
+    if(view==='special'&&!specialCid){
+      toast('고객사를 먼저 선택하세요','error');return;
+    }
     if(selMode) exitSelMode(false);
     selMode=true;
     selView=view;
