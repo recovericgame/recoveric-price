@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.80</title>
+<title>RECOVERIC 단가관리 시스템 v4.81</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -472,7 +472,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.80</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.81</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2031,27 +2031,26 @@ function selCopyKakao(){
 
   const blocks=[...selItems].map(fid=>{
     const f=ST.fabrics.find(x=>x.id===fid);if(!f)return '';
-    let disc=d;
+    let fmt;
     if(c){
-      const ov=(c.priceOverrides||{})[f.name];
-      if(ov&&typeof ov==='object'){
-        const discC=ST.grades[c.grade]?.discount||0;
-        const fmt2=field=>ov[field]!=null?ov[field].toLocaleString()+'원':(f[field]?applyD(f[field],discC).toLocaleString()+'원':'—');
-        const ribStr=f.rib?(f.ribUnit==='EA'?f.rib.toLocaleString()+'원/EA':fmt2('rib')):'—';
-        const spec=[f.width?f.width+'"':null,f.weight?f.weight+'g/y':null].filter(Boolean).join(' x ');
-        const bads=[f.badges?.recommend?'추천':'',f.badges?.newItem?'NEW':'',f.badges?.sale?'SALE':''].filter(Boolean).join(' · ');
-        let t=`[${f.name}]  RECOVERIC\n`;if(bads)t+=`★ ${bads}\n`;
-        t+=`# 8%MG : ${fmt2('mg')}\n# 백/백아이 : ${fmt2('baek')}\n# 무지 : ${fmt2('muji')}\n# 부속(RIB) : ${ribStr}\n\n■ 단가 : YD(야드)\n`;
-        if(spec)t+=`■ ${spec}\n`;t+=`■ ${comp(f)||'—'}`;return t;
-      }
-      disc=ST.grades[c.grade]?.discount||0;
+      // 고객사 특별단가 — copySpecialR과 동일하게 getSpPrice 사용
+      fmt=field=>{
+        if(field==='rib'&&f.ribUnit==='EA')return f.rib?f.rib.toLocaleString()+'원/EA':'—';
+        const {price}=getSpPrice(c,f,field);
+        return price?price.toLocaleString()+'원':'—';
+      };
+    } else {
+      // 일반 등급 할인
+      const disc=ST.grades[selGrade]?.discount||0;
+      fmt=field=>{
+        if(field==='rib'&&f.ribUnit==='EA')return f.rib?f.rib.toLocaleString()+'원/EA':'—';
+        const p=f[field];return p?applyD(p,disc).toLocaleString()+'원':'—';
+      };
     }
-    const fmt=p=>p?applyD(p,disc).toLocaleString()+'원':'—';
-    const ribStr=f.rib?(f.ribUnit==='EA'?f.rib.toLocaleString()+'원/EA':fmt(f.rib)):'—';
     const spec=[f.width?f.width+'"':null,f.weight?f.weight+'g/y':null].filter(Boolean).join(' x ');
     const bads=[f.badges?.recommend?'추천':'',f.badges?.newItem?'NEW':'',f.badges?.sale?'SALE':''].filter(Boolean).join(' · ');
     let t=`[${f.name}]  RECOVERIC\n`;if(bads)t+=`★ ${bads}\n`;
-    t+=`# 8%MG : ${fmt(f.mg)}\n# 백/백아이 : ${fmt(f.baek)}\n# 무지 : ${fmt(f.muji)}\n# 부속(RIB) : ${ribStr}\n\n■ 단가 : YD(야드)\n`;
+    t+=`# 8%MG : ${fmt('mg')}\n# 백/백아이 : ${fmt('baek')}\n# 무지 : ${fmt('muji')}\n# 부속(RIB) : ${fmt('rib')}\n\n■ 단가 : YD(야드)\n`;
     if(spec)t+=`■ ${spec}\n`;t+=`■ ${comp(f)||'—'}`;return t;
   }).filter(Boolean);
   const allText=blocks.join('\n\n');
