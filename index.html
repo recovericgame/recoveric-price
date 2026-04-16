@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.84</title>
+<title>RECOVERIC 단가관리 시스템 v4.85</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -482,7 +482,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.84</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.85</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1028,14 +1028,12 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     </div>
     <button onclick="closeSelPanel()" style="background:none;border:none;font-size:18px;color:var(--txt2);cursor:pointer;line-height:1">✕</button>
   </div>
-  <!-- 등급 선택 -->
+  <!-- 등급 표시 (좌측 선택 등급 자동 반영) -->
   <div class="sel-grade-bar">
-    <div style="font-size:10px;font-weight:700;color:var(--txt2);margin-bottom:7px">발송 등급 선택</div>
-    <div class="grade-tab-bar" style="margin:0" id="sel-grade-bar">
-      <button class="grade-tab active" data-grade="" onclick="setSelGrade(this,'')">표준가</button>
-      <button class="grade-tab" data-grade="silver" onclick="setSelGrade(this,'silver')">🥈 Silver</button>
-      <button class="grade-tab" data-grade="gold" onclick="setSelGrade(this,'gold')">🥇 Gold</button>
-      <button class="grade-tab" data-grade="vip" onclick="setSelGrade(this,'vip')">💎 VIP</button>
+    <div style="font-size:10px;font-weight:700;color:var(--txt2);margin-bottom:8px">발송 등급</div>
+    <div id="sel-grade-display" style="display:flex;align-items:center;gap:8px">
+      <span id="sel-grade-badge" style="display:inline-block;padding:5px 16px;border-radius:8px;font-size:12px;font-weight:800;letter-spacing:.5px">표준가</span>
+      <span style="font-size:11px;color:var(--txt3)">← 좌측 등급 탭 기준</span>
     </div>
   </div>
   <!-- 선택 목록 -->
@@ -1864,6 +1862,7 @@ function saveSlidePanel(){
 // ─ Grade tab (등급별 단가표 전용) ─
 function selectGradeTab(btn,grade){
   activeGrade=grade;
+  if(selMode&&selView==='price'){selGrade=activeGrade;updateSelGradeBadge(selGrade);}
   // 등급별 단가표의 등급 탭만 처리 (다른 뷰의 grade-tab에 영향 없도록)
   document.querySelectorAll('#view-price .grade-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -1939,21 +1938,46 @@ let selView='';           // 현재 선택 중인 뷰
 let selItems=new Set();   // 선택된 fabric id Set
 let selGrade='';          // 선택발송 등급
 
+// 현재 뷰에서 활성 등급 읽기
+function getActiveGradeForView(view){
+  if(view==='price') return activeGrade||'';
+  if(view==='special') return activeSpGrade||'';
+  if(view==='byline') return activeBlGrade||'';
+  if(view==='bycat') return activeBcGrade||'';
+  if(view==='apparel') return activeApGrade||'';
+  return '';
+}
+
+// 선택발송 패널 등급 배지 업데이트
+function updateSelGradeBadge(g){
+  const badge=document.getElementById('sel-grade-badge');
+  if(!badge)return;
+  const cfg={
+    '': {text:'표준가', bg:'#f0f0f0', color:'#333'},
+    silver:{text:'🥈 SILVER', bg:'rgba(85,112,160,.12)', color:'#3a5a9a'},
+    gold:  {text:'🥇 GOLD',   bg:'rgba(200,144,10,.12)', color:'#a07000'},
+    vip:   {text:'💎 VIP',    bg:'rgba(112,64,184,.12)', color:'#5a28a0'},
+  };
+  const c=cfg[g]||cfg[''];
+  badge.textContent=c.text;
+  badge.style.background=c.bg;
+  badge.style.color=c.color;
+  badge.style.border='1.5px solid '+c.color+'44';
+}
+
 function toggleSelMode(view){
   if(selMode&&selView===view){
-    // 같은 뷰에서 다시 누르면 OFF
     exitSelMode();
   } else {
-    // 다른 뷰 또는 새로 시작
     if(selMode) exitSelMode(false);
     selMode=true;
     selView=view;
     selItems.clear();
-    // 버튼 스타일
+    // 현재 뷰의 활성 등급을 자동으로 가져옴
+    selGrade=getActiveGradeForView(view);
+    updateSelGradeBadge(selGrade);
     updateSelModeBtn();
-    // 패널 열기
     document.getElementById('sel-panel').classList.add('open');
-    // 테이블 재렌더 (체크박스 추가)
     reRenderCurrentView();
     renderSelList();
   }
@@ -2009,10 +2033,9 @@ function updateSelCount(){
   if(badge)badge.textContent=selItems.size;
 }
 
-function setSelGrade(btn,g){
+function setSelGrade(g){
   selGrade=g;
-  document.querySelectorAll('#sel-grade-bar .grade-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  updateSelGradeBadge(g);
 }
 
 function renderSelList(){
@@ -3410,6 +3433,7 @@ function setBl(id,btn){
 }
 function setBlGrade(btn,grade){
   activeBlGrade=grade||'';
+  if(selMode&&selView==='byline'){selGrade=activeBlGrade;updateSelGradeBadge(selGrade);}
   renderByLine();
 }
 
@@ -3462,6 +3486,7 @@ function setBc(cat,btn){
 }
 function setBcGrade(btn,grade){
   activeBcGrade=grade||'';
+  if(selMode&&selView==='bycat'){selGrade=activeBcGrade;updateSelGradeBadge(selGrade);}
   renderByCat();
 }
 
@@ -3523,6 +3548,7 @@ function setAp(tag){
 }
 function setApGrade(btn,grade){
   activeApGrade=grade||'';
+  if(selMode&&selView==='apparel'){selGrade=activeApGrade;updateSelGradeBadge(selGrade);}
   document.querySelectorAll('#ap-grade-bar .grade-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderByApparel();
