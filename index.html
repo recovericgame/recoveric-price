@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.81</title>
+<title>RECOVERIC 단가관리 시스템 v4.82</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -472,7 +472,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.81</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.82</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -3105,12 +3105,16 @@ function renderSpecialTbl(){
     const lvCls=LVCLS[lv]||'promo';
     html+=`<tr class="section-row lv-${lvCls}"><td colspan="10">${lvIcons[lv]||'·'} ${allLvs[lv]||lv} · ${grouped[lv].length}종</td></tr>`;
     grouped[lv].forEach(f=>{
+      const gradeDisc=c.grade;
+      const gradeClass={silver:'gs',gold:'gg',vip:'gv'}[gradeDisc]||'';
       const fields=['mg','baek','muji'];
       const priceCells=fields.map(field=>{
         if(f.rib&&f.ribUnit==='EA'&&field==='rib')return`<td class="td-price"><span class="price-val">${f.rib.toLocaleString()}/EA</span></td>`;
         const {price,direct}=getSpPrice(c,f,field);
-        const style=direct?'color:#c02828;font-weight:800':'';
-        const val=price?`<span class="price-val" style="${style}">${price.toLocaleString()}</span>`:'<span class="price-null">—</span>';
+        // 직접 단가(빨강) vs 등급 할인가(등급 색상) vs 표준가(검정)
+        const cls=direct?'':'price-disc '+gradeClass;
+        const sty=direct?'color:#c02828;font-weight:800':'';
+        const val=price?`<span class="${cls||'price-val'}" style="${sty}">${price.toLocaleString()}</span>`:'<span class="price-null">—</span>';
         const restoreBtn=direct&&isAdm?`<button onclick="restoreSpPrice(${f.id},'${field}')" title="등급할인가로 복원" style="margin-left:4px;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:11px;padding:0 2px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--txt3)'">✕</button>`:'';
         return`<td class="td-price">${val}${restoreBtn}</td>`;
       });
@@ -3119,8 +3123,9 @@ function renderSpecialTbl(){
         if(!f.rib)return'<td class="td-price"><span class="price-null">—</span></td>';
         if(f.ribUnit==='EA')return`<td class="td-price"><span class="price-val">${f.rib.toLocaleString()}/EA</span></td>`;
         const {price,direct}=getSpPrice(c,f,'rib');
-        const style=direct?'color:#c02828;font-weight:800':'';
-        const val=price?`<span class="price-val" style="${style}">${price.toLocaleString()}</span>`:'<span class="price-null">—</span>';
+        const cls=direct?'':'price-disc '+gradeClass;
+        const sty=direct?'color:#c02828;font-weight:800':'';
+        const val=price?`<span class="${cls||'price-val'}" style="${sty}">${price.toLocaleString()}</span>`:'<span class="price-null">—</span>';
         const rb=direct&&isAdm?`<button onclick="restoreSpPrice(${f.id},'rib')" title="복원" style="margin-left:4px;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:11px;padding:0 2px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--txt3)'">✕</button>`:'';
         return`<td class="td-price">${val}${rb}</td>`;
       })();
