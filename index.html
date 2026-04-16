@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.79</title>
+<title>RECOVERIC 단가관리 시스템 v4.80</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -339,7 +339,55 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .copy-xs{background:var(--bg3);border:1.5px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--txt2);cursor:pointer;transition:.15s;white-space:nowrap}
 .copy-xs:hover{border-color:var(--sidebar);color:var(--sidebar)}
 
-/* ─── 슬라이드 편집 패널 ─── */
+/* ─── 선택발송 패널 ─── */
+#sel-panel{
+  position:fixed;top:0;right:0;bottom:0;width:300px;
+  background:var(--bg2);border-left:2px solid var(--gold-bd);
+  box-shadow:-4px 0 24px rgba(20,40,100,.12);
+  transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
+  z-index:498;display:flex;flex-direction:column;overflow:hidden;
+}
+#sel-panel.open{transform:translateX(0)}
+.sel-panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,var(--gold-lt),#fffbf0);flex-shrink:0;
+}
+.sel-panel-title{font-size:13px;font-weight:700;color:var(--txt);display:flex;align-items:center;gap:6px}
+.sel-count-badge{
+  background:var(--gold);color:#fff;font-size:10px;font-weight:800;
+  padding:2px 7px;border-radius:10px;
+}
+.sel-grade-bar{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg3);flex-shrink:0}
+.sel-grade-bar .grade-tab{padding:6px 12px;font-size:11px}
+.sel-list{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.sel-item{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  font-size:12px;color:var(--txt);
+}
+.sel-item-name{flex:1;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sel-item-cat{font-size:10px;color:var(--txt3);white-space:nowrap}
+.sel-item-rm{background:none;border:none;color:var(--txt3);cursor:pointer;font-size:14px;padding:0 2px;line-height:1;flex-shrink:0}
+.sel-item-rm:hover{color:var(--red)}
+.sel-empty{text-align:center;padding:32px 16px;color:var(--txt3);font-size:12px}
+.sel-actions{padding:12px 14px;border-top:1px solid var(--border);background:var(--bg3);flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+/* 선택 모드 체크박스 */
+.sel-chk{
+  width:16px;height:16px;cursor:pointer;accent-color:var(--gold);
+  flex-shrink:0;
+}
+.sel-mode-btn{
+  display:inline-flex;align-items:center;gap:5px;padding:6px 12px;
+  border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;
+  border:1.5px solid var(--gold-bd);background:var(--gold-lt);color:var(--gold);
+  transition:.15s;
+}
+.sel-mode-btn.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.sel-mode-btn:hover{opacity:.85}
+/* 선택된 행 하이라이트 */
+.price-tbl tbody tr.data-row.sel-selected{background:rgba(200,144,10,.06)!important}
+.price-tbl tbody tr.data-row.sel-selected .td-name{color:var(--gold);font-weight:800}
 .slide-panel{position:fixed;top:0;right:0;bottom:0;width:360px;background:var(--bg2);border-left:1.5px solid var(--border2);box-shadow:-4px 0 24px rgba(20,40,100,.1);transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:500;display:flex;flex-direction:column;overflow:hidden}
 .slide-panel.open{transform:translateX(0)}
 .slide-panel-dim{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:499;display:none}
@@ -424,7 +472,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.79</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.80</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -504,6 +552,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
             <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             전체 텍스트 복사
           </button>
+          <button class="sel-mode-btn" id="sel-btn-price" onclick="toggleSelMode('price')">☑ 선택발송</button>
         </div>
       </div>
 
@@ -604,6 +653,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
           <button class="btn btn-gold btn-sm" onclick="openCapture('special')" id="sp-capture-btn" style="display:none">📸 단가표 캡처</button>
           <button class="btn btn-outline btn-sm" onclick="copyAllSpecial()" id="sp-copy-btn" style="display:none">📋 전체 텍스트 복사</button>
           <button class="btn btn-navy btn-sm" id="sp-add-btn" onclick="openAddCust()">+ 고객사 추가</button>
+          <button class="sel-mode-btn" id="sel-btn-special" onclick="toggleSelMode('special')">☑ 선택발송</button>
         </div>
       </div>
       <!-- 필터 + 고객사 검색 바 -->
@@ -682,6 +732,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         <div style="display:flex;gap:8px">
           <button class="btn btn-gold btn-sm" onclick="openCapture('byline')">📸 캡처</button>
           <button class="btn btn-outline btn-sm" onclick="copyAllByLine()">📋 전체 텍스트 복사</button>
+          <button class="sel-mode-btn" id="sel-btn-byline" onclick="toggleSelMode('byline')">☑ 선택발송</button>
         </div>
       </div>
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px">
@@ -714,6 +765,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         <div style="display:flex;gap:8px">
           <button class="btn btn-gold btn-sm" onclick="openCapture('bycat')">📸 캡처</button>
           <button class="btn btn-outline btn-sm" onclick="copyAllByCat()">📋 전체 텍스트 복사</button>
+          <button class="sel-mode-btn" id="sel-btn-bycat" onclick="toggleSelMode('bycat')">☑ 선택발송</button>
         </div>
       </div>
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px">
@@ -746,6 +798,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         <div style="display:flex;gap:8px">
           <button class="btn btn-gold btn-sm" onclick="openCapture('apparel')">📸 캡처</button>
           <button class="btn btn-outline btn-sm" onclick="copyAllByApparel()">📋 전체 텍스트 복사</button>
+          <button class="sel-mode-btn" id="sel-btn-apparel" onclick="toggleSelMode('apparel')">☑ 선택발송</button>
         </div>
       </div>
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px">
@@ -778,6 +831,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="view" id="view-intro">
       <div class="view-header">
         <div class="view-title">원단 <span>소개</span></div>
+        <button class="sel-mode-btn" id="sel-btn-intro" onclick="toggleSelMode('intro')">☑ 선택발송</button>
       </div>
       <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow)">
         <!-- 1차: 조직 선택 -->
@@ -934,6 +988,39 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 
   </main>
 </div>
+</div>
+
+<!-- ═══ 선택발송 패널 ═══ -->
+<div id="sel-panel">
+  <div class="sel-panel-header">
+    <div class="sel-panel-title">
+      📤 선택발송
+      <span class="sel-count-badge" id="sel-count">0</span>
+    </div>
+    <button onclick="closeSelPanel()" style="background:none;border:none;font-size:18px;color:var(--txt2);cursor:pointer;line-height:1">✕</button>
+  </div>
+  <!-- 등급 선택 -->
+  <div class="sel-grade-bar">
+    <div style="font-size:10px;font-weight:700;color:var(--txt2);margin-bottom:7px">발송 등급 선택</div>
+    <div class="grade-tab-bar" style="margin:0" id="sel-grade-bar">
+      <button class="grade-tab active" data-grade="" onclick="setSelGrade(this,'')">표준가</button>
+      <button class="grade-tab" data-grade="silver" onclick="setSelGrade(this,'silver')">🥈 Silver</button>
+      <button class="grade-tab" data-grade="gold" onclick="setSelGrade(this,'gold')">🥇 Gold</button>
+      <button class="grade-tab" data-grade="vip" onclick="setSelGrade(this,'vip')">💎 VIP</button>
+    </div>
+  </div>
+  <!-- 선택 목록 -->
+  <div class="sel-list" id="sel-list">
+    <div class="sel-empty">품목을 체크하면<br>여기에 추가됩니다</div>
+  </div>
+  <!-- 액션 버튼 -->
+  <div class="sel-actions">
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-gold btn-sm" style="flex:1" onclick="selCopyKakao()">📋 카톡 복사</button>
+      <button class="btn btn-outline btn-sm" style="flex:1" onclick="selCapture()">📸 캡처</button>
+    </div>
+    <button onclick="selClearAll()" style="width:100%;padding:6px;background:none;border:1px solid var(--border2);border-radius:8px;font-size:11px;color:var(--txt3);cursor:pointer">전체 해제</button>
+  </div>
 </div>
 
 <!-- ═══ CAPTURE OVERLAY ═══ -->
@@ -1258,6 +1345,9 @@ function sv(name,btn,skipHistory){
   if(btn)btn.classList.add('active');
   else{const nb=document.getElementById('nb-'+name);if(nb)nb.classList.add('active');}
 
+  // 뷰 전환 시 선택 모드 종료 (다른 뷰로 이동 시)
+  if(selMode&&selView!==name){exitSelMode(false);}
+
   // 뷰 전환 시 상태 리셋
   if(name==='price'){
     activeGrade='';activeTag='';
@@ -1555,8 +1645,11 @@ function renderTbl(){
     sortFabs(grouped[lv]).forEach(f=>{
       const d=getDisc(f);
       const rib=f.rib?(f.ribUnit==='EA'?`<span class="price-val">${f.rib.toLocaleString()}/EA</span>`:fp(f.rib,d)):'<span class="price-null">—</span>';
-      html+=`<tr class="data-row" data-fid="${f.id}">
-        <td class="td-name">${badgeHtml(f)}${f.name}</td>
+      html+=`<tr class="data-row${selMode&&selView==='price'&&selItems.has(f.id)?' sel-selected':''}" data-fid="${f.id}">
+        <td class="td-name" style="display:flex;align-items:center;gap:8px">
+          ${selMode&&selView==='price'?`<input type="checkbox" class="sel-chk" ${selItems.has(f.id)?'checked':''} onchange="toggleSelItem(${f.id})" onclick="event.stopPropagation()">`:''}
+          ${badgeHtml(f)}${f.name}
+        </td>
         <td class="td-cat">${f.category}</td>
         <td class="td-price">${fp(f.mg,d)}</td>
         <td class="td-price">${fp(f.baek,d)}</td>
@@ -1566,8 +1659,8 @@ function renderTbl(){
         <td class="td-spec">${f.weight?f.weight+'g':'—'}</td>
         <td class="td-comp">${comp(f)||'—'}</td>
         <td class="td-copy"><div class="row-acts">
-          <button class="copy-xs copy-msg" data-copy-fid="${f.id}" onclick="copyR(${f.id})">메세지 복사</button>
-          ${isAdm?`<button class="copy-xs" style="border-color:var(--gold);color:var(--gold)" onclick="openSlidePanel(${f.id})">수정</button>`:''}
+          ${!(selMode&&selView==='price')?`<button class="copy-xs copy-msg" data-copy-fid="${f.id}" onclick="copyR(${f.id})">메세지 복사</button>`:''}
+          ${isAdm&&!(selMode&&selView==='price')?`<button class="copy-xs" style="border-color:var(--gold);color:var(--gold)" onclick="openSlidePanel(${f.id})">수정</button>`:''}
         </div></td>
       </tr>`;
     });
@@ -1805,6 +1898,197 @@ function downloadExcel(){
   }
 }
 
+// ─ 선택발송 시스템 ─
+let selMode=false;        // 선택 모드 ON/OFF
+let selView='';           // 현재 선택 중인 뷰
+let selItems=new Set();   // 선택된 fabric id Set
+let selGrade='';          // 선택발송 등급
+
+function toggleSelMode(view){
+  if(selMode&&selView===view){
+    // 같은 뷰에서 다시 누르면 OFF
+    exitSelMode();
+  } else {
+    // 다른 뷰 또는 새로 시작
+    if(selMode) exitSelMode(false);
+    selMode=true;
+    selView=view;
+    selItems.clear();
+    // 버튼 스타일
+    updateSelModeBtn();
+    // 패널 열기
+    document.getElementById('sel-panel').classList.add('open');
+    // 테이블 재렌더 (체크박스 추가)
+    reRenderCurrentView();
+    renderSelList();
+  }
+}
+function exitSelMode(rerender=true){
+  selMode=false;
+  selItems.clear();
+  updateSelModeBtn();
+  document.getElementById('sel-panel').classList.remove('open');
+  if(rerender)reRenderCurrentView();
+}
+function closeSelPanel(){exitSelMode();}
+
+function updateSelModeBtn(){
+  const views=['price','special','byline','bycat','apparel','intro'];
+  views.forEach(v=>{
+    const btn=document.getElementById('sel-btn-'+v);
+    if(!btn)return;
+    btn.classList.toggle('active', selMode&&selView===v);
+    btn.textContent=selMode&&selView===v?'✕ 선택 종료':'☑ 선택발송';
+  });
+}
+
+function reRenderCurrentView(){
+  if(selView==='price')renderTbl();
+  else if(selView==='special')renderSpecialTbl();
+  else if(selView==='byline')renderByLine();
+  else if(selView==='bycat')renderByCat();
+  else if(selView==='apparel')renderByApparel();
+  else if(selView==='intro')renderIntroList(document.getElementById('intro-cat-sel')?.value||'');
+}
+
+function toggleSelItem(fid){
+  if(selItems.has(fid)){
+    selItems.delete(fid);
+  } else {
+    selItems.add(fid);
+  }
+  renderSelList();
+  // 행 하이라이트 동기화
+  document.querySelectorAll('.data-row[data-fid]').forEach(tr=>{
+    tr.classList.toggle('sel-selected', selItems.has(+tr.dataset.fid));
+  });
+  // 인트로 목록 체크박스 동기화
+  document.querySelectorAll('.intro-sel-chk').forEach(chk=>{
+    chk.checked=selItems.has(+chk.dataset.fid);
+  });
+  updateSelCount();
+}
+
+function updateSelCount(){
+  const badge=document.getElementById('sel-count');
+  if(badge)badge.textContent=selItems.size;
+}
+
+function setSelGrade(btn,g){
+  selGrade=g;
+  document.querySelectorAll('#sel-grade-bar .grade-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function renderSelList(){
+  const list=document.getElementById('sel-list');
+  if(!list)return;
+  updateSelCount();
+  if(!selItems.size){
+    list.innerHTML='<div class="sel-empty">품목을 체크하면<br>여기에 추가됩니다</div>';
+    return;
+  }
+  const allLvs=getAllLevels();
+  list.innerHTML=[...selItems].map(fid=>{
+    const f=ST.fabrics.find(x=>x.id===fid);
+    if(!f)return '';
+    return `<div class="sel-item">
+      <div style="flex:1;min-width:0">
+        <div class="sel-item-name">${f.name}</div>
+        <div class="sel-item-cat">${allLvs[f.level]||f.level} · ${f.category}</div>
+      </div>
+      <button class="sel-item-rm" onclick="toggleSelItem(${fid})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function selClearAll(){
+  selItems.clear();
+  renderSelList();
+  document.querySelectorAll('.data-row.sel-selected').forEach(tr=>tr.classList.remove('sel-selected'));
+  document.querySelectorAll('.intro-sel-chk').forEach(chk=>{chk.checked=false;});
+}
+
+// 선택발송 카톡 복사
+function selCopyKakao(){
+  if(!selItems.size){toast('선택된 품목이 없습니다','error');return;}
+  const d=ST.grades[selGrade]?.discount||0;
+  const cid=selView==='special'?specialCid:null;
+  const c=cid?ST.customers.find(x=>x.id===cid):null;
+
+  // 원단소개 뷰는 buildIntroMsg 형식
+  if(selView==='intro'){
+    const blocks=[...selItems].map(fid=>{
+      const f=ST.fabrics.find(x=>x.id===fid);if(!f)return '';
+      return buildIntroMsg(f);
+    }).filter(Boolean);
+    const allText=blocks.join('\n\n');
+    doCopyText(allText)
+      .then(()=>toast(`${selItems.size}개 원단 소개 복사 완료 ✓`,'success'))
+      .catch(()=>showCopyPopup(allText));
+    return;
+  }
+
+  const blocks=[...selItems].map(fid=>{
+    const f=ST.fabrics.find(x=>x.id===fid);if(!f)return '';
+    let disc=d;
+    if(c){
+      const ov=(c.priceOverrides||{})[f.name];
+      if(ov&&typeof ov==='object'){
+        const discC=ST.grades[c.grade]?.discount||0;
+        const fmt2=field=>ov[field]!=null?ov[field].toLocaleString()+'원':(f[field]?applyD(f[field],discC).toLocaleString()+'원':'—');
+        const ribStr=f.rib?(f.ribUnit==='EA'?f.rib.toLocaleString()+'원/EA':fmt2('rib')):'—';
+        const spec=[f.width?f.width+'"':null,f.weight?f.weight+'g/y':null].filter(Boolean).join(' x ');
+        const bads=[f.badges?.recommend?'추천':'',f.badges?.newItem?'NEW':'',f.badges?.sale?'SALE':''].filter(Boolean).join(' · ');
+        let t=`[${f.name}]  RECOVERIC\n`;if(bads)t+=`★ ${bads}\n`;
+        t+=`# 8%MG : ${fmt2('mg')}\n# 백/백아이 : ${fmt2('baek')}\n# 무지 : ${fmt2('muji')}\n# 부속(RIB) : ${ribStr}\n\n■ 단가 : YD(야드)\n`;
+        if(spec)t+=`■ ${spec}\n`;t+=`■ ${comp(f)||'—'}`;return t;
+      }
+      disc=ST.grades[c.grade]?.discount||0;
+    }
+    const fmt=p=>p?applyD(p,disc).toLocaleString()+'원':'—';
+    const ribStr=f.rib?(f.ribUnit==='EA'?f.rib.toLocaleString()+'원/EA':fmt(f.rib)):'—';
+    const spec=[f.width?f.width+'"':null,f.weight?f.weight+'g/y':null].filter(Boolean).join(' x ');
+    const bads=[f.badges?.recommend?'추천':'',f.badges?.newItem?'NEW':'',f.badges?.sale?'SALE':''].filter(Boolean).join(' · ');
+    let t=`[${f.name}]  RECOVERIC\n`;if(bads)t+=`★ ${bads}\n`;
+    t+=`# 8%MG : ${fmt(f.mg)}\n# 백/백아이 : ${fmt(f.baek)}\n# 무지 : ${fmt(f.muji)}\n# 부속(RIB) : ${ribStr}\n\n■ 단가 : YD(야드)\n`;
+    if(spec)t+=`■ ${spec}\n`;t+=`■ ${comp(f)||'—'}`;return t;
+  }).filter(Boolean);
+  const allText=blocks.join('\n\n');
+  doCopyText(allText)
+    .then(()=>toast(`${selItems.size}개 품목 카톡 복사 완료 ✓`,'success'))
+    .catch(()=>showCopyPopup(allText));
+}
+
+// 선택발송 캡처 — 캡처 오버레이를 선택된 품목들로 열기
+function selCapture(){
+  if(!selItems.size){toast('선택된 품목이 없습니다','error');return;}
+  // 캡처 오버레이를 'selected' 컨텍스트로 열기
+  capCtx='selected';
+  capGrade=selGrade;
+  capBlob=null;
+  const title='RECOVERIC 선택 단가표'+(selGrade?' ['+selGrade.toUpperCase()+']':'');
+  document.getElementById('cap-cn').textContent=title;
+  document.getElementById('cap-dt').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'})+' 기준';
+  // 등급 버튼 현재 selGrade 로 맞춤
+  document.querySelectorAll('.cap-grade-btn').forEach(b=>b.classList.toggle('active',b.dataset.grade===selGrade));
+  const disc=selGrade?ST.grades[selGrade]?.discount||0:0;
+  document.getElementById('cap-grade-info').textContent=selGrade?(selGrade.toUpperCase()+' · −'+disc+'%'):'';
+  buildCapTable();
+  document.getElementById('cap-preview').style.display='block';
+  document.getElementById('cap-img-wrap').style.display='none';
+  document.getElementById('cap-img-wrap').innerHTML='';
+  document.getElementById('cap-do-btn').style.display='inline-flex';
+  const btnTop=document.getElementById('cap-do-btn-top');
+  if(btnTop){btnTop.style.display='inline-flex';btnTop.textContent='📸 이미지 생성';btnTop.disabled=false;}
+  document.getElementById('cap-dl-btn').style.display='none';
+  document.getElementById('cap-cp-btn').style.display='none';
+  const gradeBar=document.getElementById('cap-grade-bar');
+  if(gradeBar)gradeBar.style.display='flex';
+  document.querySelectorAll('.cap-grade-btn').forEach(b=>b.disabled=false);
+  document.getElementById('capture-overlay').classList.add('open');
+}
+
 function copyR(id){
   const f=ST.fabrics.find(x=>x.id===id);if(!f)return;
   const d=getDisc(f);
@@ -1958,7 +2242,9 @@ function capOutsideClick(e){
 
 function buildCapTable(){
   let fabs;
-  if(capCtx==='special'&&specialCid){
+  if(capCtx==='selected'){
+    fabs=ST.fabrics.filter(f=>selItems.has(f.id));
+  } else if(capCtx==='special'&&specialCid){
     fabs=ST.fabrics;
   } else if(capCtx==='byline'){
     fabs=activeBl?ST.fabrics.filter(f=>f.level===activeBl):ST.fabrics;
@@ -2839,15 +3125,18 @@ function renderSpecialTbl(){
         const rb=direct&&isAdm?`<button onclick="restoreSpPrice(${f.id},'rib')" title="복원" style="margin-left:4px;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:11px;padding:0 2px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--txt3)'">✕</button>`:'';
         return`<td class="td-price">${val}${rb}</td>`;
       })();
-      html+=`<tr class="data-row" data-fid="${f.id}">
-        <td class="td-name">${f.name}</td><td class="td-cat">${f.category}</td>
+      html+=`<tr class="data-row${selMode&&selView==='special'&&selItems.has(f.id)?' sel-selected':''}" data-fid="${f.id}">
+        <td class="td-name" style="display:flex;align-items:center;gap:8px">
+          ${selMode&&selView==='special'?`<input type="checkbox" class="sel-chk" ${selItems.has(f.id)?'checked':''} onchange="toggleSelItem(${f.id})" onclick="event.stopPropagation()">`:'' }
+          ${f.name}
+        </td><td class="td-cat">${f.category}</td>
         ${priceCells.join('')}${ribField}
         <td class="td-spec">${f.width?f.width+'"':'—'}</td>
         <td class="td-spec">${f.weight?f.weight+'g':'—'}</td>
         <td class="td-comp">${comp(f)||'—'}</td>
         <td class="td-copy"><div class="row-acts">
-          <button class="copy-msg" onclick="copySpecialR(${f.id})">복사</button>
-          ${isAdm?`<button class="copy-xs" style="border-color:var(--gold);color:var(--gold)" onclick="openSpSlidePanel(${f.id})">수정</button>`:''}
+          ${!(selMode&&selView==='special')?`<button class="copy-msg" onclick="copySpecialR(${f.id})">복사</button>`:''}
+          ${isAdm&&!(selMode&&selView==='special')?`<button class="copy-xs" style="border-color:var(--gold);color:var(--gold)" onclick="openSpSlidePanel(${f.id})">수정</button>`:''}
         </div></td>
       </tr>`;
     });
@@ -3004,13 +3293,15 @@ function renderByLine(){
 }
 function blRow(f,d,g){
   const rib=f.rib?(f.ribUnit==='EA'?`<span class="price-val">${f.rib.toLocaleString()}/EA</span>`:fp(f.rib,d,g)):'<span class="price-null">—</span>';
-  return`<tr class="data-row" data-fid="${f.id}">
-    <td class="td-name">${badgeHtml(f)}${f.name}</td><td class="td-cat">${f.category}</td>
+  const selChk=selMode&&selView==='byline'?`<input type="checkbox" class="sel-chk" ${selItems.has(f.id)?'checked':''} onchange="toggleSelItem(${f.id})" onclick="event.stopPropagation()">`:'' ;
+  const copyBtn=!(selMode&&selView==='byline')?`<button class="copy-msg" onclick="copyRSimple(${f.id},${d})">복사</button>`:'';
+  return`<tr class="data-row${selMode&&selView==='byline'&&selItems.has(f.id)?' sel-selected':''}" data-fid="${f.id}">
+    <td class="td-name" style="display:flex;align-items:center;gap:8px">${selChk}${badgeHtml(f)}${f.name}</td><td class="td-cat">${f.category}</td>
     <td class="td-price">${fp(f.mg,d,g)}</td><td class="td-price">${fp(f.baek,d,g)}</td>
     <td class="td-price">${fp(f.muji,d,g)}</td><td class="td-price">${rib}</td>
     <td class="td-spec">${f.width?f.width+'"':'—'}</td><td class="td-spec">${f.weight?f.weight+'g':'—'}</td>
     <td class="td-comp">${comp(f)||'—'}</td>
-    <td class="td-copy"><div class="row-acts"><button class="copy-msg" onclick="copyRSimple(${f.id},${d})">복사</button></div></td>
+    <td class="td-copy"><div class="row-acts">${copyBtn}</div></td>
   </tr>`;
 }
 function setBl(id,btn){
@@ -3049,12 +3340,14 @@ function renderByCat(){
   });
   const mkRow=f=>{
     const rib=f.rib?(f.ribUnit==='EA'?`<span class="price-val">${f.rib.toLocaleString()}/EA</span>`:fp(f.rib,d,g)):'<span class="price-null">—</span>';
-    return`<tr class="data-row"><td class="td-name">${badgeHtml(f)}${f.name}</td><td class="td-cat">${allLvs[f.level]||f.level}</td>
+    const selChk=selMode&&selView==='bycat'?`<input type="checkbox" class="sel-chk" ${selItems.has(f.id)?'checked':''} onchange="toggleSelItem(${f.id})" onclick="event.stopPropagation()">`:'' ;
+    const copyBtn=!(selMode&&selView==='bycat')?`<button class="copy-msg" onclick="copyRSimple(${f.id},${d})">복사</button>`:'';
+    return`<tr class="data-row${selMode&&selView==='bycat'&&selItems.has(f.id)?' sel-selected':''}" data-fid="${f.id}"><td class="td-name" style="display:flex;align-items:center;gap:8px">${selChk}${badgeHtml(f)}${f.name}</td><td class="td-cat">${allLvs[f.level]||f.level}</td>
       <td class="td-price">${fp(f.mg,d,g)}</td><td class="td-price">${fp(f.baek,d,g)}</td>
       <td class="td-price">${fp(f.muji,d,g)}</td><td class="td-price">${rib}</td>
       <td class="td-spec">${f.width?f.width+'"':'—'}</td><td class="td-spec">${f.weight?f.weight+'g':'—'}</td>
       <td class="td-comp">${comp(f)||'—'}</td>
-      <td class="td-copy"><div class="row-acts"><button class="copy-msg" onclick="copyRSimple(${f.id},${d})">복사</button></div></td></tr>`;
+      <td class="td-copy"><div class="row-acts">${copyBtn}</div></td></tr>`;
   };
   let html='';
   const grouped2={};sortedFabs.forEach(f=>{if(!grouped2[f.category])grouped2[f.category]=[];grouped2[f.category].push(f);});
@@ -3100,12 +3393,14 @@ function renderByApparel(){
     html+=`<tr class="section-row lv-${lvCls}"><td colspan="10">▸ ${allLvs[lv]||lv} · ${grouped[lv].length}종</td></tr>`;
     sortFabs(grouped[lv]).forEach(f=>{
       const rib=f.rib?(f.ribUnit==='EA'?`<span class="price-val">${f.rib.toLocaleString()}/EA</span>`:fp(f.rib,d,g)):'<span class="price-null">—</span>';
-      html+=`<tr class="data-row">
-        <td class="td-name">${badgeHtml(f)}${f.name}</td><td class="td-cat">${allLvs[f.level]||f.level}</td><td class="td-cat">${f.category}</td>
+      const selChk=selMode&&selView==='apparel'?`<input type="checkbox" class="sel-chk" ${selItems.has(f.id)?'checked':''} onchange="toggleSelItem(${f.id})" onclick="event.stopPropagation()">`:'' ;
+      const copyBtn=!(selMode&&selView==='apparel')?`<button class="copy-msg" onclick="copyRSimple(${f.id},${d})">복사</button>`:'';
+      html+=`<tr class="data-row${selMode&&selView==='apparel'&&selItems.has(f.id)?' sel-selected':''}" data-fid="${f.id}">
+        <td class="td-name" style="display:flex;align-items:center;gap:8px">${selChk}${badgeHtml(f)}${f.name}</td><td class="td-cat">${allLvs[f.level]||f.level}</td><td class="td-cat">${f.category}</td>
         <td class="td-price">${fp(f.mg,d,g)}</td><td class="td-price">${fp(f.baek,d,g)}</td><td class="td-price">${fp(f.muji,d,g)}</td>
         <td class="td-spec">${f.width?f.width+'"':'—'}</td><td class="td-spec">${f.weight?f.weight+'g':'—'}</td>
         <td class="td-comp">${comp(f)||'—'}</td>
-        <td class="td-copy"><div class="row-acts"><button class="copy-msg" onclick="copyRSimple(${f.id},${d})">복사</button></div></td>
+        <td class="td-copy"><div class="row-acts">${copyBtn}</div></td>
       </tr>`;
     });
   });
@@ -3213,14 +3508,15 @@ function renderIntroList(filterCat){
     const rows=fabrics.filter(f=>(f.category||'미분류')===cat);
     return `<div style="margin-bottom:12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)">
       <div style="padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--txt2);letter-spacing:.5px">${cat} · ${rows.length}종</div>
-      ${rows.map(f=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+      ${rows.map(f=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:${selMode&&selView==='intro'&&selItems.has(f.id)?'rgba(200,144,10,.05)':''}" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='${selMode&&selView==='intro'&&selItems.has(f.id)?'rgba(200,144,10,.05)':''}'">
+        ${selMode&&selView==='intro'?`<input type="checkbox" class="sel-chk intro-sel-chk" data-fid="${f.id}" ${selItems.has(f.id)?'checked':''} onchange="toggleSelItem(${f.id})" style="flex-shrink:0">`:'' }
         <div style="flex:1;min-width:120px">
           <div style="font-size:13px;font-weight:700;color:var(--txt)">${f.name}</div>
           ${f.description?`<div style="font-size:11px;color:var(--txt3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px">${f.description}</div>`:'<div style="font-size:11px;color:var(--red);margin-top:2px">설명 미입력</div>'}
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
-          <button class="btn btn-gold btn-sm" onclick="copyIntroById(${f.id})" style="font-size:11px;padding:5px 10px">📋 복사</button>
-          ${isAdm?`<button class="btn btn-outline btn-sm" onclick="openIntroEditById(${f.id})" style="font-size:11px;padding:5px 10px">✎ 수정</button>`:''}
+          ${!(selMode&&selView==='intro')?`<button class="btn btn-gold btn-sm" onclick="copyIntroById(${f.id})" style="font-size:11px;padding:5px 10px">📋 복사</button>`:''}
+          ${isAdm&&!(selMode&&selView==='intro')?`<button class="btn btn-outline btn-sm" onclick="openIntroEditById(${f.id})" style="font-size:11px;padding:5px 10px">✎ 수정</button>`:''}
         </div>
       </div>`).join('')}
     </div>`;
