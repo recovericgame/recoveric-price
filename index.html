@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.82</title>
+<title>RECOVERIC 단가관리 시스템 v4.83</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -472,7 +472,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.82</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.83</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2062,18 +2062,36 @@ function selCopyKakao(){
 // 선택발송 캡처 — 캡처 오버레이를 선택된 품목들로 열기
 function selCapture(){
   if(!selItems.size){toast('선택된 품목이 없습니다','error');return;}
-  // 캡처 오버레이를 'selected' 컨텍스트로 열기
   capCtx='selected';
   capGrade=selGrade;
   capBlob=null;
-  const title='RECOVERIC 선택 단가표'+(selGrade?' ['+selGrade.toUpperCase()+']':'');
+
+  // 제목: 고객사 특별단가표면 고객사명 포함
+  let title='RECOVERIC 선택 단가표';
+  if(selView==='special'&&specialCid){
+    const c=ST.customers.find(x=>x.id===specialCid);
+    if(c){
+      const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};
+      title=`${c.name} 선택 단가표 [${gl[c.grade]||c.grade.toUpperCase()}]`;
+    }
+  } else if(selGrade){
+    title=`RECOVERIC 선택 단가표 [${selGrade.toUpperCase()}]`;
+  }
   document.getElementById('cap-cn').textContent=title;
   document.getElementById('cap-dt').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'})+' 기준';
-  // 등급 버튼 현재 selGrade 로 맞춤
-  document.querySelectorAll('.cap-grade-btn').forEach(b=>b.classList.toggle('active',b.dataset.grade===selGrade));
-  const disc=selGrade?ST.grades[selGrade]?.discount||0:0;
-  document.getElementById('cap-grade-info').textContent=selGrade?(selGrade.toUpperCase()+' · −'+disc+'%'):'';
-  buildCapTable();
+  // 고객사 뷰일 때: 등급 선택 바 숨기고 고객사 등급 그대로 사용
+  const gradeBar=document.getElementById('cap-grade-bar');
+  if(selView==='special'&&specialCid){
+    if(gradeBar)gradeBar.style.display='none';
+    // capGrade를 고객사 등급으로 설정
+    const c=ST.customers.find(x=>x.id===specialCid);
+    if(c)capGrade=c.grade;
+  } else {
+    if(gradeBar)gradeBar.style.display='flex';
+    document.querySelectorAll('.cap-grade-btn').forEach(b=>b.classList.toggle('active',b.dataset.grade===selGrade));
+    const disc=selGrade?ST.grades[selGrade]?.discount||0:0;
+    document.getElementById('cap-grade-info').textContent=selGrade?(selGrade.toUpperCase()+' · −'+disc+'%'):'';
+  }
   document.getElementById('cap-preview').style.display='block';
   document.getElementById('cap-img-wrap').style.display='none';
   document.getElementById('cap-img-wrap').innerHTML='';
@@ -2082,9 +2100,8 @@ function selCapture(){
   if(btnTop){btnTop.style.display='inline-flex';btnTop.textContent='📸 이미지 생성';btnTop.disabled=false;}
   document.getElementById('cap-dl-btn').style.display='none';
   document.getElementById('cap-cp-btn').style.display='none';
-  const gradeBar=document.getElementById('cap-grade-bar');
-  if(gradeBar)gradeBar.style.display='flex';
   document.querySelectorAll('.cap-grade-btn').forEach(b=>b.disabled=false);
+  buildCapTable();
   document.getElementById('capture-overlay').classList.add('open');
 }
 
@@ -2217,17 +2234,11 @@ function capDiscFor(f){
 }
 
 function capPriceFor(f,field){
-  // special 컨텍스트 + 고객사 선택 시 → 직접단가 우선
-  if(capCtx==='special'&&specialCid){
+  // selected 컨텍스트이면서 special 뷰에서 열었을 때 → 고객사 단가 우선
+  const useCustomer=(capCtx==='special'||( capCtx==='selected'&&selView==='special'))&&specialCid;
+  if(useCustomer){
     const c=ST.customers.find(x=>x.id===specialCid);
-    if(c){
-      const ov=(c.priceOverrides||{})[f.name];
-      if(ov&&typeof ov==='object'&&ov[field]!=null)return{price:ov[field],direct:true};
-      // 없으면 고객사 등급 할인 적용
-      const d=ST.grades[c.grade]?.discount||0;
-      const p=f[field];if(!p)return{price:null,direct:false};
-      return{price:applyD(p,d),direct:false};
-    }
+    if(c)return getSpPrice(c,f,field);
   }
   // 일반 컨텍스트
   const d=capDiscFor(f);
@@ -2297,13 +2308,20 @@ function buildCapTable(){
         const {price}=capPriceFor(f,field);
         return price?price.toLocaleString():'-';
       };
-      // direct 단가가 있으면 빨간색으로 표시
+      // 등급 색상 결정 (special/selected+special → 고객사 등급, 그 외 → selGrade/capGrade)
+      const useCustomer=(capCtx==='special'||(capCtx==='selected'&&selView==='special'))&&specialCid;
+      const dispGrade=useCustomer?(ST.customers.find(x=>x.id===specialCid)?.grade||''):capGrade;
+      const gradeColor={silver:'#3a5a9a',gold:'#a07000',vip:'#5a28a0'}[dispGrade]||'';
+      // direct 단가: 빨강, 등급 할인가: 등급색, 표준가: 검정
       const fmtCell=field=>{
+        if(field==='rib'&&f.ribUnit==='EA')return f.rib?f.rib.toLocaleString()+'/EA':'-';
         const {price,direct}=capPriceFor(f,field);
         if(!price)return '-';
-        return direct?`<span style="color:#c02828;font-weight:700">${price.toLocaleString()}</span>`:price.toLocaleString();
+        if(direct)return`<span style="color:#c02828;font-weight:700">${price.toLocaleString()}</span>`;
+        if(gradeColor)return`<span style="color:${gradeColor};font-weight:700">${price.toLocaleString()}</span>`;
+        return price.toLocaleString();
       };
-      const rib=f.rib?(f.ribUnit==='EA'?f.rib.toLocaleString()+'/EA':fmtField('rib')):'-';
+      const rib=f.rib?(f.ribUnit==='EA'?f.rib.toLocaleString()+'/EA':fmtCell('rib')):'-';
       rows+=`<tr>
         <td style="text-align:left;font-weight:600">${badgeHtml(f)}${f.name}</td>
         <td style="text-align:center">${f.category}</td>
