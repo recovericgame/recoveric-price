@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.90</title>
+<title>RECOVERIC 단가관리 시스템 v4.91</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -483,7 +483,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.90</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.91</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1083,16 +1083,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       </div>
     </div>
     <!-- 등급 선택 바 -->
-    <div id="cap-grade-bar" style="display:flex;align-items:center;gap:12px;padding:10px 20px;background:#f7f9fd;border-bottom:1px solid #e8ecf4;flex-wrap:wrap">
-      <span style="font-size:12px;color:#5a6b8a;font-weight:600">캡처 등급 선택</span>
-      <div style="display:flex;gap:6px">
-        <button class="cap-grade-btn active" data-grade="" onclick="selectCapGrade(this,'')">표준 단가</button>
-        <button class="cap-grade-btn" data-grade="silver" onclick="selectCapGrade(this,'silver')">🥈 Silver</button>
-        <button class="cap-grade-btn" data-grade="gold" onclick="selectCapGrade(this,'gold')">🥇 Gold</button>
-        <button class="cap-grade-btn" data-grade="vip" onclick="selectCapGrade(this,'vip')">💎 VIP</button>
-      </div>
-      <span id="cap-grade-info" style="font-size:11px;color:#9aa0b8"></span>
-    </div>
+    <div id="cap-grade-bar" style="display:none"></div>
     <div class="cap-scroll-area">
       <!-- 로딩 표시 -->
       <div id="cap-loading" style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:14px">
@@ -2302,17 +2293,16 @@ function selectCapGrade(btn, grade){
   if(grade) titleEl.textContent='RECOVERIC 단가표 ['+grade.toUpperCase()+' 등급]';
   else titleEl.textContent='RECOVERIC 단가표';
   buildCapTable();
-  // 이미지 생성 후 등급 변경 시 → 미리보기 모드로 자동 복원
-  const imgWrap=document.getElementById('cap-img-wrap');
-  if(imgWrap&&imgWrap.style.display!=='none'){
-    imgWrap.style.display='none';
-    imgWrap.innerHTML='';
-    document.getElementById('cap-preview').style.display='block';
-          document.getElementById('cap-dl-btn').style.display='none';
-    document.getElementById('cap-cp-btn').style.display='none';
-    const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
-    capBlob=null;
-  }
+  // 등급 변경 시 자동 재캡처
+  document.getElementById('cap-preview').style.display='block';
+  document.getElementById('cap-img-wrap').style.display='none';
+  document.getElementById('cap-img-wrap').innerHTML='';
+  document.getElementById('cap-dl-btn').style.display='none';
+  document.getElementById('cap-cp-btn').style.display='none';
+  const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
+  const retry2=document.getElementById('cap-retry-btn');if(retry2)retry2.style.display='none';
+  capBlob=null;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(doCapture,80)));
 }
 
 function capDiscFor(f){
@@ -2427,14 +2417,12 @@ function buildCapTable(){
 function openCapture(viewCtx){
   const ctx=viewCtx||'price';
   capCtx=ctx;
+
   // 제목 설정
   let titleText='RECOVERIC 단가표';
   if(ctx==='special'&&specialCid){
     const c=ST.customers.find(x=>x.id===specialCid);
-    if(c){
-      const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};
-      titleText=`${c.name} 전용 단가표 [${gl[c.grade]||c.grade.toUpperCase()}]`;
-    }
+    if(c){const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};titleText=`${c.name} 전용 단가표 [${gl[c.grade]||c.grade.toUpperCase()}]`;}
   } else if(ctx==='byline'&&activeBl){
     const allLvs=getAllLevels();titleText=`${allLvs[activeBl]||activeBl} 단가표`;
   } else if(ctx==='bycat'&&activeBc){
@@ -2442,69 +2430,32 @@ function openCapture(viewCtx){
   } else if(ctx==='apparel'&&activeAp){
     titleText=`${activeAp} 추천 단가표`;
   }
-  const titleEl=document.getElementById('cap-cn');
-  if(titleEl)titleEl.textContent=titleText;
+  document.getElementById('cap-cn').textContent=titleText;
   document.getElementById('cap-dt').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'})+' 기준';
-  const allLvs=getAllLevels();
-  // 컨텍스트별 초기 등급 결정
-  let initGrade='';
-  if(ctx==='byline') initGrade=activeBlGrade||'';
-  else if(ctx==='bycat') initGrade=activeBcGrade||'';
-  else if(ctx==='apparel') initGrade=activeApGrade||'';
-  else if(ctx==='special'&&specialCid){
-    const c=ST.customers.find(x=>x.id===specialCid);
-    if(c)initGrade=c.grade||'';
-  } else initGrade=activeGrade||'';
-  capGrade=initGrade;
-  document.querySelectorAll('.cap-grade-btn').forEach(b=>b.classList.toggle('active',b.dataset.grade===initGrade));
-  if(initGrade){const disc=ST.grades[initGrade]?.discount||0;document.getElementById('cap-grade-info').textContent=initGrade.toUpperCase()+' 등급 · −'+disc+'%';}
-  else document.getElementById('cap-grade-info').textContent='';
+
+  // 현재 뷰의 등급을 자동으로 읽어 capGrade 고정
+  if(ctx==='byline') capGrade=activeBlGrade||'';
+  else if(ctx==='bycat') capGrade=activeBcGrade||'';
+  else if(ctx==='apparel') capGrade=activeApGrade||'';
+  else if(ctx==='special'&&specialCid){const c=ST.customers.find(x=>x.id===specialCid);capGrade=c?c.grade:'';}
+  else if(ctx==='selected') capGrade=selGrade||'';
+  else capGrade=activeGrade||'';
+
   buildCapTable();
+
+  // UI 초기화
   document.getElementById('cap-preview').style.display='block';
   document.getElementById('cap-img-wrap').style.display='none';
   document.getElementById('cap-img-wrap').innerHTML='';
   document.getElementById('cap-dl-btn').style.display='none';
   document.getElementById('cap-cp-btn').style.display='none';
-  capBlob=null;
-
-  // ── 등급 선택 바 제어 ──
-  const gradeBar=document.getElementById('cap-grade-bar');
-  const gradeBtns=document.querySelectorAll('.cap-grade-btn');
-  if(ctx==='special'){
-    // 고객사는 등급 고정 → 바 숨김
-    if(gradeBar)gradeBar.style.display='none';
-  } else if(ctx==='byline'||ctx==='bycat'||ctx==='apparel'){
-    // 현재 선택 등급만 active, 나머지 disabled
-    if(gradeBar)gradeBar.style.display='flex';
-    const fixedGrade=ctx==='byline'?activeBlGrade:ctx==='bycat'?activeBcGrade:activeApGrade;
-    gradeBtns.forEach(b=>{
-      const isActive=b.dataset.grade===fixedGrade;
-      b.classList.toggle('active',isActive);
-      b.disabled=!isActive;
-    });
-    capGrade=fixedGrade;
-    const disc=fixedGrade?ST.grades[fixedGrade]?.discount||0:0;
-    const info=document.getElementById('cap-grade-info');
-    if(info)info.textContent=fixedGrade?(fixedGrade.toUpperCase()+' 등급 적용 중'):'';
-  } else {
-    // 등급별 단가표 → 자유 선택 가능
-    if(gradeBar)gradeBar.style.display='flex';
-    gradeBtns.forEach(b=>b.disabled=false);
-  }
-
-  document.getElementById('capture-overlay').classList.add('open');
-  // 오버레이 열리자마자 자동 캡처 시작
-  document.getElementById('cap-loading').style.display='none';
-  document.getElementById('cap-preview').style.display='block'; // 먼저 보이게
-  document.getElementById('cap-img-wrap').style.display='none';
-  document.getElementById('cap-img-wrap').innerHTML='';
-  document.getElementById('cap-dl-btn').style.display='none';
-  document.getElementById('cap-cp-btn').style.display='none';
-  const hint=document.getElementById('cp-hint')||document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
+  const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
   const retry=document.getElementById('cap-retry-btn');if(retry)retry.style.display='none';
   capBlob=null;
-  // DOM 렌더링 완료 후 캡처 (두 프레임 + 50ms 여유)
-  requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(doCapture,50)));
+
+  document.getElementById('capture-overlay').classList.add('open');
+  // DOM 렌더링 완료 후 자동 캡처
+  requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(doCapture,80)));
 }
 function doCapture(){
   // 로딩 표시
