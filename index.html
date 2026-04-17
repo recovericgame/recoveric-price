@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.87</title>
+<title>RECOVERIC 단가관리 시스템 v4.89</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -483,7 +483,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.87</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.89</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -877,6 +877,26 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
           <div id="intro-url-box" style="font-size:13px;color:var(--blue);word-break:break-all;margin-bottom:14px"></div>
           <div id="intro-desc-status" style="margin-bottom:12px"></div>
           <div style="font-size:11px;color:var(--txt3);line-height:1.7">✎ 설명 수정 버튼으로 원단 특징 설명과 URL을 바로 수정할 수 있습니다.</div>
+        </div>
+        <!-- 컬러 이미지 뷰어 -->
+        <div id="color-viewer-wrap" style="display:none;width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--shadow)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--txt2)">🎨 컬러 확인</div>
+              <div style="font-size:11px;color:var(--txt3);margin-top:2px">드래그로 확인할 컬러에 빨간 박스를 그리세요</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn btn-outline btn-sm" onclick="colorViewerUndo()">↩ 박스 지우기</button>
+              <button class="btn btn-gold btn-sm" onclick="colorViewerCapture()">📋 이미지 복사</button>
+              <button class="btn btn-outline btn-sm" onclick="colorViewerDownload()">⬇ 다운로드</button>
+            </div>
+          </div>
+          <!-- 로딩 -->
+          <div id="cv-loading" style="text-align:center;padding:32px;color:var(--txt3);font-size:13px">이미지 불러오는 중...</div>
+          <!-- 캔버스 -->
+          <div style="position:relative;display:inline-block;max-width:100%;overflow:auto">
+            <canvas id="cv-canvas" style="display:none;cursor:crosshair;max-width:100%;border:1px solid var(--border);border-radius:8px;touch-action:none"></canvas>
+          </div>
         </div>
       </div>
     </div>
@@ -3725,6 +3745,162 @@ function renderIntro(fid){
       descStatus.innerHTML=`<span style="font-size:11px;color:var(--red)">⚠ 특징 설명 미입력 — 수정 버튼으로 추가하세요</span>`;
     }
   }
+  // 컬러 이미지 뷰어 로드
+  bindCvEvents();
+  loadColorViewer(f.url);
+}
+
+// ── 컬러 이미지 뷰어 ──
+let cvBaseImg=null; // 원본 이미지 ImageBitmap
+let cvBoxes=[];     // 그려진 박스 목록
+let cvDragging=false;
+let cvStart={x:0,y:0};
+let cvScale=1;      // 캔버스 실제 픽셀 / 표시 픽셀 비율
+
+// 원단 URL에서 컬러 이미지 URL 추출
+// 예: https://recoveric.com/main/product.html?divi=single&item=vsingle
+//  → https://recoveric.com/data/productall/{code}_h?ver=2
+function extractColorImgUrl(fabricUrl){
+  if(!fabricUrl)return null;
+  try{
+    const u=new URL(fabricUrl);
+    const item=u.searchParams.get('item');
+    if(!item)return null;
+    // item 코드로 컬러 이미지 URL 구성
+    return `https://recoveric.com/data/productall/${item}_h?ver=${Date.now()}`;
+  }catch(e){return null;}
+}
+
+async function loadColorViewer(fabricUrl){
+  const wrap=document.getElementById('color-viewer-wrap');
+  const cvLoad=document.getElementById('cv-loading');
+  const canvas=document.getElementById('cv-canvas');
+  if(!wrap||!canvas)return;
+  const colorUrl=extractColorImgUrl(fabricUrl);
+  if(!colorUrl){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  cvLoad.style.display='block';
+  cvLoad.textContent='이미지 불러오는 중...';
+  canvas.style.display='none';
+  cvBoxes=[];cvBaseImg=null;
+  try{
+    // fetch로 이미지 가져와서 Blob URL로 변환 (CORS 우회 시도)
+    const resp=await fetch(colorUrl,{mode:'cors'});
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const blob=await resp.blob();
+    const blobUrl=URL.createObjectURL(blob);
+    const img=new Image();
+    img.onload=()=>{
+      cvBaseImg=img;
+      const dispW=Math.min(img.width, wrap.clientWidth-40||700);
+      cvScale=img.width/dispW;
+      canvas.width=img.width;
+      canvas.height=img.height;
+      canvas.style.width=dispW+'px';
+      canvas.style.height=Math.round(img.height/cvScale)+'px';
+      canvas.style.display='block';
+      cvLoad.style.display='none';
+      cvRedraw();
+      URL.revokeObjectURL(blobUrl);
+    };
+    img.onerror=()=>{throw new Error('이미지 로드 실패');};
+    img.src=blobUrl;
+  }catch(e){
+    // CORS 실패 시 직접 img 태그로 fallback (canvas 합성 불가 — 다운로드만)
+    cvLoad.textContent='';
+    cvLoad.innerHTML=`<div style="text-align:center">
+      <img src="${colorUrl}" crossorigin="anonymous" style="max-width:100%;border-radius:8px;border:1px solid var(--border)" onerror="this.onerror=null;this.src='${colorUrl.replace('?ver='+cvLoad.dataset.t,'')}'">
+      <div style="font-size:11px;color:var(--txt3);margin-top:8px">⚠ 박스 그리기 기능을 사용하려면 recoveric.com 서버에서 CORS 설정이 필요합니다.<br>스크린샷 후 카톡 전송 방식을 사용해주세요.</div>
+    </div>`;
+    cvLoad.style.display='block';
+    canvas.style.display='none';
+  }
+}
+
+function cvRedraw(){
+  const canvas=document.getElementById('cv-canvas');
+  if(!canvas||!cvBaseImg)return;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(cvBaseImg,0,0,canvas.width,canvas.height);
+  cvBoxes.forEach(b=>{
+    ctx.strokeStyle='#e00';
+    ctx.lineWidth=Math.max(3,canvas.width*0.003);
+    ctx.strokeRect(b.x,b.y,b.w,b.h);
+  });
+}
+
+function cvGetPos(canvas,e){
+  const rect=canvas.getBoundingClientRect();
+  const touch=e.touches?e.touches[0]:e;
+  return{
+    x:Math.round((touch.clientX-rect.left)*cvScale),
+    y:Math.round((touch.clientY-rect.top)*cvScale)
+  };
+}
+
+// 이벤트 바인딩은 canvas 생성 후 한 번만
+function bindCvEvents(){
+  const canvas=document.getElementById('cv-canvas');
+  if(!canvas||canvas._cvBound)return;
+  canvas._cvBound=true;
+  const down=e=>{
+    if(!cvBaseImg)return;
+    e.preventDefault();
+    cvDragging=true;
+    cvStart=cvGetPos(canvas,e);
+  };
+  const move=e=>{
+    if(!cvDragging||!cvBaseImg)return;
+    e.preventDefault();
+    const cur=cvGetPos(canvas,e);
+    cvRedraw();
+    const ctx=canvas.getContext('2d');
+    ctx.strokeStyle='#e00';
+    ctx.lineWidth=Math.max(3,canvas.width*0.003);
+    ctx.strokeRect(cvStart.x,cvStart.y,cur.x-cvStart.x,cur.y-cvStart.y);
+  };
+  const up=e=>{
+    if(!cvDragging)return;
+    cvDragging=false;
+    const cur=cvGetPos(canvas,e.changedTouches?e.changedTouches[0]:e);
+    const w=cur.x-cvStart.x,h=cur.y-cvStart.y;
+    if(Math.abs(w)>5&&Math.abs(h)>5){
+      cvBoxes.push({x:cvStart.x,y:cvStart.y,w,h});
+      cvRedraw();
+    }
+  };
+  canvas.addEventListener('mousedown',down);
+  canvas.addEventListener('mousemove',move);
+  canvas.addEventListener('mouseup',up);
+  canvas.addEventListener('touchstart',down,{passive:false});
+  canvas.addEventListener('touchmove',move,{passive:false});
+  canvas.addEventListener('touchend',up,{passive:false});
+}
+
+function colorViewerUndo(){cvBoxes.pop();cvRedraw();}
+
+function colorViewerCapture(){
+  const canvas=document.getElementById('cv-canvas');
+  if(!canvas||!cvBaseImg){toast('이미지를 먼저 불러오세요','error');return;}
+  canvas.toBlob(blob=>{
+    if(navigator.clipboard&&window.ClipboardItem){
+      navigator.clipboard.write([new ClipboardItem({'image/png':blob})])
+        .then(()=>toast('컬러 이미지 복사됨 ✓ 카톡에 붙여넣기 하세요','success'))
+        .catch(()=>{colorViewerDownload();});
+    } else colorViewerDownload();
+  },'image/png');
+}
+
+function colorViewerDownload(){
+  const canvas=document.getElementById('cv-canvas');
+  if(!canvas||!cvBaseImg){toast('이미지를 먼저 불러오세요','error');return;}
+  canvas.toBlob(blob=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='컬러확인_'+new Date().toISOString().slice(0,10)+'.png';
+    a.click();toast('컬러 이미지 다운로드','success');
+  },'image/png');
 }
 
 // 원단 소개에서 바로 description/url 수정
