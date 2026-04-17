@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.89</title>
+<title>RECOVERIC 단가관리 시스템 v4.90</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -483,7 +483,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.89</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.90</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1099,8 +1099,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         <div style="width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite"></div>
         <div style="font-size:13px;color:var(--txt2);font-weight:600">이미지 생성 중...</div>
       </div>
-      <!-- 미리보기 (캡처용 — 화면 밖) -->
-      <div id="cap-preview" style="position:fixed;left:-9999px;top:0;pointer-events:none;opacity:0">
+      <!-- 미리보기 (캡처용) -->
+      <div id="cap-preview">
         <div class="cap-header">
           <div>
             <div class="cap-logo">RECOVERIC</div>
@@ -2494,33 +2494,34 @@ function openCapture(viewCtx){
 
   document.getElementById('capture-overlay').classList.add('open');
   // 오버레이 열리자마자 자동 캡처 시작
-  document.getElementById('cap-loading').style.display='flex';
+  document.getElementById('cap-loading').style.display='none';
+  document.getElementById('cap-preview').style.display='block'; // 먼저 보이게
   document.getElementById('cap-img-wrap').style.display='none';
   document.getElementById('cap-img-wrap').innerHTML='';
   document.getElementById('cap-dl-btn').style.display='none';
   document.getElementById('cap-cp-btn').style.display='none';
-  const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
+  const hint=document.getElementById('cp-hint')||document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
   const retry=document.getElementById('cap-retry-btn');if(retry)retry.style.display='none';
   capBlob=null;
-  // 렌더링이 완료된 후 캡처 실행
-  requestAnimationFrame(()=>requestAnimationFrame(()=>doCapture()));
+  // DOM 렌더링 완료 후 캡처 (두 프레임 + 50ms 여유)
+  requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(doCapture,50)));
 }
 function doCapture(){
   // 로딩 표시
   const loading=document.getElementById('cap-loading');
+  const target=document.getElementById('cap-preview');
   if(loading)loading.style.display='flex';
+  target.style.display='none';
   document.getElementById('cap-dl-btn').style.display='none';
   document.getElementById('cap-cp-btn').style.display='none';
   const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
   const retry=document.getElementById('cap-retry-btn');if(retry)retry.style.display='none';
   document.getElementById('cap-img-wrap').style.display='none';
 
-  const target=document.getElementById('cap-preview');
-  // 캡처 대상을 임시로 표시 (화면 밖)
-  target.style.opacity='0';
-  target.style.left='-9999px';
-  target.style.position='fixed';
-  target.style.top='0';
+  // 캡처 대상을 임시로 화면에 표시 (html2canvas가 읽을 수 있도록)
+  target.style.position='static';
+  target.style.opacity='1';
+  target.style.display='block';
 
   const targetW=Math.max(target.scrollWidth,900);
   const targetH=Math.max(target.scrollHeight,200);
@@ -2548,12 +2549,13 @@ function doCapture(){
       const url=URL.createObjectURL(blob);
       const img=document.createElement('img');
       img.src=url;
-      img.style.cssText='max-width:100%;border-radius:8px;border:1px solid #dde;margin-top:4px;display:block';
+      img.style.cssText='max-width:100%;border-radius:8px;border:1px solid #dde;display:block';
       const imgWrap=document.getElementById('cap-img-wrap');
       imgWrap.innerHTML='';
       imgWrap.appendChild(img);
       imgWrap.style.display='block';
-      // 로딩 숨기고 버튼 표시
+      // 미리보기 숨기고 결과 표시
+      target.style.display='none';
       if(loading)loading.style.display='none';
       document.getElementById('cap-dl-btn').style.display='inline-flex';
       document.getElementById('cap-cp-btn').style.display='inline-flex';
@@ -2561,6 +2563,7 @@ function doCapture(){
       if(retry)retry.style.display='inline-flex';
     },'image/png');
   }).catch(e=>{
+    target.style.display='none';
     if(loading)loading.style.display='none';
     if(retry)retry.style.display='inline-flex';
     toast('캡처 실패: '+e.message,'error');
