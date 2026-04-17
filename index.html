@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.91</title>
+<title>RECOVERIC 단가관리 시스템 v4.92</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -483,7 +483,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.91</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.92</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1099,12 +1099,13 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
           </div>
           <div class="cap-meta">
             <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px" id="cap-cn"></div>
-            <div id="cap-grade-badge" style="display:none;margin-bottom:4px"></div>
             <div id="cap-dt" style="font-size:10px;color:#666"></div>
             <div id="cap-tag-badge" style="font-size:9px;color:#888;margin-top:2px;display:none"></div>
             <div style="font-size:9px;color:#aaa;margin-top:2px">본 단가표는 고객사 전용입니다</div>
           </div>
         </div>
+        <!-- 등급 배지 띠 (등급 선택 시에만 표시) -->
+        <div id="cap-grade-badge" style="display:none;padding:8px 28px;margin-bottom:0"></div>
         <div class="cap-body">
           <table class="cap-tbl" id="captbl">
             <colgroup>
@@ -2356,8 +2357,13 @@ function buildCapTable(){
     }
     if(displayGrade){
       const gColors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
-      const gLabels={silver:'SILVER',gold:'GOLD',vip:'VIP'};
-      gradeBadgeEl.innerHTML=`<span style="display:inline-block;background:${gColors[displayGrade]};color:#fff;padding:5px 18px;border-radius:6px;font-size:12px;font-weight:900;letter-spacing:2px;font-family:'Outfit',sans-serif">${gLabels[displayGrade]||displayGrade.toUpperCase()}</span>`;
+      const gBg={silver:'#eef2ff',gold:'#fff7e0',vip:'#f5eeff'};
+      const gLabels={silver:'🥈 SILVER 등급',gold:'🥇 GOLD 등급',vip:'💎 VIP 등급'};
+      const disc=ST.grades[displayGrade]?.discount||0;
+      gradeBadgeEl.style.background=gBg[displayGrade]||'#f5f5f5';
+      gradeBadgeEl.style.borderTop='2px solid '+gColors[displayGrade];
+      gradeBadgeEl.style.borderBottom='2px solid '+gColors[displayGrade];
+      gradeBadgeEl.innerHTML=`<span style="color:${gColors[displayGrade]};font-size:13px;font-weight:900;letter-spacing:1px;font-family:'Outfit',sans-serif">${gLabels[displayGrade]||displayGrade.toUpperCase()} · 기본 할인 −${disc}% 적용 단가표</span>`;
       gradeBadgeEl.style.display='block';
     } else {
       gradeBadgeEl.style.display='none';
@@ -2440,6 +2446,13 @@ function openCapture(viewCtx){
   else if(ctx==='special'&&specialCid){const c=ST.customers.find(x=>x.id===specialCid);capGrade=c?c.grade:'';}
   else if(ctx==='selected') capGrade=selGrade||'';
   else capGrade=activeGrade||'';
+
+  // 제목에 등급 표시
+  if(capGrade){
+    const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};
+    const glLabel=gl[capGrade]||capGrade.toUpperCase();
+    if(ctx!=='special') document.getElementById('cap-cn').textContent=titleText+' ['+glLabel+']';
+  }
 
   buildCapTable();
 
