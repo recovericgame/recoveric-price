@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.86</title>
+<title>RECOVERIC 단가관리 시스템 v4.87</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -224,6 +224,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .cap-tbl tr:nth-child(even):not(.cap-sect) td{background:#f8f9fd}
 /* 캡처 등급 버튼 */
 .cap-grade-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;border:1.5px solid #d0d8ee;background:#fff;color:#5a6b8a;cursor:pointer;transition:.15s}
+@keyframes spin{to{transform:rotate(360deg)}}
 .cap-grade-btn:hover{border-color:#1a2c4e;color:#1a2c4e}
 .cap-grade-btn.active{background:#1a2c4e;border-color:#1a2c4e;color:#fff}
 .cap-grade-btn[data-grade="silver"].active{background:#5570a0;border-color:#5570a0}
@@ -482,7 +483,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.86</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.87</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1054,13 +1055,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 <div id="slide-dim" class="slide-panel-dim" onclick="closeSlidePanelByDim()"></div>
 <div id="capture-overlay" onclick="capOutsideClick(event)">
   <div class="cap-box" id="cap-box">
-    <!-- 상단 타이틀 + 이미지생성 버튼 -->
+    <!-- 상단 타이틀 -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;border-bottom:1px solid #e8ecf4">
       <div style="font-size:13px;font-weight:700;color:#1a2035">단가표 이미지 캡처</div>
       <div style="display:flex;align-items:center;gap:8px">
-        <button class="btn btn-gold btn-sm" id="cap-do-btn-top" onclick="doCapture()" style="font-size:12px;padding:7px 14px">
-          📸 이미지 생성
-        </button>
         <button onclick="closeCapture()" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:20px;color:#9aa0b8;line-height:1;border-radius:6px" onmouseover="this.style.background='#f0f2f8'" onmouseout="this.style.background='none'">✕</button>
       </div>
     </div>
@@ -1076,7 +1074,13 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       <span id="cap-grade-info" style="font-size:11px;color:#9aa0b8"></span>
     </div>
     <div class="cap-scroll-area">
-      <div id="cap-preview">
+      <!-- 로딩 표시 -->
+      <div id="cap-loading" style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:14px">
+        <div style="width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite"></div>
+        <div style="font-size:13px;color:var(--txt2);font-weight:600">이미지 생성 중...</div>
+      </div>
+      <!-- 미리보기 (캡처용 — 화면 밖) -->
+      <div id="cap-preview" style="position:fixed;left:-9999px;top:0;pointer-events:none;opacity:0">
         <div class="cap-header">
           <div>
             <div class="cap-logo">RECOVERIC</div>
@@ -1084,7 +1088,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
           </div>
           <div class="cap-meta">
             <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px" id="cap-cn"></div>
-            <!-- 등급 배지 - 캡처 이미지 내 표시 -->
             <div id="cap-grade-badge" style="display:none;margin-bottom:4px"></div>
             <div id="cap-dt" style="font-size:10px;color:#666"></div>
             <div id="cap-tag-badge" style="font-size:9px;color:#888;margin-top:2px;display:none"></div>
@@ -1094,15 +1097,15 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         <div class="cap-body">
           <table class="cap-tbl" id="captbl">
             <colgroup>
-              <col style="width:22%"><!-- 품목명 -->
-              <col style="width:8%"> <!-- 구분 -->
-              <col style="width:9%"> <!-- 8%MG -->
-              <col style="width:10%"><!-- 백/백아이 -->
-              <col style="width:9%"> <!-- 무지 -->
-              <col style="width:10%"><!-- 부속RIB -->
-              <col style="width:7%"> <!-- 폭 -->
-              <col style="width:6%"> <!-- g/y -->
-              <col style="width:19%"><!-- 혼용률 -->
+              <col style="width:22%">
+              <col style="width:8%">
+              <col style="width:9%">
+              <col style="width:10%">
+              <col style="width:9%">
+              <col style="width:10%">
+              <col style="width:7%">
+              <col style="width:6%">
+              <col style="width:19%">
             </colgroup>
             <thead><tr>
               <th style="text-align:left">품목명</th>
@@ -1126,10 +1129,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       <div id="cap-img-wrap"></div>
     </div>
     <div class="cap-actions">
-      <button class="btn btn-gold btn-sm" id="cap-do-btn" onclick="doCapture()">📸 이미지 생성</button>
-      <button class="btn btn-outline btn-sm" id="cap-dl-btn" onclick="capDownload()" style="display:none">⬇ 다운로드</button>
+      <button class="btn btn-gold btn-sm" id="cap-dl-btn" onclick="capDownload()" style="display:none">⬇ 다운로드</button>
       <button class="btn btn-outline btn-sm" id="cap-cp-btn" onclick="capCopy()" style="display:none">📋 클립보드 복사</button>
       <span id="cap-cp-hint" style="font-size:11px;color:var(--txt2);display:none">카톡에 바로 붙여넣기 가능합니다</span>
+      <button class="btn btn-outline btn-sm" id="cap-retry-btn" onclick="doCapture()" style="display:none">🔄 다시 생성</button>
       <button class="btn btn-outline btn-sm" onclick="closeCapture()" style="margin-left:auto">닫기</button>
     </div>
   </div>
@@ -2164,9 +2167,6 @@ function selCapture(){
   document.getElementById('cap-preview').style.display='block';
   document.getElementById('cap-img-wrap').style.display='none';
   document.getElementById('cap-img-wrap').innerHTML='';
-  document.getElementById('cap-do-btn').style.display='inline-flex';
-  const btnTop=document.getElementById('cap-do-btn-top');
-  if(btnTop){btnTop.style.display='inline-flex';btnTop.textContent='📸 이미지 생성';btnTop.disabled=false;}
   document.getElementById('cap-dl-btn').style.display='none';
   document.getElementById('cap-cp-btn').style.display='none';
   document.querySelectorAll('.cap-grade-btn').forEach(b=>b.disabled=false);
@@ -2288,10 +2288,7 @@ function selectCapGrade(btn, grade){
     imgWrap.style.display='none';
     imgWrap.innerHTML='';
     document.getElementById('cap-preview').style.display='block';
-    document.getElementById('cap-do-btn').style.display='inline-flex';
-    const btnTop=document.getElementById('cap-do-btn-top');
-    if(btnTop){btnTop.style.display='inline-flex';btnTop.textContent='📸 이미지 생성';btnTop.disabled=false;}
-    document.getElementById('cap-dl-btn').style.display='none';
+          document.getElementById('cap-dl-btn').style.display='none';
     document.getElementById('cap-cp-btn').style.display='none';
     const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
     capBlob=null;
@@ -2446,9 +2443,6 @@ function openCapture(viewCtx){
   document.getElementById('cap-preview').style.display='block';
   document.getElementById('cap-img-wrap').style.display='none';
   document.getElementById('cap-img-wrap').innerHTML='';
-  document.getElementById('cap-do-btn').style.display='inline-flex';
-  const btnTop=document.getElementById('cap-do-btn-top');
-  if(btnTop){btnTop.style.display='inline-flex';btnTop.textContent='📸 이미지 생성';btnTop.disabled=false;}
   document.getElementById('cap-dl-btn').style.display='none';
   document.getElementById('cap-cp-btn').style.display='none';
   capBlob=null;
@@ -2479,12 +2473,35 @@ function openCapture(viewCtx){
   }
 
   document.getElementById('capture-overlay').classList.add('open');
+  // 오버레이 열리자마자 자동 캡처 시작
+  document.getElementById('cap-loading').style.display='flex';
+  document.getElementById('cap-img-wrap').style.display='none';
+  document.getElementById('cap-img-wrap').innerHTML='';
+  document.getElementById('cap-dl-btn').style.display='none';
+  document.getElementById('cap-cp-btn').style.display='none';
+  const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
+  const retry=document.getElementById('cap-retry-btn');if(retry)retry.style.display='none';
+  capBlob=null;
+  // 렌더링이 완료된 후 캡처 실행
+  requestAnimationFrame(()=>requestAnimationFrame(()=>doCapture()));
 }
 function doCapture(){
-  const btn=document.getElementById('cap-do-btn');
-  const btnTop=document.getElementById('cap-do-btn-top');
-  [btn,btnTop].forEach(b=>{if(b){b.textContent='생성 중...';b.disabled=true;}});
+  // 로딩 표시
+  const loading=document.getElementById('cap-loading');
+  if(loading)loading.style.display='flex';
+  document.getElementById('cap-dl-btn').style.display='none';
+  document.getElementById('cap-cp-btn').style.display='none';
+  const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
+  const retry=document.getElementById('cap-retry-btn');if(retry)retry.style.display='none';
+  document.getElementById('cap-img-wrap').style.display='none';
+
   const target=document.getElementById('cap-preview');
+  // 캡처 대상을 임시로 표시 (화면 밖)
+  target.style.opacity='0';
+  target.style.left='-9999px';
+  target.style.position='fixed';
+  target.style.top='0';
+
   const targetW=Math.max(target.scrollWidth,900);
   const targetH=Math.max(target.scrollHeight,200);
 
@@ -2499,11 +2516,10 @@ function doCapture(){
     windowWidth:targetW,
     windowHeight:targetH,
     onclone:(clonedDoc,clonedEl)=>{
-      // cloned body를 완전히 비우고 clonedEl만 (0,0) 위치에 배치
       const clonedBody=clonedDoc.body;
       clonedBody.innerHTML='';
       clonedBody.style.cssText='margin:0;padding:0;background:#fff;overflow:visible;width:'+targetW+'px';
-      clonedEl.style.cssText='position:static;display:block;width:'+targetW+'px;overflow:visible;background:#fff;box-sizing:border-box';
+      clonedEl.style.cssText='position:static;display:block;width:'+targetW+'px;overflow:visible;background:#fff;box-sizing:border-box;opacity:1';
       clonedBody.appendChild(clonedEl);
     },
   }).then(canvas=>{
@@ -2512,20 +2528,21 @@ function doCapture(){
       const url=URL.createObjectURL(blob);
       const img=document.createElement('img');
       img.src=url;
-      img.style.cssText='max-width:100%;border-radius:8px;border:1px solid #dde;margin-top:12px;display:block';
+      img.style.cssText='max-width:100%;border-radius:8px;border:1px solid #dde;margin-top:4px;display:block';
       const imgWrap=document.getElementById('cap-img-wrap');
-      imgWrap.innerHTML='<p style="font-size:12px;color:var(--green);font-weight:600;padding:12px 4px 0">✅ 이미지 생성 완료!</p>';
-      imgWrap.appendChild(img);imgWrap.style.display='block';
-      target.style.display='none';
-      document.getElementById('cap-do-btn').style.display='none';
-      if(btnTop)btnTop.style.display='none';
+      imgWrap.innerHTML='';
+      imgWrap.appendChild(img);
+      imgWrap.style.display='block';
+      // 로딩 숨기고 버튼 표시
+      if(loading)loading.style.display='none';
       document.getElementById('cap-dl-btn').style.display='inline-flex';
       document.getElementById('cap-cp-btn').style.display='inline-flex';
-      const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='inline';
-      [btn,btnTop].forEach(b=>{if(b){b.textContent='📸 이미지 생성';b.disabled=false;}});
+      if(hint)hint.style.display='inline';
+      if(retry)retry.style.display='inline-flex';
     },'image/png');
   }).catch(e=>{
-    [btn,btnTop].forEach(b=>{if(b){b.textContent='📸 이미지 생성';b.disabled=false;}});
+    if(loading)loading.style.display='none';
+    if(retry)retry.style.display='inline-flex';
     toast('캡처 실패: '+e.message,'error');
   });
 }
@@ -2559,14 +2576,13 @@ function capCopy(){
   }
 }
 function closeCapture(){
-  const prev=document.getElementById('cap-preview');
-  if(prev)prev.style.display='block';
+  const loading=document.getElementById('cap-loading');if(loading)loading.style.display='none';
   const imgWrap=document.getElementById('cap-img-wrap');
   if(imgWrap){imgWrap.style.display='none';imgWrap.innerHTML='';}
-  const doBtn=document.getElementById('cap-do-btn');if(doBtn)doBtn.style.display='inline-flex';
   const dlBtn=document.getElementById('cap-dl-btn');if(dlBtn)dlBtn.style.display='none';
   const cpBtn=document.getElementById('cap-cp-btn');if(cpBtn)cpBtn.style.display='none';
   const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
+  const retry=document.getElementById('cap-retry-btn');if(retry)retry.style.display='none';
   capBlob=null;
   document.getElementById('capture-overlay').classList.remove('open');
 }
