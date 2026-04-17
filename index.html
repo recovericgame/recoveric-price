@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.92</title>
+<title>RECOVERIC 단가관리 시스템 v4.87</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -224,7 +224,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .cap-tbl tr:nth-child(even):not(.cap-sect) td{background:#f8f9fd}
 /* 캡처 등급 버튼 */
 .cap-grade-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;border:1.5px solid #d0d8ee;background:#fff;color:#5a6b8a;cursor:pointer;transition:.15s}
-@keyframes spin{to{transform:rotate(360deg)}}
 .cap-grade-btn:hover{border-color:#1a2c4e;color:#1a2c4e}
 .cap-grade-btn.active{background:#1a2c4e;border-color:#1a2c4e;color:#fff}
 .cap-grade-btn[data-grade="silver"].active{background:#5570a0;border-color:#5570a0}
@@ -483,7 +482,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.92</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.87</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -878,26 +877,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
           <div id="intro-desc-status" style="margin-bottom:12px"></div>
           <div style="font-size:11px;color:var(--txt3);line-height:1.7">✎ 설명 수정 버튼으로 원단 특징 설명과 URL을 바로 수정할 수 있습니다.</div>
         </div>
-        <!-- 컬러 이미지 뷰어 -->
-        <div id="color-viewer-wrap" style="display:none;width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--shadow)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-            <div>
-              <div style="font-size:11px;font-weight:700;color:var(--txt2)">🎨 컬러 확인</div>
-              <div style="font-size:11px;color:var(--txt3);margin-top:2px">드래그로 확인할 컬러에 빨간 박스를 그리세요</div>
-            </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <button class="btn btn-outline btn-sm" onclick="colorViewerUndo()">↩ 박스 지우기</button>
-              <button class="btn btn-gold btn-sm" onclick="colorViewerCapture()">📋 이미지 복사</button>
-              <button class="btn btn-outline btn-sm" onclick="colorViewerDownload()">⬇ 다운로드</button>
-            </div>
-          </div>
-          <!-- 로딩 -->
-          <div id="cv-loading" style="text-align:center;padding:32px;color:var(--txt3);font-size:13px">이미지 불러오는 중...</div>
-          <!-- 캔버스 -->
-          <div style="position:relative;display:inline-block;max-width:100%;overflow:auto">
-            <canvas id="cv-canvas" style="display:none;cursor:crosshair;max-width:100%;border:1px solid var(--border);border-radius:8px;touch-action:none"></canvas>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -1075,22 +1054,12 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 <div id="slide-dim" class="slide-panel-dim" onclick="closeSlidePanelByDim()"></div>
 <div id="capture-overlay" onclick="capOutsideClick(event)">
   <div class="cap-box" id="cap-box">
-    <!-- 상단 타이틀 -->
+    <!-- 상단 타이틀 (닫기 버튼만) -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;border-bottom:1px solid #e8ecf4">
       <div style="font-size:13px;font-weight:700;color:#1a2035">단가표 이미지 캡처</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button onclick="closeCapture()" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:20px;color:#9aa0b8;line-height:1;border-radius:6px" onmouseover="this.style.background='#f0f2f8'" onmouseout="this.style.background='none'">✕</button>
-      </div>
+      <button onclick="closeCapture()" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:20px;color:#9aa0b8;line-height:1;border-radius:6px" onmouseover="this.style.background='#f0f2f8'" onmouseout="this.style.background='none'">✕</button>
     </div>
-    <!-- 등급 선택 바 -->
-    <div id="cap-grade-bar" style="display:none"></div>
     <div class="cap-scroll-area">
-      <!-- 로딩 표시 -->
-      <div id="cap-loading" style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:14px">
-        <div style="width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite"></div>
-        <div style="font-size:13px;color:var(--txt2);font-weight:600">이미지 생성 중...</div>
-      </div>
-      <!-- 미리보기 (캡처용) -->
       <div id="cap-preview">
         <div class="cap-header">
           <div>
@@ -1099,25 +1068,25 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
           </div>
           <div class="cap-meta">
             <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px" id="cap-cn"></div>
+            <!-- 등급 배지 - 캡처 이미지 내 표시 -->
+            <div id="cap-grade-badge" style="display:none;margin-bottom:4px"></div>
             <div id="cap-dt" style="font-size:10px;color:#666"></div>
             <div id="cap-tag-badge" style="font-size:9px;color:#888;margin-top:2px;display:none"></div>
             <div style="font-size:9px;color:#aaa;margin-top:2px">본 단가표는 고객사 전용입니다</div>
           </div>
         </div>
-        <!-- 등급 배지 띠 (등급 선택 시에만 표시) -->
-        <div id="cap-grade-badge" style="display:none;padding:8px 28px;margin-bottom:0"></div>
         <div class="cap-body">
           <table class="cap-tbl" id="captbl">
             <colgroup>
-              <col style="width:22%">
-              <col style="width:8%">
-              <col style="width:9%">
-              <col style="width:10%">
-              <col style="width:9%">
-              <col style="width:10%">
-              <col style="width:7%">
-              <col style="width:6%">
-              <col style="width:19%">
+              <col style="width:22%"><!-- 품목명 -->
+              <col style="width:8%"> <!-- 구분 -->
+              <col style="width:9%"> <!-- 8%MG -->
+              <col style="width:10%"><!-- 백/백아이 -->
+              <col style="width:9%"> <!-- 무지 -->
+              <col style="width:10%"><!-- 부속RIB -->
+              <col style="width:7%"> <!-- 폭 -->
+              <col style="width:6%"> <!-- g/y -->
+              <col style="width:19%"><!-- 혼용률 -->
             </colgroup>
             <thead><tr>
               <th style="text-align:left">품목명</th>
@@ -1141,11 +1110,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       <div id="cap-img-wrap"></div>
     </div>
     <div class="cap-actions">
-      <button class="btn btn-gold btn-sm" id="cap-dl-btn" onclick="capDownload()" style="display:none">⬇ 다운로드</button>
-      <button class="btn btn-outline btn-sm" id="cap-cp-btn" onclick="capCopy()" style="display:none">📋 클립보드 복사</button>
-      <span id="cap-cp-hint" style="font-size:11px;color:var(--txt2);display:none">카톡에 바로 붙여넣기 가능합니다</span>
-      <button class="btn btn-outline btn-sm" id="cap-retry-btn" onclick="doCapture()" style="display:none">🔄 다시 생성</button>
-      <button class="btn btn-outline btn-sm" onclick="closeCapture()" style="margin-left:auto">닫기</button>
+      <button class="btn btn-gold btn-sm" id="cap-dl-btn" onclick="capDownload()">⬇ 다운로드</button>
+      <button class="btn btn-outline btn-sm" id="cap-cp-btn" onclick="capCopy()">📋 클립보드 복사</button>
+      <span id="cap-cp-hint" style="font-size:11px;color:var(--txt2)">카톡에 바로 붙여넣기 가능합니다</span>
+      <button class="btn btn-outline btn-sm" id="cap-redo-btn" onclick="doCapture()" style="margin-left:auto">🔄 다시 생성</button>
+      <button class="btn btn-outline btn-sm" onclick="closeCapture()">닫기</button>
     </div>
   </div>
 </div>
@@ -2157,33 +2126,22 @@ function selCapture(){
     if(c){
       const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};
       title=`${c.name} 선택 단가표 [${gl[c.grade]||c.grade.toUpperCase()}]`;
+      capGrade=c.grade;
     }
   } else if(selGrade){
     title=`RECOVERIC 선택 단가표 [${selGrade.toUpperCase()}]`;
   }
   document.getElementById('cap-cn').textContent=title;
   document.getElementById('cap-dt').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'})+' 기준';
-  // 고객사 뷰일 때: 등급 선택 바 숨기고 고객사 등급 그대로 사용
-  const gradeBar=document.getElementById('cap-grade-bar');
-  if(selView==='special'&&specialCid){
-    if(gradeBar)gradeBar.style.display='none';
-    // capGrade를 고객사 등급으로 설정
-    const c=ST.customers.find(x=>x.id===specialCid);
-    if(c)capGrade=c.grade;
-  } else {
-    if(gradeBar)gradeBar.style.display='flex';
-    document.querySelectorAll('.cap-grade-btn').forEach(b=>b.classList.toggle('active',b.dataset.grade===selGrade));
-    const disc=selGrade?ST.grades[selGrade]?.discount||0:0;
-    document.getElementById('cap-grade-info').textContent=selGrade?(selGrade.toUpperCase()+' · −'+disc+'%'):'';
-  }
+  // 이전 결과 초기화
   document.getElementById('cap-preview').style.display='block';
-  document.getElementById('cap-img-wrap').style.display='none';
-  document.getElementById('cap-img-wrap').innerHTML='';
-  document.getElementById('cap-dl-btn').style.display='none';
-  document.getElementById('cap-cp-btn').style.display='none';
-  document.querySelectorAll('.cap-grade-btn').forEach(b=>b.disabled=false);
+  const imgWrap=document.getElementById('cap-img-wrap');
+  imgWrap.style.display='none';
+  imgWrap.innerHTML='';
   buildCapTable();
+  // 오버레이 열고 바로 자동 캡처
   document.getElementById('capture-overlay').classList.add('open');
+  setTimeout(()=>doCapture(),100);
 }
 
 function copyR(id){
@@ -2284,26 +2242,8 @@ function copyAllSpecial(){
 let capGrade='', capCtx='price'; // capGrade: 선택된 캡처 등급, capCtx: 캡처 컨텍스트
 
 function selectCapGrade(btn, grade){
-  capGrade=grade;
-  document.querySelectorAll('.cap-grade-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  const disc=grade?ST.grades[grade]?.discount||0:0;
-  const info=document.getElementById('cap-grade-info');
-  info.textContent=grade?(grade.toUpperCase()+' 등급 · 기본 할인 −'+disc+'%'):'';
-  const titleEl=document.getElementById('cap-cn');
-  if(grade) titleEl.textContent='RECOVERIC 단가표 ['+grade.toUpperCase()+' 등급]';
-  else titleEl.textContent='RECOVERIC 단가표';
-  buildCapTable();
-  // 등급 변경 시 자동 재캡처
-  document.getElementById('cap-preview').style.display='block';
-  document.getElementById('cap-img-wrap').style.display='none';
-  document.getElementById('cap-img-wrap').innerHTML='';
-  document.getElementById('cap-dl-btn').style.display='none';
-  document.getElementById('cap-cp-btn').style.display='none';
-  const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
-  const retry2=document.getElementById('cap-retry-btn');if(retry2)retry2.style.display='none';
-  capBlob=null;
-  requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(doCapture,80)));
+  // v4.87부터 등급 선택 바 제거됨 - 현재 뷰의 등급이 자동 적용됨
+  // 레거시 호환을 위해 빈 함수로 유지
 }
 
 function capDiscFor(f){
@@ -2357,13 +2297,8 @@ function buildCapTable(){
     }
     if(displayGrade){
       const gColors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
-      const gBg={silver:'#eef2ff',gold:'#fff7e0',vip:'#f5eeff'};
-      const gLabels={silver:'🥈 SILVER 등급',gold:'🥇 GOLD 등급',vip:'💎 VIP 등급'};
-      const disc=ST.grades[displayGrade]?.discount||0;
-      gradeBadgeEl.style.background=gBg[displayGrade]||'#f5f5f5';
-      gradeBadgeEl.style.borderTop='2px solid '+gColors[displayGrade];
-      gradeBadgeEl.style.borderBottom='2px solid '+gColors[displayGrade];
-      gradeBadgeEl.innerHTML=`<span style="color:${gColors[displayGrade]};font-size:13px;font-weight:900;letter-spacing:1px;font-family:'Outfit',sans-serif">${gLabels[displayGrade]||displayGrade.toUpperCase()} · 기본 할인 −${disc}% 적용 단가표</span>`;
+      const gLabels={silver:'SILVER',gold:'GOLD',vip:'VIP'};
+      gradeBadgeEl.innerHTML=`<span style="display:inline-block;background:${gColors[displayGrade]};color:#fff;padding:5px 18px;border-radius:6px;font-size:12px;font-weight:900;letter-spacing:2px;font-family:'Outfit',sans-serif">${gLabels[displayGrade]||displayGrade.toUpperCase()}</span>`;
       gradeBadgeEl.style.display='block';
     } else {
       gradeBadgeEl.style.display='none';
@@ -2423,12 +2358,14 @@ function buildCapTable(){
 function openCapture(viewCtx){
   const ctx=viewCtx||'price';
   capCtx=ctx;
-
   // 제목 설정
   let titleText='RECOVERIC 단가표';
   if(ctx==='special'&&specialCid){
     const c=ST.customers.find(x=>x.id===specialCid);
-    if(c){const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};titleText=`${c.name} 전용 단가표 [${gl[c.grade]||c.grade.toUpperCase()}]`;}
+    if(c){
+      const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};
+      titleText=`${c.name} 전용 단가표 [${gl[c.grade]||c.grade.toUpperCase()}]`;
+    }
   } else if(ctx==='byline'&&activeBl){
     const allLvs=getAllLevels();titleText=`${allLvs[activeBl]||activeBl} 단가표`;
   } else if(ctx==='bycat'&&activeBc){
@@ -2436,57 +2373,43 @@ function openCapture(viewCtx){
   } else if(ctx==='apparel'&&activeAp){
     titleText=`${activeAp} 추천 단가표`;
   }
-  document.getElementById('cap-cn').textContent=titleText;
+  const titleEl=document.getElementById('cap-cn');
+  if(titleEl)titleEl.textContent=titleText;
   document.getElementById('cap-dt').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'})+' 기준';
-
-  // 현재 뷰의 등급을 자동으로 읽어 capGrade 고정
-  if(ctx==='byline') capGrade=activeBlGrade||'';
-  else if(ctx==='bycat') capGrade=activeBcGrade||'';
-  else if(ctx==='apparel') capGrade=activeApGrade||'';
-  else if(ctx==='special'&&specialCid){const c=ST.customers.find(x=>x.id===specialCid);capGrade=c?c.grade:'';}
-  else if(ctx==='selected') capGrade=selGrade||'';
-  else capGrade=activeGrade||'';
-
-  // 제목에 등급 표시
-  if(capGrade){
-    const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};
-    const glLabel=gl[capGrade]||capGrade.toUpperCase();
-    if(ctx!=='special') document.getElementById('cap-cn').textContent=titleText+' ['+glLabel+']';
-  }
-
+  // 현재 뷰의 등급 자동 적용 (사용자 선택 없음)
+  let initGrade='';
+  if(ctx==='byline') initGrade=activeBlGrade||'';
+  else if(ctx==='bycat') initGrade=activeBcGrade||'';
+  else if(ctx==='apparel') initGrade=activeApGrade||'';
+  else if(ctx==='special'&&specialCid){
+    const c=ST.customers.find(x=>x.id===specialCid);
+    if(c)initGrade=c.grade||'';
+  } else initGrade=activeGrade||'';
+  capGrade=initGrade;
   buildCapTable();
-
-  // UI 초기화
+  // 이전 결과 초기화
   document.getElementById('cap-preview').style.display='block';
-  document.getElementById('cap-img-wrap').style.display='none';
-  document.getElementById('cap-img-wrap').innerHTML='';
-  document.getElementById('cap-dl-btn').style.display='none';
-  document.getElementById('cap-cp-btn').style.display='none';
-  const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
-  const retry=document.getElementById('cap-retry-btn');if(retry)retry.style.display='none';
+  const imgWrap=document.getElementById('cap-img-wrap');
+  imgWrap.style.display='none';
+  imgWrap.innerHTML='';
   capBlob=null;
-
+  // 오버레이 열고 바로 자동 캡처
   document.getElementById('capture-overlay').classList.add('open');
-  // DOM 렌더링 완료 후 자동 캡처
-  requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(doCapture,80)));
+  setTimeout(()=>doCapture(),100);
 }
 function doCapture(){
-  // 로딩 표시
-  const loading=document.getElementById('cap-loading');
+  const redoBtn=document.getElementById('cap-redo-btn');
+  const dlBtn=document.getElementById('cap-dl-btn');
+  const cpBtn=document.getElementById('cap-cp-btn');
+  if(redoBtn){redoBtn.textContent='생성 중...';redoBtn.disabled=true;}
+  if(dlBtn)dlBtn.disabled=true;
+  if(cpBtn)cpBtn.disabled=true;
+  // 캡처 전에 이전 결과 이미지 숨기고 프리뷰 표시 (html2canvas가 프리뷰를 읽도록)
   const target=document.getElementById('cap-preview');
-  if(loading)loading.style.display='flex';
-  target.style.display='none';
-  document.getElementById('cap-dl-btn').style.display='none';
-  document.getElementById('cap-cp-btn').style.display='none';
-  const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
-  const retry=document.getElementById('cap-retry-btn');if(retry)retry.style.display='none';
-  document.getElementById('cap-img-wrap').style.display='none';
-
-  // 캡처 대상을 임시로 화면에 표시 (html2canvas가 읽을 수 있도록)
-  target.style.position='static';
-  target.style.opacity='1';
   target.style.display='block';
-
+  const imgWrap=document.getElementById('cap-img-wrap');
+  imgWrap.style.display='none';
+  imgWrap.innerHTML='';
   const targetW=Math.max(target.scrollWidth,900);
   const targetH=Math.max(target.scrollHeight,200);
 
@@ -2504,7 +2427,7 @@ function doCapture(){
       const clonedBody=clonedDoc.body;
       clonedBody.innerHTML='';
       clonedBody.style.cssText='margin:0;padding:0;background:#fff;overflow:visible;width:'+targetW+'px';
-      clonedEl.style.cssText='position:static;display:block;width:'+targetW+'px;overflow:visible;background:#fff;box-sizing:border-box;opacity:1';
+      clonedEl.style.cssText='position:static;display:block;width:'+targetW+'px;overflow:visible;background:#fff;box-sizing:border-box';
       clonedBody.appendChild(clonedEl);
     },
   }).then(canvas=>{
@@ -2514,22 +2437,18 @@ function doCapture(){
       const img=document.createElement('img');
       img.src=url;
       img.style.cssText='max-width:100%;border-radius:8px;border:1px solid #dde;display:block';
-      const imgWrap=document.getElementById('cap-img-wrap');
       imgWrap.innerHTML='';
       imgWrap.appendChild(img);
       imgWrap.style.display='block';
-      // 미리보기 숨기고 결과 표시
       target.style.display='none';
-      if(loading)loading.style.display='none';
-      document.getElementById('cap-dl-btn').style.display='inline-flex';
-      document.getElementById('cap-cp-btn').style.display='inline-flex';
-      if(hint)hint.style.display='inline';
-      if(retry)retry.style.display='inline-flex';
+      if(redoBtn){redoBtn.textContent='🔄 다시 생성';redoBtn.disabled=false;}
+      if(dlBtn)dlBtn.disabled=false;
+      if(cpBtn)cpBtn.disabled=false;
     },'image/png');
   }).catch(e=>{
-    target.style.display='none';
-    if(loading)loading.style.display='none';
-    if(retry)retry.style.display='inline-flex';
+    if(redoBtn){redoBtn.textContent='🔄 다시 생성';redoBtn.disabled=false;}
+    if(dlBtn)dlBtn.disabled=false;
+    if(cpBtn)cpBtn.disabled=false;
     toast('캡처 실패: '+e.message,'error');
   });
 }
@@ -2563,13 +2482,12 @@ function capCopy(){
   }
 }
 function closeCapture(){
-  const loading=document.getElementById('cap-loading');if(loading)loading.style.display='none';
+  const prev=document.getElementById('cap-preview');
+  if(prev)prev.style.display='block';
   const imgWrap=document.getElementById('cap-img-wrap');
   if(imgWrap){imgWrap.style.display='none';imgWrap.innerHTML='';}
-  const dlBtn=document.getElementById('cap-dl-btn');if(dlBtn)dlBtn.style.display='none';
-  const cpBtn=document.getElementById('cap-cp-btn');if(cpBtn)cpBtn.style.display='none';
-  const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
-  const retry=document.getElementById('cap-retry-btn');if(retry)retry.style.display='none';
+  const redoBtn=document.getElementById('cap-redo-btn');
+  if(redoBtn){redoBtn.textContent='🔄 다시 생성';redoBtn.disabled=false;}
   capBlob=null;
   document.getElementById('capture-overlay').classList.remove('open');
 }
@@ -3712,162 +3630,6 @@ function renderIntro(fid){
       descStatus.innerHTML=`<span style="font-size:11px;color:var(--red)">⚠ 특징 설명 미입력 — 수정 버튼으로 추가하세요</span>`;
     }
   }
-  // 컬러 이미지 뷰어 로드
-  bindCvEvents();
-  loadColorViewer(f.url);
-}
-
-// ── 컬러 이미지 뷰어 ──
-let cvBaseImg=null; // 원본 이미지 ImageBitmap
-let cvBoxes=[];     // 그려진 박스 목록
-let cvDragging=false;
-let cvStart={x:0,y:0};
-let cvScale=1;      // 캔버스 실제 픽셀 / 표시 픽셀 비율
-
-// 원단 URL에서 컬러 이미지 URL 추출
-// 예: https://recoveric.com/main/product.html?divi=single&item=vsingle
-//  → https://recoveric.com/data/productall/{code}_h?ver=2
-function extractColorImgUrl(fabricUrl){
-  if(!fabricUrl)return null;
-  try{
-    const u=new URL(fabricUrl);
-    const item=u.searchParams.get('item');
-    if(!item)return null;
-    // item 코드로 컬러 이미지 URL 구성
-    return `https://recoveric.com/data/productall/${item}_h?ver=${Date.now()}`;
-  }catch(e){return null;}
-}
-
-async function loadColorViewer(fabricUrl){
-  const wrap=document.getElementById('color-viewer-wrap');
-  const cvLoad=document.getElementById('cv-loading');
-  const canvas=document.getElementById('cv-canvas');
-  if(!wrap||!canvas)return;
-  const colorUrl=extractColorImgUrl(fabricUrl);
-  if(!colorUrl){wrap.style.display='none';return;}
-  wrap.style.display='block';
-  cvLoad.style.display='block';
-  cvLoad.textContent='이미지 불러오는 중...';
-  canvas.style.display='none';
-  cvBoxes=[];cvBaseImg=null;
-  try{
-    // fetch로 이미지 가져와서 Blob URL로 변환 (CORS 우회 시도)
-    const resp=await fetch(colorUrl,{mode:'cors'});
-    if(!resp.ok)throw new Error('HTTP '+resp.status);
-    const blob=await resp.blob();
-    const blobUrl=URL.createObjectURL(blob);
-    const img=new Image();
-    img.onload=()=>{
-      cvBaseImg=img;
-      const dispW=Math.min(img.width, wrap.clientWidth-40||700);
-      cvScale=img.width/dispW;
-      canvas.width=img.width;
-      canvas.height=img.height;
-      canvas.style.width=dispW+'px';
-      canvas.style.height=Math.round(img.height/cvScale)+'px';
-      canvas.style.display='block';
-      cvLoad.style.display='none';
-      cvRedraw();
-      URL.revokeObjectURL(blobUrl);
-    };
-    img.onerror=()=>{throw new Error('이미지 로드 실패');};
-    img.src=blobUrl;
-  }catch(e){
-    // CORS 실패 시 직접 img 태그로 fallback (canvas 합성 불가 — 다운로드만)
-    cvLoad.textContent='';
-    cvLoad.innerHTML=`<div style="text-align:center">
-      <img src="${colorUrl}" crossorigin="anonymous" style="max-width:100%;border-radius:8px;border:1px solid var(--border)" onerror="this.onerror=null;this.src='${colorUrl.replace('?ver='+cvLoad.dataset.t,'')}'">
-      <div style="font-size:11px;color:var(--txt3);margin-top:8px">⚠ 박스 그리기 기능을 사용하려면 recoveric.com 서버에서 CORS 설정이 필요합니다.<br>스크린샷 후 카톡 전송 방식을 사용해주세요.</div>
-    </div>`;
-    cvLoad.style.display='block';
-    canvas.style.display='none';
-  }
-}
-
-function cvRedraw(){
-  const canvas=document.getElementById('cv-canvas');
-  if(!canvas||!cvBaseImg)return;
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(cvBaseImg,0,0,canvas.width,canvas.height);
-  cvBoxes.forEach(b=>{
-    ctx.strokeStyle='#e00';
-    ctx.lineWidth=Math.max(3,canvas.width*0.003);
-    ctx.strokeRect(b.x,b.y,b.w,b.h);
-  });
-}
-
-function cvGetPos(canvas,e){
-  const rect=canvas.getBoundingClientRect();
-  const touch=e.touches?e.touches[0]:e;
-  return{
-    x:Math.round((touch.clientX-rect.left)*cvScale),
-    y:Math.round((touch.clientY-rect.top)*cvScale)
-  };
-}
-
-// 이벤트 바인딩은 canvas 생성 후 한 번만
-function bindCvEvents(){
-  const canvas=document.getElementById('cv-canvas');
-  if(!canvas||canvas._cvBound)return;
-  canvas._cvBound=true;
-  const down=e=>{
-    if(!cvBaseImg)return;
-    e.preventDefault();
-    cvDragging=true;
-    cvStart=cvGetPos(canvas,e);
-  };
-  const move=e=>{
-    if(!cvDragging||!cvBaseImg)return;
-    e.preventDefault();
-    const cur=cvGetPos(canvas,e);
-    cvRedraw();
-    const ctx=canvas.getContext('2d');
-    ctx.strokeStyle='#e00';
-    ctx.lineWidth=Math.max(3,canvas.width*0.003);
-    ctx.strokeRect(cvStart.x,cvStart.y,cur.x-cvStart.x,cur.y-cvStart.y);
-  };
-  const up=e=>{
-    if(!cvDragging)return;
-    cvDragging=false;
-    const cur=cvGetPos(canvas,e.changedTouches?e.changedTouches[0]:e);
-    const w=cur.x-cvStart.x,h=cur.y-cvStart.y;
-    if(Math.abs(w)>5&&Math.abs(h)>5){
-      cvBoxes.push({x:cvStart.x,y:cvStart.y,w,h});
-      cvRedraw();
-    }
-  };
-  canvas.addEventListener('mousedown',down);
-  canvas.addEventListener('mousemove',move);
-  canvas.addEventListener('mouseup',up);
-  canvas.addEventListener('touchstart',down,{passive:false});
-  canvas.addEventListener('touchmove',move,{passive:false});
-  canvas.addEventListener('touchend',up,{passive:false});
-}
-
-function colorViewerUndo(){cvBoxes.pop();cvRedraw();}
-
-function colorViewerCapture(){
-  const canvas=document.getElementById('cv-canvas');
-  if(!canvas||!cvBaseImg){toast('이미지를 먼저 불러오세요','error');return;}
-  canvas.toBlob(blob=>{
-    if(navigator.clipboard&&window.ClipboardItem){
-      navigator.clipboard.write([new ClipboardItem({'image/png':blob})])
-        .then(()=>toast('컬러 이미지 복사됨 ✓ 카톡에 붙여넣기 하세요','success'))
-        .catch(()=>{colorViewerDownload();});
-    } else colorViewerDownload();
-  },'image/png');
-}
-
-function colorViewerDownload(){
-  const canvas=document.getElementById('cv-canvas');
-  if(!canvas||!cvBaseImg){toast('이미지를 먼저 불러오세요','error');return;}
-  canvas.toBlob(blob=>{
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='컬러확인_'+new Date().toISOString().slice(0,10)+'.png';
-    a.click();toast('컬러 이미지 다운로드','success');
-  },'image/png');
 }
 
 // 원단 소개에서 바로 description/url 수정
