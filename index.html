@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.95</title>
+<title>RECOVERIC 단가관리 시스템 v4.96</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -549,7 +549,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.95</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.96</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -4171,20 +4171,42 @@ async function handleColorImageUpload(fid, file){
     const blob=await compressImage(file);
     const sizeKB=Math.round(blob.size/1024);
     toast(`업로드 중... (${sizeKB}KB)`,'success');
-    // 이전 이미지 삭제 (있으면)
-    if(f.colorImagePath){deleteColorImageFromStorage(f.colorImagePath);}
+    // 이전 이미지 삭제 (있으면) - 비동기, 결과 기다리지 않음
+    const oldPath=f.colorImagePath;
     const result=await uploadColorImageToStorage(fid, blob);
-    // DB 저장
+    console.log('[Upload]',f.name,'→',result.url);
+
+    // DB 저장 - LocalStorage는 즉시, Firebase RTDB는 대기
     f.colorImage=result.url;
     f.colorImagePath=result.path;
-    saveFabricsDirty();
-    // 캐시 강제 갱신
-    colorImgCache[result.url]=true;
+    // LocalStorage 즉시 저장 (동기)
+    try{localStorage.setItem('rcv2',JSON.stringify(ST));}catch(e){}
+    // Firebase RTDB 저장 - 완료 대기 (중요: fbRead 덮어쓰기 방지 및 다른 기기 동기화)
+    _fbLastWrite=Date.now(); // fbRead 5초 보호 갱신
+    await fbWrite();
+    console.log('[Upload] RTDB 저장 완료',f.name);
+
+    // 이전 이미지 삭제 (DB 저장 후)
+    if(oldPath)deleteColorImageFromStorage(oldPath);
+
+    // 이미지 URL이 실제로 로드 가능한지 검증
+    await new Promise((resolve)=>{
+      const img=new Image();
+      img.onload=()=>{colorImgCache[result.url]=true;resolve();};
+      img.onerror=()=>{colorImgCache[result.url]=false;resolve();};
+      img.src=result.url;
+      setTimeout(resolve,5000); // 5초 타임아웃
+    });
+
     renderColorTable();
     if(document.getElementById('view-colorsend')?.classList.contains('active')){
       renderColorSendList();
     }
-    toast(`✓ ${f.name} 이미지 업로드 완료 (${sizeKB}KB)`,'success');
+    if(colorImgCache[result.url]===false){
+      toast(`⚠ ${f.name} 업로드됐으나 이미지 로드 실패 — 새로고침 필요`,'error');
+    } else {
+      toast(`✓ ${f.name} 이미지 업로드 완료 (${sizeKB}KB)`,'success');
+    }
   }catch(e){
     console.error('[Image upload]',e);
     toast('업로드 실패: '+e.message,'error');
