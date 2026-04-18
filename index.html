@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.90</title>
+<title>RECOVERIC 단가관리 시스템 v4.92</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -283,6 +283,35 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .color-bulk-box{background:#fff9ee;border:1.5px dashed var(--gold);border-radius:10px;padding:14px 16px;font-size:12px;color:var(--txt2);line-height:1.6}
 .color-bulk-textarea{width:100%;min-height:100px;padding:10px;border:1.5px solid var(--border2);border-radius:8px;font-family:'Outfit',monospace;font-size:12px;resize:vertical;margin-top:8px}
 
+/* ─── COLOR SEND (컬러 발송) ─── */
+#view-colorsend{padding:16px 20px;gap:12px}
+.cs-list-wrap{flex:1;overflow-y:auto;min-height:0;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;box-shadow:var(--shadow)}
+.cs-sect-header{background:var(--bg3);color:var(--txt2);font-size:11px;font-weight:800;letter-spacing:1px;padding:8px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2}
+.cs-row{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--border);transition:.15s}
+.cs-row:hover{background:rgba(200,144,10,.04)}
+.cs-row:last-child{border-bottom:none}
+.cs-thumb{width:52px;height:52px;border-radius:8px;border:1.5px solid var(--border);object-fit:cover;background:#f8f9fd;flex-shrink:0;cursor:pointer;transition:.15s}
+.cs-thumb:hover{border-color:var(--gold);transform:scale(1.05)}
+.cs-thumb-empty{width:52px;height:52px;border-radius:8px;border:1.5px dashed var(--border2);background:#fafbfe;display:flex;align-items:center;justify-content:center;color:var(--txt3);font-size:18px;flex-shrink:0}
+.cs-info{flex:1;min-width:0}
+.cs-name{font-size:14px;font-weight:700;color:var(--txt)}
+.cs-meta{font-size:11px;color:var(--txt3);margin-top:2px}
+.cs-actions{display:flex;gap:6px;flex-shrink:0}
+.cs-empty-notice{padding:50px 20px;text-align:center;color:var(--txt3)}
+.cs-empty-notice .cs-empty-ic{font-size:36px;margin-bottom:10px;opacity:.4}
+.cs-status-bar{background:linear-gradient(135deg,#fef7e6 0%,#fff9ee 100%);border:2px solid var(--gold);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;flex-shrink:0;box-shadow:0 4px 14px rgba(200,144,10,.12);transition:.2s}
+.cs-status-bar.empty{background:var(--bg2);border-color:var(--border2);border-style:dashed;box-shadow:none;opacity:.7}
+.cs-status-ic{width:40px;height:40px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.cs-status-bar.empty .cs-status-ic{background:var(--border2);color:var(--txt3)}
+.cs-status-text{flex:1;min-width:0}
+.cs-status-title{font-size:13px;font-weight:700;color:var(--txt)}
+.cs-status-hint{font-size:11px;color:var(--txt2);margin-top:2px}
+.cs-img-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;flex-direction:column;gap:14px}
+.cs-img-modal.open{display:flex}
+.cs-img-modal img{max-width:92vw;max-height:82vh;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.cs-img-modal-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.12);border:none;color:#fff;width:44px;height:44px;border-radius:50%;font-size:22px;cursor:pointer;backdrop-filter:blur(8px)}
+.cs-img-modal-title{color:#fff;font-size:15px;font-weight:700}
+
 /* ─── CUSTOMERS ─── */
 .cust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .cc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow);transition:.15s}
@@ -517,7 +546,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.90</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.92</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -544,6 +573,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       <button class="nav-btn" id="nb-intro" onclick="sv('intro',this)">
         <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         원단 소개
+      </button>
+      <button class="nav-btn" id="nb-colorsend" onclick="sv('colorsend',this)">
+        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        컬러 발송
       </button>
       <div class="nav-section" id="ns-admin">관리</div>
       <button class="nav-btn" id="nb-admin" onclick="sv('admin',this)">
@@ -916,6 +949,47 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
           <div id="intro-desc-status" style="margin-bottom:12px"></div>
           <div style="font-size:11px;color:var(--txt3);line-height:1.7">✎ 설명 수정 버튼으로 원단 특징 설명과 URL을 바로 수정할 수 있습니다.</div>
         </div>
+      </div>
+    </div>
+
+    <!-- ══ 컬러 발송 ══ -->
+    <div class="view" id="view-colorsend">
+      <div class="view-header">
+        <div class="view-title">컬러 <span>발송</span></div>
+      </div>
+      <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow)">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--txt2);font-weight:600">조직</span>
+          <select id="cs-cat-filter" onchange="renderColorSendList()" class="filter-select" style="min-width:100px">
+            <option value="">전체</option>
+          </select>
+        </div>
+        <div style="position:relative;flex:1;min-width:160px;max-width:280px">
+          <input type="text" id="cs-search" class="search-input" placeholder="원단명 검색..." oninput="renderColorSendList()" autocomplete="off" style="padding-left:12px">
+        </div>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2);cursor:pointer;user-select:none">
+          <input type="checkbox" id="cs-only-registered" onchange="renderColorSendList()" checked>
+          <span>등록된 원단만</span>
+        </label>
+      </div>
+      <div class="cs-list-wrap" id="cs-list-wrap"></div>
+      <!-- 하단 고정: 마지막 복사 안내 -->
+      <div class="cs-status-bar empty" id="cs-status-bar">
+        <div class="cs-status-ic">📋</div>
+        <div class="cs-status-text">
+          <div class="cs-status-title" id="cs-status-title">복사된 이미지 없음</div>
+          <div class="cs-status-hint" id="cs-status-hint">원단 옆 [📋 이미지] 버튼을 클릭하면 여기에 상태가 표시됩니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 컬러 이미지 확대 보기 모달 -->
+    <div class="cs-img-modal" id="cs-img-modal" onclick="if(event.target.id==='cs-img-modal')closeCsImgModal()">
+      <button class="cs-img-modal-close" onclick="closeCsImgModal()">✕</button>
+      <div class="cs-img-modal-title" id="cs-img-modal-title"></div>
+      <img id="cs-img-modal-img" src="" alt="">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-gold btn-sm" onclick="copyCsImageFromModal()">📋 이미지 복사</button>
       </div>
     </div>
 
@@ -1498,6 +1572,7 @@ function sv(name,btn,skipHistory){
   else if(name==='cust')renderCust();
   else if(name==='admin'){renderAdminTbl();fillLevelSelects();fillCatList();renderTagMgmt();loadSeasonInput();}
   else if(name==='color'){initColorView();}
+  else if(name==='colorsend'){initColorSendView();}
   else if(name==='special'){
     // 사이드바에서 진입 시 등급 필터 초기화 + 카드 목록으로 리셋
     spGradeFilter='';
@@ -1537,7 +1612,7 @@ window.addEventListener('popstate',e=>{
 // 초기 진입 시 hash 처리
 window.addEventListener('load',()=>{
   const hash=location.hash.replace('#','');
-  const valid=['price','special','byline','bycat','apparel','intro','admin','cust','sheets','color'];
+  const valid=['price','special','byline','bycat','apparel','intro','admin','cust','sheets','color','colorsend'];
   if(hash&&valid.includes(hash)){
     // 로그인 후에만 적용 — 앱 진입 이후에 처리
     window._initialView=hash;
@@ -2770,21 +2845,37 @@ function fForm(f){
     <div class="fg"><label class="flabel">SP%</label><input class="finput" id="fcs" type="number" value="${f?.sp||0}" style="width:55px"></div>
     <div class="fg"><label class="flabel">R%</label><input class="finput" id="fcr" type="number" value="${f?.r||0}" style="width:55px"></div>
   </div>
-  <div style="margin-top:4px"><div class="flabel" style="margin-bottom:6px">의류 태그</div>${tcs}</div>`;
+  <div style="margin-top:6px">
+    <div class="flabel" style="margin-bottom:6px">배지</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px">
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-rec" ${f?.badges?.recommend?'checked':''}><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:4px;font-weight:700">추천</span></label>
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-new" ${f?.badges?.newItem?'checked':''}><span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-weight:700">NEW</span></label>
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-sale" ${f?.badges?.sale?'checked':''}><span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;font-weight:700">SALE</span></label>
+    </div>
+  </div>
+  <div style="margin-top:8px"><div class="flabel" style="margin-bottom:6px">의류 태그</div>${tcs}</div>`;
 }
 function saveF(){
   const catSel=document.getElementById('fc').value;
   const catVal=catSel==='_new'?(document.getElementById('fc-new')?.value.trim()||''):catSel;
   const name=document.getElementById('fn').value.trim();
   if(!name){toast('품목명 필요','error');return;}
-  const tags=[...document.querySelectorAll('#m-content input[type=checkbox]:checked')].map(c=>c.value).filter(v=>v&&v!=='on');
+  // 태그 수집 - 배지 체크박스(fb-*)는 제외
+  const tags=[...document.querySelectorAll('#m-content input[type=checkbox]:checked')]
+    .filter(c=>!['fb-rec','fb-new','fb-sale'].includes(c.id))
+    .map(c=>c.value).filter(v=>v&&v!=='on');
+  const badges={
+    recommend:!!document.getElementById('fb-rec')?.checked,
+    newItem:!!document.getElementById('fb-new')?.checked,
+    sale:!!document.getElementById('fb-sale')?.checked,
+  };
   const d={level:document.getElementById('fl').value,category:catVal||'기타',name,
     mg:parseInt(document.getElementById('fmg').value)||null,baek:parseInt(document.getElementById('fbk').value)||null,
     muji:parseInt(document.getElementById('fmj').value)||null,rib:parseInt(document.getElementById('frb').value)||null,
     ribUnit:document.getElementById('fru').value||undefined,
     width:document.getElementById('fwi').value.trim()||null,weight:parseInt(document.getElementById('fwt').value)||null,
     c:parseInt(document.getElementById('fcc').value)||0,p:parseInt(document.getElementById('fcp').value)||0,
-    sp:parseInt(document.getElementById('fcs').value)||0,r:parseInt(document.getElementById('fcr').value)||0,tags};
+    sp:parseInt(document.getElementById('fcs').value)||0,r:parseInt(document.getElementById('fcr').value)||0,tags,badges};
   if(editFid){const idx=ST.fabrics.findIndex(x=>x.id===editFid);if(idx>=0)ST.fabrics[idx]={...ST.fabrics[idx],...d};}
   else ST.fabrics.push({id:ST.nextFid++,...d});
   saveFabricsDirty();fillLevelSelects();fillCatList();
@@ -3879,6 +3970,196 @@ function processColorBulkPaste(){
 }
 
 
+// ─ 컬러 발송 ─
+// 확대보기 모달 전용 상태
+let csModalCurrentFid=null;
+
+// 뷰 진입 시 초기화
+function initColorSendView(){
+  const catSel=document.getElementById('cs-cat-filter');
+  if(catSel){
+    const cats=[...new Set(ST.fabrics.map(f=>f.category).filter(Boolean))].sort();
+    const prev=catSel.value;
+    catSel.innerHTML='<option value="">전체</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+    if(prev)catSel.value=prev;
+  }
+  renderColorSendList();
+}
+
+// 목록 렌더
+function renderColorSendList(){
+  const wrap=document.getElementById('cs-list-wrap');if(!wrap)return;
+  const catFilter=(document.getElementById('cs-cat-filter')||{}).value||'';
+  const srch=((document.getElementById('cs-search')||{}).value||'').trim().toLowerCase();
+  const onlyReg=!!(document.getElementById('cs-only-registered')||{}).checked;
+
+  let fabs=ST.fabrics.filter(f=>f.name);
+  if(onlyReg)fabs=fabs.filter(f=>f.colorUrl&&f.colorUrl.trim());
+  if(catFilter)fabs=fabs.filter(f=>f.category===catFilter);
+  if(srch)fabs=fabs.filter(f=>(f.name||'').toLowerCase().includes(srch));
+
+  // 라인 → 조직 → 이름 순 정렬
+  const lvOrder={promo:1,standard:2,premium:3,luxury:4,apparel:5};
+  fabs.sort((a,b)=>{
+    const la=lvOrder[a.level]||9,lb=lvOrder[b.level]||9;
+    if(la!==lb)return la-lb;
+    if(a.category!==b.category)return (a.category||'').localeCompare(b.category||'');
+    return (a.name||'').localeCompare(b.name||'');
+  });
+
+  if(!fabs.length){
+    wrap.innerHTML=`<div class="cs-empty-notice">
+      <div class="cs-empty-ic">🎨</div>
+      <div style="font-size:14px;font-weight:600;color:var(--txt2);margin-bottom:4px">표시할 원단이 없습니다</div>
+      <div style="font-size:12px">${onlyReg?'"등록된 원단만" 체크를 해제하면 전체가 표시됩니다.':'필터 조건을 다시 확인해주세요.'}</div>
+    </div>`;
+    return;
+  }
+
+  // 조직별 그룹
+  const grouped={};
+  fabs.forEach(f=>{const k=f.category||'기타';if(!grouped[k])grouped[k]=[];grouped[k].push(f);});
+
+  let html='';
+  Object.keys(grouped).forEach(cat=>{
+    const rows=grouped[cat];
+    html+=`<div class="cs-sect-header">${cat} · ${rows.length}종</div>`;
+    rows.forEach(f=>{
+      const hasUrl=!!(f.colorUrl&&f.colorUrl.trim());
+      const status=hasUrl?colorStatusOf(f):'empty'; // ok | err | loading | empty
+      // 썸네일 영역
+      let thumbHtml='';
+      if(hasUrl&&status==='ok')thumbHtml=`<img src="${f.colorUrl}" class="cs-thumb" alt="${f.name}" onclick="openCsImgModal(${f.id})">`;
+      else if(hasUrl&&status==='err')thumbHtml=`<div class="cs-thumb-empty" title="이미지 로드 실패">⚠</div>`;
+      else if(hasUrl)thumbHtml=`<div class="cs-thumb-empty" title="로드 중">⏳</div>`;
+      else thumbHtml=`<div class="cs-thumb-empty" title="URL 미등록">—</div>`;
+      // 백그라운드 로드 예약
+      if(hasUrl&&!(f.colorUrl in colorImgCache))preloadColorImg(f.colorUrl);
+      // 메타 라인
+      const allLvs=getAllLevels();
+      const lvName=allLvs[f.level]||f.level||'';
+      // 액션 버튼
+      let actions='';
+      if(hasUrl){
+        actions=`<button class="btn btn-gold btn-sm" onclick="copyCsImage(${f.id})" title="이미지 복사" style="font-size:12px;padding:6px 12px">📋 이미지</button>
+          <button class="btn btn-outline btn-sm" onclick="copyCsImageUrl(${f.id})" title="URL 텍스트 복사" style="font-size:12px;padding:6px 12px">🔗 URL</button>`;
+      } else {
+        actions=`<span style="font-size:11px;color:var(--txt3);padding:6px 10px;background:var(--bg3);border-radius:6px">URL 미등록</span>`;
+      }
+      html+=`<div class="cs-row">
+        ${thumbHtml}
+        <div class="cs-info">
+          <div class="cs-name">${f.name}</div>
+          <div class="cs-meta">${lvName}${f.width?' · '+f.width+'"':''}${f.weight?' · '+f.weight+'g/y':''}</div>
+        </div>
+        <div class="cs-actions">${actions}</div>
+      </div>`;
+    });
+  });
+  wrap.innerHTML=html;
+}
+
+// 이미지 복사 (fetch → blob → ClipboardItem)
+async function copyCsImage(fid){
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f||!f.colorUrl)return;
+  if(!(navigator.clipboard&&window.ClipboardItem)){
+    // 환경 미지원 → URL 텍스트 복사로 fallback
+    copyCsImageUrl(fid);
+    return;
+  }
+  try{
+    const resp=await fetch(f.colorUrl,{mode:'cors'});
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    let blob=await resp.blob();
+    // 브라우저 Clipboard API는 image/png만 허용 — JPEG이면 변환 필요
+    if(blob.type!=='image/png'){
+      blob=await convertToPng(blob);
+    }
+    await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+    toast(`${f.name} 컬러 이미지 복사됨 ✓`,'success');
+    updateCsStatusBar(f.name,'image');
+  }catch(e){
+    // CORS 실패 또는 네트워크 문제 → URL 텍스트 복사로 자동 전환
+    toast(`이미지 복사 불가(브라우저 제약) — URL로 대체`,'error');
+    copyCsImageUrl(fid,true);
+  }
+}
+
+// URL 텍스트 복사
+function copyCsImageUrl(fid,isFallback){
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f||!f.colorUrl)return;
+  doCopyText(f.colorUrl).then(()=>{
+    if(!isFallback)toast(`${f.name} URL 복사됨 ✓`,'success');
+    updateCsStatusBar(f.name,'url');
+  }).catch(()=>{
+    showCopyPopup(f.colorUrl);
+    updateCsStatusBar(f.name,'url');
+  });
+}
+
+// Blob을 PNG로 변환 (JPEG 이미지 → Canvas → PNG Blob)
+function convertToPng(blob){
+  return new Promise((resolve,reject)=>{
+    const url=URL.createObjectURL(blob);
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const canvas=document.createElement('canvas');
+        canvas.width=img.naturalWidth;
+        canvas.height=img.naturalHeight;
+        const ctx=canvas.getContext('2d');
+        ctx.drawImage(img,0,0);
+        canvas.toBlob(b=>{
+          URL.revokeObjectURL(url);
+          if(b)resolve(b);
+          else reject(new Error('toBlob failed'));
+        },'image/png');
+      }catch(e){URL.revokeObjectURL(url);reject(e);}
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('image load error'));};
+    img.src=url;
+  });
+}
+
+// 하단 상태바 갱신 (마지막 복사 내역 - 덮어쓰기)
+function updateCsStatusBar(name,type){
+  const bar=document.getElementById('cs-status-bar');
+  const ic=bar?bar.querySelector('.cs-status-ic'):null;
+  const title=document.getElementById('cs-status-title');
+  const hint=document.getElementById('cs-status-hint');
+  if(!bar||!title||!hint)return;
+  const now=new Date();
+  const hh=String(now.getHours()).padStart(2,'0');
+  const mm=String(now.getMinutes()).padStart(2,'0');
+  bar.classList.remove('empty');
+  if(ic)ic.textContent=type==='image'?'🖼️':'🔗';
+  if(type==='image'){
+    title.innerHTML=`<span style="color:var(--green)">✓ 복사됨</span> · <b>${name}</b> 컬러 이미지 <span style="color:var(--txt3);font-weight:400">(${hh}:${mm})</span>`;
+    hint.textContent='카톡 대화창에서 Ctrl+V 또는 길게 눌러 붙여넣기 하세요.';
+  } else {
+    title.innerHTML=`<span style="color:var(--green)">✓ 복사됨</span> · <b>${name}</b> 이미지 URL <span style="color:var(--txt3);font-weight:400">(${hh}:${mm})</span>`;
+    hint.textContent='카톡에 붙여넣으면 링크 미리보기로 전송됩니다.';
+  }
+}
+
+// 이미지 확대 모달
+function openCsImgModal(fid){
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f||!f.colorUrl)return;
+  csModalCurrentFid=fid;
+  document.getElementById('cs-img-modal-title').textContent=f.name;
+  document.getElementById('cs-img-modal-img').src=f.colorUrl;
+  document.getElementById('cs-img-modal').classList.add('open');
+}
+function closeCsImgModal(){
+  document.getElementById('cs-img-modal').classList.remove('open');
+  document.getElementById('cs-img-modal-img').src='';
+  csModalCurrentFid=null;
+}
+function copyCsImageFromModal(){
+  if(csModalCurrentFid)copyCsImage(csModalCurrentFid);
+}
+
+
 // ─ 원단 소개 ─
 let introFid=null;
 
@@ -4282,6 +4563,19 @@ document.addEventListener('keydown',e=>{
     if(sel&&sel.length>0)return;
     e.preventDefault();
     capCopy();
+  }
+});
+
+// ─ 컬러 발송 이미지 확대 모달 단축키 ─
+document.addEventListener('keydown',e=>{
+  const m=document.getElementById('cs-img-modal');
+  if(!m||!m.classList.contains('open'))return;
+  if(e.key==='Escape'){e.preventDefault();closeCsImgModal();}
+  else if((e.ctrlKey||e.metaKey)&&(e.key==='c'||e.key==='C')){
+    const sel=window.getSelection&&window.getSelection().toString();
+    if(sel&&sel.length>0)return;
+    e.preventDefault();
+    copyCsImageFromModal();
   }
 });
 </script>
