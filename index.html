@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.89</title>
+<title>RECOVERIC 단가관리 시스템 v4.90</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -257,6 +257,32 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .cap-loading-text{font-size:13px;font-weight:600;letter-spacing:.3px}
 .cap-loading-sub{font-size:11px;color:#9aa0b8;margin-top:-8px}
 
+/* ─── COLOR IMAGE MANAGEMENT ─── */
+#view-color{padding:16px 20px;gap:12px}
+.color-toolbar{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.color-progress{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg3);border-radius:20px;font-size:12px;font-weight:700;color:var(--txt2)}
+.color-progress .color-progress-bar{width:90px;height:6px;background:#e5e8f0;border-radius:3px;overflow:hidden}
+.color-progress .color-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),#e0b040);transition:width .3s}
+.color-tbl-wrap{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.color-tbl{width:100%;border-collapse:collapse}
+.color-tbl th{background:var(--sidebar);color:#fff;padding:10px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.5px}
+.color-tbl td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+.color-tbl tr.color-sect td{background:var(--bg3);color:var(--txt2);font-size:11px;font-weight:800;letter-spacing:1px;padding:6px 14px}
+.color-tbl tr:hover:not(.color-sect) td{background:rgba(200,144,10,.05)}
+.color-thumb{width:46px;height:46px;border-radius:8px;border:1.5px solid var(--border);object-fit:cover;background:#f8f9fd;display:block}
+.color-thumb-empty{width:46px;height:46px;border-radius:8px;border:1.5px dashed var(--border2);background:#fafbfe;display:flex;align-items:center;justify-content:center;color:var(--txt3);font-size:16px}
+.color-url-input{width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:7px;font-size:12px;font-family:'Outfit',sans-serif;background:#fff;color:var(--txt);transition:.15s}
+.color-url-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,144,10,.12)}
+.color-url-input.ok{border-color:#16a34a;background:#f0fdf4}
+.color-url-input.err{border-color:var(--red);background:#fff1f1}
+.color-status{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:13px;font-weight:700}
+.color-status.ok{background:#dcfce7;color:#16a34a}
+.color-status.err{background:#fee2e2;color:var(--red)}
+.color-status.empty{background:#e5e8f0;color:var(--txt3)}
+.color-status.loading{background:#fef3c7;color:#b45309}
+.color-bulk-box{background:#fff9ee;border:1.5px dashed var(--gold);border-radius:10px;padding:14px 16px;font-size:12px;color:var(--txt2);line-height:1.6}
+.color-bulk-textarea{width:100%;min-height:100px;padding:10px;border:1.5px solid var(--border2);border-radius:8px;font-family:'Outfit',monospace;font-size:12px;resize:vertical;margin-top:8px}
+
 /* ─── CUSTOMERS ─── */
 .cust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .cc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow);transition:.15s}
@@ -491,7 +517,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.89</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.90</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -523,6 +549,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       <button class="nav-btn" id="nb-admin" onclick="sv('admin',this)">
         <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/></svg>
         관리 및 설정
+      </button>
+      <button class="nav-btn" id="nb-color" onclick="sv('color',this)">
+        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        컬러 이미지 관리
       </button>
       <button class="nav-btn" id="nb-sheets" onclick="sv('sheets',this)">
         <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -889,6 +919,66 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       </div>
     </div>
 
+    <!-- ══ 컬러 이미지 관리 ══ -->
+    <div class="view" id="view-color">
+      <div class="view-header">
+        <div class="view-title">컬러 이미지 <span>관리</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="openColorBulkPaste()">📋 엑셀 붙여넣기</button>
+          <button class="btn btn-gold btn-sm" onclick="applyDefaultColorUrls()" title="기본 등록된 6개 원단의 URL을 일괄 적용">⚡ 기본값 일괄 적용</button>
+        </div>
+      </div>
+      <div class="color-toolbar">
+        <div class="color-progress">
+          <span id="color-progress-text">0 / 0 등록됨</span>
+          <div class="color-progress-bar"><div class="color-progress-fill" id="color-progress-fill" style="width:0%"></div></div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--txt2);font-weight:600">조직</span>
+          <select id="color-cat-filter" onchange="renderColorTable()" class="filter-select" style="min-width:100px">
+            <option value="">전체</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--txt2);font-weight:600">상태</span>
+          <select id="color-status-filter" onchange="renderColorTable()" class="filter-select" style="min-width:110px">
+            <option value="">전체</option>
+            <option value="ok">✓ 등록 완료</option>
+            <option value="empty">○ 미등록</option>
+            <option value="err">⚠ URL 오류</option>
+          </select>
+        </div>
+        <div style="position:relative;flex:1;min-width:160px;max-width:260px">
+          <input type="text" id="color-search" class="search-input" placeholder="원단명 검색..." oninput="renderColorTable()" autocomplete="off">
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;min-height:0">
+        <div class="color-tbl-wrap">
+          <table class="color-tbl">
+            <colgroup>
+              <col style="width:22%"><!-- 원단명 -->
+              <col style="width:10%"><!-- 조직 -->
+              <col style="width:70px"><!-- 미리보기 -->
+              <col style="width:auto"><!-- URL 입력 -->
+              <col style="width:60px"><!-- 상태 -->
+              <col style="width:70px"><!-- 액션 -->
+            </colgroup>
+            <thead>
+              <tr>
+                <th>원단명</th>
+                <th>조직</th>
+                <th style="text-align:center">미리보기</th>
+                <th>컬러 이미지 URL</th>
+                <th style="text-align:center">상태</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="color-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
 
     <div class="view" id="view-admin">
       <div class="view-header">
@@ -1155,6 +1245,16 @@ const LVNAMES={promo:'프로모션',standard:'Standard',premium:'Premium',luxury
 const LVCLS={promo:'promo',standard:'standard',premium:'premium',luxury:'luxury',apparel:'apparel'};
 const TAGS=['반팔','긴팔','민소매','크롭티','맨투맨','후드','후드집업','이너','반바지','칠부바지','긴바지','스커트','가디건','집업','자켓','트레이닝세트'];
 
+// 기본 컬러 이미지 URL 매핑 (원단명 → recoveric.com 컬러 전체보기 URL)
+const DEFAULT_COLOR_URLS={
+  '스포츠싱글':'https://recoveric.com/data/productall/1050_h?ver=2',
+  '노블싱글(스판)':'https://recoveric.com/data/productall/1020_h?ver=2',
+  '울트라싱글':'https://recoveric.com/data/productall/1010_h?ver=2',
+  '슈퍼싱글':'https://recoveric.com/data/productall/1030_h?ver=2',
+  '프리미엄싱글':'https://recoveric.com/data/productall/1040_h?ver=2',
+  'RS-400S':'https://recoveric.com/data/productall/1055_h?ver=2',
+};
+
 const DFABRICS=[
   // ── Promotion ──
   {id:1,level:'promo',category:'싱글',name:'V싱글',mg:null,baek:4300,muji:4300,rib:7300,width:'70/74',weight:370,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
@@ -1262,7 +1362,7 @@ function migrate(old){
   }
   // 원단 데이터: v4 이상으로 저장된 데이터만 신뢰 (구버전은 DFABRICS로 리셋)
   if(old.dataVersion>=4&&old.fabrics&&old.fabrics.length){
-    s.fabrics=old.fabrics.map(f=>({url:null,description:null,...f}));
+    s.fabrics=old.fabrics.map(f=>({url:null,description:null,colorUrl:'',...f}));
     s.nextFid=old.nextFid||s.nextFid;
   }
   // 필수 필드 보장
@@ -1292,6 +1392,8 @@ function migrate(old){
   if(!s.seasonName)s.seasonName='2026 상반기';
   if(!s.sheetsUrl)s.sheetsUrl=DEFAULT_SHEETS_URL;
   if(!s.tags||!s.tags.length)s.tags=[...TAGS];
+  // colorUrl 필드 보장
+  if(s.fabrics)s.fabrics.forEach(f=>{if(f.colorUrl===undefined||f.colorUrl===null)f.colorUrl='';});
   return s;
 }
 function load(){
@@ -1325,7 +1427,7 @@ function enter(r,label,cls){
   pill.textContent=label;pill.className='user-role-pill '+cls;
   const isAdm=r==='superadmin'||r==='admin';
   const isSuperAdmin=r==='superadmin';
-  ['nb-admin','ns-admin'].forEach(id=>{
+  ['nb-admin','nb-color','ns-admin'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.style.display=isAdm?'':'none';
   });
@@ -1395,6 +1497,7 @@ function sv(name,btn,skipHistory){
   else if(name==='apparel'){activeAp='';activeApGrade='';renderByApparel();}
   else if(name==='cust')renderCust();
   else if(name==='admin'){renderAdminTbl();fillLevelSelects();fillCatList();renderTagMgmt();loadSeasonInput();}
+  else if(name==='color'){initColorView();}
   else if(name==='special'){
     // 사이드바에서 진입 시 등급 필터 초기화 + 카드 목록으로 리셋
     spGradeFilter='';
@@ -1434,7 +1537,7 @@ window.addEventListener('popstate',e=>{
 // 초기 진입 시 hash 처리
 window.addEventListener('load',()=>{
   const hash=location.hash.replace('#','');
-  const valid=['price','special','byline','bycat','apparel','intro','admin','cust','sheets'];
+  const valid=['price','special','byline','bycat','apparel','intro','admin','cust','sheets','color'];
   if(hash&&valid.includes(hash)){
     // 로그인 후에만 적용 — 앱 진입 이후에 처리
     window._initialView=hash;
@@ -3516,6 +3619,263 @@ function setApGrade(btn,grade){
   document.querySelectorAll('#ap-grade-bar .grade-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderByApparel();
+}
+
+
+// ─ 컬러 이미지 관리 ─
+// 메모리 캐시: 이미지 로드 결과 (true=성공, false=실패, undefined=미시도)
+const colorImgCache={};
+
+// 컬러 관리 뷰 진입 - 필터 선택 박스 채우기 + 테이블 렌더
+function initColorView(){
+  const catSel=document.getElementById('color-cat-filter');
+  if(catSel){
+    const cats=[...new Set(ST.fabrics.map(f=>f.category).filter(Boolean))].sort();
+    catSel.innerHTML='<option value="">전체</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  }
+  renderColorTable();
+}
+
+// 원단 상태 판정: 'ok' | 'err' | 'empty' | 'loading'
+function colorStatusOf(f){
+  const url=(f.colorUrl||'').trim();
+  if(!url)return 'empty';
+  if(colorImgCache[url]===true)return 'ok';
+  if(colorImgCache[url]===false)return 'err';
+  return 'loading';
+}
+
+// 이미지 미리 로드 (비동기): 결과를 캐시에 저장하고 renderColorTable 재호출 불필요하게 해당 셀만 갱신
+function preloadColorImg(url){
+  if(!url)return;
+  if(url in colorImgCache)return; // 이미 시도함
+  colorImgCache[url]=undefined; // 진행 중 마킹
+  const img=new Image();
+  img.onload=()=>{colorImgCache[url]=true;updateColorRowState(url);};
+  img.onerror=()=>{colorImgCache[url]=false;updateColorRowState(url);};
+  img.src=url;
+}
+
+// 특정 URL을 쓰는 모든 행의 썸네일/상태/입력창 클래스를 갱신
+function updateColorRowState(url){
+  if(!url)return;
+  const tbody=document.getElementById('color-tbody');if(!tbody)return;
+  const rows=tbody.querySelectorAll(`tr[data-url="${CSS.escape(url)}"]`);
+  rows.forEach(tr=>{
+    const fid=+tr.dataset.fid;
+    const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+    const status=colorStatusOf(f);
+    const thumbTd=tr.querySelector('.color-thumb-td');
+    const statusTd=tr.querySelector('.color-status-td');
+    const input=tr.querySelector('.color-url-input');
+    if(thumbTd){
+      if(status==='ok')thumbTd.innerHTML=`<img src="${f.colorUrl}" class="color-thumb" alt="${f.name}">`;
+      else if(status==='err')thumbTd.innerHTML='<div class="color-thumb-empty" title="이미지 로드 실패">⚠</div>';
+      else if(status==='loading')thumbTd.innerHTML='<div class="color-thumb-empty">⏳</div>';
+      else thumbTd.innerHTML='<div class="color-thumb-empty">—</div>';
+    }
+    if(statusTd)statusTd.innerHTML=colorStatusBadge(status);
+    if(input){
+      input.classList.remove('ok','err');
+      if(status==='ok')input.classList.add('ok');
+      else if(status==='err')input.classList.add('err');
+    }
+  });
+  updateColorProgress();
+}
+
+// 상태 배지 HTML
+function colorStatusBadge(status){
+  if(status==='ok')return '<span class="color-status ok" title="등록 완료">✓</span>';
+  if(status==='err')return '<span class="color-status err" title="URL 오류">⚠</span>';
+  if(status==='loading')return '<span class="color-status loading" title="로드 중">⏳</span>';
+  return '<span class="color-status empty" title="미등록">○</span>';
+}
+
+// 진행률 업데이트
+function updateColorProgress(){
+  const total=ST.fabrics.length;
+  const okCount=ST.fabrics.filter(f=>colorStatusOf(f)==='ok').length;
+  const txt=document.getElementById('color-progress-text');
+  if(txt)txt.textContent=`${okCount} / ${total} 등록됨`;
+  const fill=document.getElementById('color-progress-fill');
+  if(fill)fill.style.width=total?(okCount/total*100)+'%':'0%';
+}
+
+// 테이블 렌더
+function renderColorTable(){
+  const tbody=document.getElementById('color-tbody');if(!tbody)return;
+  const catFilter=(document.getElementById('color-cat-filter')||{}).value||'';
+  const statusFilter=(document.getElementById('color-status-filter')||{}).value||'';
+  const srch=((document.getElementById('color-search')||{}).value||'').trim().toLowerCase();
+
+  let fabs=ST.fabrics.filter(f=>f.name);
+  if(catFilter)fabs=fabs.filter(f=>f.category===catFilter);
+  if(srch)fabs=fabs.filter(f=>(f.name||'').toLowerCase().includes(srch));
+  if(statusFilter)fabs=fabs.filter(f=>colorStatusOf(f)===statusFilter);
+
+  // 라인(level) → 조직(category) 순 정렬
+  const lvOrder={promo:1,standard:2,premium:3,luxury:4,apparel:5};
+  fabs.sort((a,b)=>{
+    const la=lvOrder[a.level]||9,lb=lvOrder[b.level]||9;
+    if(la!==lb)return la-lb;
+    if(a.category!==b.category)return (a.category||'').localeCompare(b.category||'');
+    return (a.name||'').localeCompare(b.name||'');
+  });
+
+  if(!fabs.length){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--txt3)">표시할 원단이 없습니다</td></tr>';
+    updateColorProgress();
+    return;
+  }
+
+  // 라인별 그룹 섹션 렌더
+  const allLvs=getAllLevels();
+  let html='';
+  let lastLv=null;
+  fabs.forEach(f=>{
+    if(f.level!==lastLv){
+      html+=`<tr class="color-sect"><td colspan="6">${(allLvs[f.level]||f.level||'').toUpperCase()}</td></tr>`;
+      lastLv=f.level;
+    }
+    const status=colorStatusOf(f);
+    const url=f.colorUrl||'';
+    const thumbHtml=status==='ok'?`<img src="${url}" class="color-thumb" alt="${f.name}">`
+      :status==='err'?'<div class="color-thumb-empty" title="이미지 로드 실패">⚠</div>'
+      :status==='loading'?'<div class="color-thumb-empty">⏳</div>'
+      :'<div class="color-thumb-empty">—</div>';
+    const inputCls=status==='ok'?'ok':(status==='err'?'err':'');
+    html+=`<tr data-fid="${f.id}" data-url="${url}">
+      <td><div style="font-weight:700;color:var(--txt)">${f.name}</div></td>
+      <td style="color:var(--txt2);font-size:12px">${f.category||'-'}</td>
+      <td class="color-thumb-td" style="text-align:center">${thumbHtml}</td>
+      <td><input type="text" class="color-url-input ${inputCls}" value="${url.replace(/"/g,'&quot;')}" placeholder="https://recoveric.com/data/productall/..." onchange="onColorUrlChange(${f.id}, this.value)" onkeydown="if(event.key==='Enter')this.blur();"></td>
+      <td class="color-status-td" style="text-align:center">${colorStatusBadge(status)}</td>
+      <td style="text-align:center">${url?`<button class="btn btn-sm" onclick="clearColorUrl(${f.id})" style="font-size:11px;padding:4px 8px;background:#fff;border:1px solid var(--border2);color:var(--txt3);border-radius:6px;cursor:pointer">✕</button>`:''}</td>
+    </tr>`;
+
+    // 이미지 로드 아직 시도 안 했으면 백그라운드 로드 예약
+    if(url&&!(url in colorImgCache))preloadColorImg(url);
+  });
+
+  tbody.innerHTML=html;
+  updateColorProgress();
+}
+
+// URL 변경 처리
+function onColorUrlChange(fid,url){
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+  const clean=(url||'').trim();
+  if(clean===(f.colorUrl||''))return; // 변경 없음
+  f.colorUrl=clean;
+  saveFabricsDirty();
+  if(clean){
+    if(!(clean in colorImgCache))preloadColorImg(clean);
+    else updateColorRowState(clean);
+    // 이전 URL의 캐시된 결과가 있다면 현재 행 UI만 해당 URL 기준으로 재설정
+    const tbody=document.getElementById('color-tbody');
+    if(tbody){
+      const tr=tbody.querySelector(`tr[data-fid="${fid}"]`);
+      if(tr)tr.dataset.url=clean;
+    }
+    updateColorRowState(clean);
+  } else {
+    // 빈 문자열로 변경 → 해당 행만 다시 렌더
+    renderColorTable();
+  }
+}
+
+// 단일 URL 제거
+function clearColorUrl(fid){
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+  if(!f.colorUrl)return;
+  f.colorUrl='';
+  saveFabricsDirty();
+  renderColorTable();
+  toast(`${f.name} 컬러 URL 제거됨`,'success');
+}
+
+// 기본값 일괄 적용 (DEFAULT_COLOR_URLS)
+function applyDefaultColorUrls(){
+  const entries=Object.entries(DEFAULT_COLOR_URLS);
+  const matched=[],skipped=[];
+  entries.forEach(([name,url])=>{
+    const f=ST.fabrics.find(x=>x.name===name);
+    if(f){matched.push({name,url,hadPrev:!!f.colorUrl});f.colorUrl=url;preloadColorImg(url);}
+    else skipped.push(name);
+  });
+  const replaced=matched.filter(m=>m.hadPrev).length;
+  const added=matched.length-replaced;
+  openM('기본값 일괄 적용 결과',
+    `<div style="font-size:13px;line-height:1.9">
+      <div><b style="color:var(--green)">✓ 신규 등록:</b> ${added}개</div>
+      <div><b style="color:var(--gold)">↻ 덮어쓰기:</b> ${replaced}개</div>
+      ${skipped.length?`<div style="margin-top:10px;color:var(--red)"><b>⚠ 원단을 찾지 못함:</b> ${skipped.join(', ')}</div>`:''}
+      <div style="margin-top:12px;padding:10px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--txt2)">기본 등록되는 원단: 스포츠싱글 · 노블싱글(스판) · 울트라싱글 · 슈퍼싱글 · 프리미엄싱글 · RS-400S (총 6종)</div>
+    </div>`,
+    [{label:'확인',cls:'btn-gold',fn:()=>{saveFabricsDirty();renderColorTable();closeM();toast(`기본값 ${matched.length}개 적용됨`,'success');}}]
+  );
+}
+
+// 엑셀 붙여넣기 모달 열기
+function openColorBulkPaste(){
+  openM('엑셀 붙여넣기로 일괄 등록',
+    `<div class="color-bulk-box" style="margin-bottom:12px">
+      <div style="font-weight:700;color:var(--txt);margin-bottom:6px">📋 사용 방법</div>
+      엑셀에서 <b>원단명 | 컬러이미지URL</b> 두 컬럼을 선택 → 복사 → 아래 박스에 붙여넣기(Ctrl+V)<br>
+      <span style="color:var(--txt3);font-size:11px">예) 스포츠싱글[탭]https://recoveric.com/data/productall/1050_h?ver=2</span>
+    </div>
+    <textarea class="color-bulk-textarea" id="color-bulk-textarea" placeholder="원단명&#9;URL&#10;원단명&#9;URL&#10;..."></textarea>
+    <div id="color-bulk-preview" style="margin-top:10px;font-size:12px;color:var(--txt2)"></div>`,
+    [
+      {label:'일괄 적용',cls:'btn-gold',fn:processColorBulkPaste},
+      {label:'취소',cls:'btn-outline',fn:closeM}
+    ]
+  );
+  // 입력 중 미리보기
+  setTimeout(()=>{
+    const ta=document.getElementById('color-bulk-textarea');
+    if(ta)ta.addEventListener('input',renderColorBulkPreview);
+  },100);
+}
+
+// 붙여넣기 텍스트 미리보기 (몇 건 매칭됐는지)
+function renderColorBulkPreview(){
+  const ta=document.getElementById('color-bulk-textarea');
+  const prev=document.getElementById('color-bulk-preview');
+  if(!ta||!prev)return;
+  const lines=ta.value.split('\n').map(l=>l.trim()).filter(Boolean);
+  const parsed=lines.map(line=>{
+    const parts=line.split(/\t|\s{2,}|,/).map(p=>p.trim()).filter(Boolean);
+    if(parts.length<2)return null;
+    const name=parts[0], url=parts[parts.length-1];
+    return {name,url,found:!!ST.fabrics.find(f=>f.name===name)};
+  }).filter(Boolean);
+  const found=parsed.filter(p=>p.found).length;
+  const notFound=parsed.filter(p=>!p.found);
+  prev.innerHTML=`<b>${parsed.length}</b>개 행 인식됨 · 매칭 <b style="color:var(--green)">${found}</b>개 · 매칭 안됨 <b style="color:var(--red)">${notFound.length}</b>개`
+    +(notFound.length?`<div style="margin-top:4px;color:var(--red);font-size:11px">⚠ 매칭 안됨: ${notFound.map(p=>p.name).join(', ')}</div>`:'');
+}
+
+// 붙여넣기 적용
+function processColorBulkPaste(){
+  const ta=document.getElementById('color-bulk-textarea');
+  if(!ta)return;
+  const lines=ta.value.split('\n').map(l=>l.trim()).filter(Boolean);
+  let applied=0,skipped=0;
+  lines.forEach(line=>{
+    const parts=line.split(/\t|\s{2,}|,/).map(p=>p.trim()).filter(Boolean);
+    if(parts.length<2){skipped++;return;}
+    const name=parts[0], url=parts[parts.length-1];
+    const f=ST.fabrics.find(x=>x.name===name);
+    if(!f){skipped++;return;}
+    f.colorUrl=url;
+    preloadColorImg(url);
+    applied++;
+  });
+  if(applied){saveFabricsDirty();renderColorTable();}
+  closeM();
+  toast(`${applied}개 적용됨${skipped?` · ${skipped}개 건너뜀`:''}`,applied?'success':'error');
 }
 
 
