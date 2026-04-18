@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.88</title>
+<title>RECOVERIC 단가관리 시스템 v4.89</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -491,7 +491,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.88</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.89</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1127,7 +1127,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="cap-actions">
       <button class="btn btn-gold btn-sm" id="cap-dl-btn" onclick="capDownload()">⬇ 다운로드</button>
       <button class="btn btn-outline btn-sm" id="cap-cp-btn" onclick="capCopy()">📋 클립보드 복사</button>
-      <span id="cap-cp-hint" style="font-size:11px;color:var(--txt2)">카톡에 바로 붙여넣기 가능합니다</span>
+      <span id="cap-cp-hint" style="font-size:11px;color:var(--txt2)">Ctrl+C 또는 📋 클릭 → 카톡 붙여넣기</span>
       <button class="btn btn-outline btn-sm" id="cap-redo-btn" onclick="doCapture()" style="margin-left:auto">🔄 다시 생성</button>
       <button class="btn btn-outline btn-sm" onclick="closeCapture()">닫기</button>
     </div>
@@ -3907,6 +3907,22 @@ document.addEventListener('keydown',e=>{
   if(e.key>='0'&&e.key<='9')pi(e.key);
   else if(e.key==='Backspace')pd();
   else if(e.key==='Escape'){pb='';upd();document.getElementById('pin-err').textContent='';}
+});
+
+// ─ 캡처 오버레이 키보드 단축키: Ctrl+C / Cmd+C 로 이미지 클립보드 복사 ─
+document.addEventListener('keydown',e=>{
+  const ov=document.getElementById('capture-overlay');
+  if(!ov||!ov.classList.contains('open'))return;
+  // Ctrl+C (Windows/Linux) 또는 Cmd+C (Mac)
+  if((e.ctrlKey||e.metaKey)&&(e.key==='c'||e.key==='C')){
+    // 이미지가 아직 생성 안됐으면 무시
+    if(!capBlob)return;
+    // 사용자가 텍스트를 선택해놓은 경우(예: 특정 문자열 복사 의도)에는 양보
+    const sel=window.getSelection&&window.getSelection().toString();
+    if(sel&&sel.length>0)return;
+    e.preventDefault();
+    capCopy();
+  }
 });
 </script>
 </body>
