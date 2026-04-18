@@ -3,10 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.93</title>
+<title>RECOVERIC 단가관리 시스템 v4.95</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Firebase Web SDK (compat mode) for Storage -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" onerror="window._fbSDKFailed=true;console.warn('[FB] app SDK 로드 실패')"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js" onerror="window._fbSDKFailed=true;console.warn('[FB] storage SDK 로드 실패')"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -546,7 +549,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.93</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.95</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1002,6 +1005,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
           <button class="btn btn-gold btn-sm" onclick="applyDefaultColorUrls()" title="기본 등록된 6개 원단의 URL을 일괄 적용">⚡ 기본값 일괄 적용</button>
         </div>
       </div>
+      <div style="background:linear-gradient(135deg,#fef7e6 0%,#fff9ee 100%);border:1.5px solid var(--gold);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--txt);line-height:1.7;margin-bottom:4px">
+        <b style="color:#8b6100">📷 이미지 업로드 방식 권장</b><br>
+        각 원단의 <b>📷 업로드</b> 버튼으로 이미지 파일을 직접 올리면, Firebase Storage에 저장되어 카톡에 <b>이미지 직접 복사</b>가 가능합니다.<br>
+        URL만 등록하는 방식은 recoveric.com 서버 CORS 설정 상태에 따라 이미지 복사가 실패할 수 있습니다.
+      </div>
       <div class="color-toolbar">
         <div class="color-progress">
           <span id="color-progress-text">0 / 0 등록됨</span>
@@ -1030,21 +1038,21 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         <div class="color-tbl-wrap">
           <table class="color-tbl">
             <colgroup>
-              <col style="width:22%"><!-- 원단명 -->
-              <col style="width:10%"><!-- 조직 -->
+              <col style="width:20%"><!-- 원단명 -->
+              <col style="width:8%"><!-- 조직 -->
               <col style="width:70px"><!-- 미리보기 -->
-              <col style="width:auto"><!-- URL 입력 -->
+              <col style="width:auto"><!-- URL 입력/업로드 상태 -->
               <col style="width:60px"><!-- 상태 -->
-              <col style="width:70px"><!-- 액션 -->
+              <col style="width:170px"><!-- 액션 -->
             </colgroup>
             <thead>
               <tr>
                 <th>원단명</th>
                 <th>조직</th>
                 <th style="text-align:center">미리보기</th>
-                <th>컬러 이미지 URL</th>
+                <th>컬러 이미지 URL / 업로드</th>
                 <th style="text-align:center">상태</th>
-                <th></th>
+                <th style="text-align:center">관리</th>
               </tr>
             </thead>
             <tbody id="color-tbody"></tbody>
@@ -1436,7 +1444,7 @@ function migrate(old){
   }
   // 원단 데이터: v4 이상으로 저장된 데이터만 신뢰 (구버전은 DFABRICS로 리셋)
   if(old.dataVersion>=4&&old.fabrics&&old.fabrics.length){
-    s.fabrics=old.fabrics.map(f=>({url:null,description:null,colorUrl:'',...f}));
+    s.fabrics=old.fabrics.map(f=>({url:null,description:null,colorUrl:'',colorImage:'',colorImagePath:'',...f}));
     s.nextFid=old.nextFid||s.nextFid;
   }
   // 필수 필드 보장
@@ -2989,6 +2997,48 @@ async function syncFrom(){
 const FB_URL='https://recoveric-price-default-rtdb.firebaseio.com';
 let _fbPending=false,_fbQueued=false,_fbLastWrite=0;
 
+// ─ Firebase Storage 초기화 (이미지 업로드용) ─
+const FIREBASE_CONFIG={
+  apiKey: "AIzaSyDR2ltxeN04-_GhTPLdvjUif4Nn_4stoqw",
+  authDomain: "recoveric-price.firebaseapp.com",
+  databaseURL: "https://recoveric-price-default-rtdb.firebaseio.com",
+  projectId: "recoveric-price",
+  storageBucket: "recoveric-price.firebasestorage.app",
+  messagingSenderId: "105100929540",
+  appId: "1:105100929540:web:ca598be4cb3631d8d4a351"
+};
+let _fbApp=null, _fbStorage=null;
+
+// Firebase SDK 로드 완료 대기 (최대 5초)
+function waitForFirebaseSDK(timeout=5000){
+  return new Promise((resolve,reject)=>{
+    if(window._fbSDKFailed){reject(new Error('Firebase SDK CDN 로드 실패 — 네트워크 확인'));return;}
+    const start=Date.now();
+    (function check(){
+      if(window._fbSDKFailed){reject(new Error('Firebase SDK CDN 로드 실패 — 네트워크 확인'));return;}
+      if(typeof firebase!=='undefined'&&firebase.storage){resolve();return;}
+      if(Date.now()-start>timeout){reject(new Error('Firebase SDK 로드 시간 초과 — 인터넷 연결 확인'));return;}
+      setTimeout(check,100);
+    })();
+  });
+}
+
+// Firebase Storage 초기화 (동기 — 이미 로드된 경우만)
+function initFirebaseStorage(){
+  try{
+    if(typeof firebase==='undefined'||!firebase.storage)return null;
+    if(!_fbApp){_fbApp=firebase.initializeApp(FIREBASE_CONFIG);}
+    if(!_fbStorage){_fbStorage=firebase.storage();}
+    return _fbStorage;
+  }catch(e){console.error('[FB Storage] 초기화 실패:',e);return null;}
+}
+
+// Firebase Storage 비동기 초기화 (SDK 로딩 대기 포함)
+async function ensureFirebaseStorage(){
+  await waitForFirebaseSDK();
+  return initFirebaseStorage();
+}
+
 function getFBState(){
   return {
     customers:ST.customers||[],fabrics:ST.fabrics||[],
@@ -3717,6 +3767,16 @@ function setApGrade(btn,grade){
 // 메모리 캐시: 이미지 로드 결과 (true=성공, false=실패, undefined=미시도)
 const colorImgCache={};
 
+// 원단의 표시용 이미지 URL 가져오기 (Storage 우선, URL 폴백)
+function getColorImageUrl(f){
+  if(!f)return '';
+  return (f.colorImage||'').trim()||(f.colorUrl||'').trim();
+}
+// 원단이 Firebase Storage에 업로드된 이미지를 가지고 있는지
+function hasUploadedImage(f){
+  return !!(f&&f.colorImage&&f.colorImage.trim());
+}
+
 // 컬러 관리 뷰 진입 - 필터 선택 박스 채우기 + 테이블 렌더
 function initColorView(){
   const catSel=document.getElementById('color-cat-filter');
@@ -3729,7 +3789,7 @@ function initColorView(){
 
 // 원단 상태 판정: 'ok' | 'err' | 'empty' | 'loading'
 function colorStatusOf(f){
-  const url=(f.colorUrl||'').trim();
+  const url=getColorImageUrl(f);
   if(!url)return 'empty';
   if(colorImgCache[url]===true)return 'ok';
   if(colorImgCache[url]===false)return 'err';
@@ -3798,13 +3858,14 @@ function updateColorSendRowState(url){
     const fid=+row.dataset.fid;
     const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
     const status=colorStatusOf(f);
+    const dispUrl=getColorImageUrl(f);
     // 썸네일 영역 첫 자식 교체
     const oldThumb=row.querySelector('.cs-thumb, .cs-thumb-empty');
     if(!oldThumb)return;
     let newThumb;
-    if(status==='ok'){
+    if(status==='ok'&&dispUrl){
       newThumb=document.createElement('img');
-      newThumb.src=f.colorUrl;
+      newThumb.src=dispUrl;
       newThumb.className='cs-thumb';
       newThumb.alt=f.name;
       newThumb.onclick=()=>openCsImgModal(f.id);
@@ -3812,7 +3873,7 @@ function updateColorSendRowState(url){
       newThumb=document.createElement('div');
       newThumb.className='cs-thumb-empty';
       newThumb.textContent=status==='err'?'⚠':status==='loading'?'⏳':'—';
-      newThumb.title=status==='err'?'이미지 로드 실패':status==='loading'?'로드 중':'URL 미등록';
+      newThumb.title=status==='err'?'이미지 로드 실패':status==='loading'?'로드 중':'이미지 미등록';
     }
     oldThumb.replaceWith(newThumb);
   });
@@ -3873,23 +3934,37 @@ function renderColorTable(){
       lastLv=f.level;
     }
     const status=colorStatusOf(f);
-    const url=f.colorUrl||'';
-    const thumbHtml=(status==='ok'||status==='loading')&&url
-      ?`<img src="${url}" class="color-thumb" alt="${f.name}" onerror="this.outerHTML='<div class=&quot;color-thumb-empty&quot; title=&quot;이미지 로드 실패&quot;>⚠</div>'">`
+    const dispUrl=getColorImageUrl(f);
+    const hasUp=hasUploadedImage(f);
+    const thumbHtml=(status==='ok'||status==='loading')&&dispUrl
+      ?`<img src="${dispUrl}" class="color-thumb" alt="${f.name}" onerror="this.outerHTML='<div class=&quot;color-thumb-empty&quot; title=&quot;이미지 로드 실패&quot;>⚠</div>'">`
       :status==='err'?'<div class="color-thumb-empty" title="이미지 로드 실패">⚠</div>'
       :'<div class="color-thumb-empty">—</div>';
-    const inputCls=status==='ok'?'ok':(status==='err'?'err':'');
-    html+=`<tr data-fid="${f.id}" data-url="${url}">
+    const inputCls=(!hasUp&&status==='ok')?'ok':(status==='err'?'err':'');
+    const urlVal=(f.colorUrl||'').replace(/"/g,'&quot;');
+    // 업로드된 이미지가 있으면 URL 입력란에 안내 + 비활성화 스타일
+    const urlField=hasUp
+      ?`<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);font-weight:600;padding:6px 10px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:7px">
+          <span>📷 업로드됨</span>
+          <span style="color:var(--txt3);font-weight:400;font-size:11px">· Firebase Storage</span>
+        </div>`
+      :`<input type="text" class="color-url-input ${inputCls}" value="${urlVal}" placeholder="https://... (또는 📷 업로드 버튼 사용)" onchange="onColorUrlChange(${f.id}, this.value)" onkeydown="if(event.key==='Enter')this.blur();">`;
+    // 액션 버튼: 업로드 항상 표시 + 제거(업로드된 경우) / URL 삭제(URL만 있는 경우)
+    const actionBtn=hasUp
+      ?`<button class="btn btn-sm" onclick="removeColorImage(${f.id})" title="업로드된 이미지 제거" style="font-size:11px;padding:4px 8px;background:#fff;border:1px solid var(--red);color:var(--red);border-radius:6px;cursor:pointer">제거</button>`
+      :((f.colorUrl||'')?`<button class="btn btn-sm" onclick="clearColorUrl(${f.id})" title="URL 제거" style="font-size:11px;padding:4px 8px;background:#fff;border:1px solid var(--border2);color:var(--txt3);border-radius:6px;cursor:pointer">✕</button>`:'');
+    const uploadBtn=`<button class="btn btn-sm" onclick="pickColorImageFile(${f.id})" title="${hasUp?'이미지 교체':'이미지 업로드'}" style="font-size:11px;padding:4px 10px;background:var(--gold);border:none;color:#fff;border-radius:6px;cursor:pointer;font-weight:600;white-space:nowrap">📷 ${hasUp?'교체':'업로드'}</button>`;
+    html+=`<tr data-fid="${f.id}" data-url="${dispUrl}">
       <td><div style="font-weight:700;color:var(--txt)">${f.name}</div></td>
       <td style="color:var(--txt2);font-size:12px">${f.category||'-'}</td>
       <td class="color-thumb-td" style="text-align:center">${thumbHtml}</td>
-      <td><input type="text" class="color-url-input ${inputCls}" value="${url.replace(/"/g,'&quot;')}" placeholder="https://recoveric.com/data/productall/..." onchange="onColorUrlChange(${f.id}, this.value)" onkeydown="if(event.key==='Enter')this.blur();"></td>
+      <td>${urlField}</td>
       <td class="color-status-td" style="text-align:center">${colorStatusBadge(status)}</td>
-      <td style="text-align:center">${url?`<button class="btn btn-sm" onclick="clearColorUrl(${f.id})" style="font-size:11px;padding:4px 8px;background:#fff;border:1px solid var(--border2);color:var(--txt3);border-radius:6px;cursor:pointer">✕</button>`:''}</td>
+      <td style="text-align:center;white-space:nowrap"><div style="display:flex;gap:4px;justify-content:center">${uploadBtn}${actionBtn}</div></td>
     </tr>`;
 
     // 이미지 로드 아직 시도 안 했으면 백그라운드 로드 예약
-    if(url&&!(url in colorImgCache))preloadColorImg(url);
+    if(dispUrl&&!(dispUrl in colorImgCache))preloadColorImg(dispUrl);
   });
 
   tbody.innerHTML=html;
@@ -4012,6 +4087,131 @@ function processColorBulkPaste(){
   toast(`${applied}개 적용됨${skipped?` · ${skipped}개 건너뜀`:''}`,applied?'success':'error');
 }
 
+// ─ Firebase Storage 이미지 업로드/관리 ─
+
+// 이미지 압축: File → Blob (JPEG, 최대 1200px, 품질 85%)
+function compressImage(file, maxWidth=1200, quality=0.85){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.naturalWidth, h=img.naturalHeight;
+        if(w>maxWidth){h=Math.round(h*maxWidth/w);w=maxWidth;}
+        const canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        const ctx=canvas.getContext('2d');
+        // 하얀 배경(투명 PNG 대비)
+        ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
+        ctx.drawImage(img,0,0,w,h);
+        canvas.toBlob(b=>{
+          if(b)resolve(b);else reject(new Error('compress toBlob failed'));
+        },'image/jpeg',quality);
+      };
+      img.onerror=()=>reject(new Error('이미지 로드 실패'));
+      img.src=e.target.result;
+    };
+    reader.onerror=()=>reject(new Error('파일 읽기 실패'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// Firebase Storage에 업로드 → 공개 URL 반환
+async function uploadColorImageToStorage(fid, blob){
+  const storage=await ensureFirebaseStorage();
+  if(!storage)throw new Error('Firebase Storage 초기화 실패 — 인터넷 연결 확인');
+  const fileName=`color-images/${fid}_${Date.now()}.jpg`;
+  const ref=storage.ref(fileName);
+  const snapshot=await ref.put(blob,{contentType:'image/jpeg'});
+  const url=await snapshot.ref.getDownloadURL();
+  return {url, path: fileName};
+}
+
+// Firebase Storage에서 파일 삭제 (이전 이미지 정리)
+async function deleteColorImageFromStorage(path){
+  if(!path)return;
+  try{
+    const storage=await ensureFirebaseStorage();
+    if(!storage)return;
+    await storage.ref(path).delete();
+  }catch(e){
+    // 이미 삭제됐거나 경로 오류는 무시
+    console.warn('[Storage delete]',e.message);
+  }
+}
+
+// 이미지 파일 선택 다이얼로그 → 업로드 처리
+function pickColorImageFile(fid){
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='image/jpeg,image/png,image/webp,image/gif';
+  input.onchange=async(e)=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    // 용량 제한 (원본 20MB까지)
+    if(file.size>20*1024*1024){
+      toast('파일이 너무 큽니다 (20MB 초과)','error');
+      return;
+    }
+    await handleColorImageUpload(fid, file);
+  };
+  input.click();
+}
+
+// 이미지 업로드 전체 흐름 (압축 → Storage 업로드 → DB 저장 → UI 갱신)
+async function handleColorImageUpload(fid, file){
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+  const statusEl=document.querySelector(`tr[data-fid="${fid}"] .color-status-td`);
+  const thumbEl=document.querySelector(`tr[data-fid="${fid}"] .color-thumb-td`);
+  try{
+    if(statusEl)statusEl.innerHTML='<span class="color-status loading" title="업로드 중">⏳</span>';
+    if(thumbEl)thumbEl.innerHTML='<div class="color-thumb-empty" title="업로드 중">⏳</div>';
+    toast('이미지 압축 중...','success');
+    const blob=await compressImage(file);
+    const sizeKB=Math.round(blob.size/1024);
+    toast(`업로드 중... (${sizeKB}KB)`,'success');
+    // 이전 이미지 삭제 (있으면)
+    if(f.colorImagePath){deleteColorImageFromStorage(f.colorImagePath);}
+    const result=await uploadColorImageToStorage(fid, blob);
+    // DB 저장
+    f.colorImage=result.url;
+    f.colorImagePath=result.path;
+    saveFabricsDirty();
+    // 캐시 강제 갱신
+    colorImgCache[result.url]=true;
+    renderColorTable();
+    if(document.getElementById('view-colorsend')?.classList.contains('active')){
+      renderColorSendList();
+    }
+    toast(`✓ ${f.name} 이미지 업로드 완료 (${sizeKB}KB)`,'success');
+  }catch(e){
+    console.error('[Image upload]',e);
+    toast('업로드 실패: '+e.message,'error');
+    renderColorTable();
+  }
+}
+
+// 업로드한 이미지 제거 (Storage + DB)
+async function removeColorImage(fid){
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+  if(!f.colorImage&&!f.colorImagePath)return;
+  if(!confirm(`${f.name}의 업로드된 이미지를 제거하시겠습니까?`))return;
+  try{
+    if(f.colorImagePath)await deleteColorImageFromStorage(f.colorImagePath);
+    delete f.colorImage;
+    delete f.colorImagePath;
+    saveFabricsDirty();
+    renderColorTable();
+    if(document.getElementById('view-colorsend')?.classList.contains('active')){
+      renderColorSendList();
+    }
+    toast(`${f.name} 이미지 제거됨`,'success');
+  }catch(e){
+    toast('제거 실패: '+e.message,'error');
+  }
+}
+
 
 // ─ 컬러 발송 ─
 // 확대보기 모달 전용 상태
@@ -4037,7 +4237,7 @@ function renderColorSendList(){
   const onlyReg=!!(document.getElementById('cs-only-registered')||{}).checked;
 
   let fabs=ST.fabrics.filter(f=>f.name);
-  if(onlyReg)fabs=fabs.filter(f=>f.colorUrl&&f.colorUrl.trim());
+  if(onlyReg)fabs=fabs.filter(f=>getColorImageUrl(f));
   if(catFilter)fabs=fabs.filter(f=>f.category===catFilter);
   if(srch)fabs=fabs.filter(f=>(f.name||'').toLowerCase().includes(srch));
 
@@ -4068,30 +4268,34 @@ function renderColorSendList(){
     const rows=grouped[cat];
     html+=`<div class="cs-sect-header">${cat} · ${rows.length}종</div>`;
     rows.forEach(f=>{
-      const hasUrl=!!(f.colorUrl&&f.colorUrl.trim());
+      const dispUrl=getColorImageUrl(f);
+      const hasUrl=!!dispUrl;
+      const hasUp=hasUploadedImage(f);
       const status=hasUrl?colorStatusOf(f):'empty'; // ok | err | loading | empty
       // 썸네일 영역 - loading 상태에서도 img로 표시하여 브라우저가 직접 로드하게 함
       let thumbHtml='';
-      if(hasUrl&&(status==='ok'||status==='loading'))thumbHtml=`<img src="${f.colorUrl}" class="cs-thumb" alt="${f.name}" onclick="openCsImgModal(${f.id})" onerror="this.outerHTML='<div class=&quot;cs-thumb-empty&quot; title=&quot;이미지 로드 실패&quot;>⚠</div>'">`;
+      if(hasUrl&&(status==='ok'||status==='loading'))thumbHtml=`<img src="${dispUrl}" class="cs-thumb" alt="${f.name}" onclick="openCsImgModal(${f.id})" onerror="this.outerHTML='<div class=&quot;cs-thumb-empty&quot; title=&quot;이미지 로드 실패&quot;>⚠</div>'">`;
       else if(hasUrl&&status==='err')thumbHtml=`<div class="cs-thumb-empty" title="이미지 로드 실패">⚠</div>`;
-      else thumbHtml=`<div class="cs-thumb-empty" title="URL 미등록">—</div>`;
+      else thumbHtml=`<div class="cs-thumb-empty" title="이미지 미등록">—</div>`;
       // 백그라운드 로드 예약
-      if(hasUrl&&!(f.colorUrl in colorImgCache))preloadColorImg(f.colorUrl);
+      if(hasUrl&&!(dispUrl in colorImgCache))preloadColorImg(dispUrl);
       // 메타 라인
       const allLvs=getAllLevels();
       const lvName=allLvs[f.level]||f.level||'';
+      // 업로드 배지 (Storage 이미지인 경우)
+      const upBadge=hasUp?'<span style="display:inline-block;background:#dcfce7;color:#166534;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle">📷 업로드</span>':'';
       // 액션 버튼
       let actions='';
       if(hasUrl){
         actions=`<button class="btn btn-gold btn-sm" onclick="copyCsImage(${f.id})" title="이미지 복사" style="font-size:12px;padding:6px 12px">📋 이미지</button>
           <button class="btn btn-outline btn-sm" onclick="copyCsImageUrl(${f.id})" title="URL 텍스트 복사" style="font-size:12px;padding:6px 12px">🔗 URL</button>`;
       } else {
-        actions=`<span style="font-size:11px;color:var(--txt3);padding:6px 10px;background:var(--bg3);border-radius:6px">URL 미등록</span>`;
+        actions=`<span style="font-size:11px;color:var(--txt3);padding:6px 10px;background:var(--bg3);border-radius:6px">이미지 미등록</span>`;
       }
-      html+=`<div class="cs-row" data-fid="${f.id}" data-url="${hasUrl?(f.colorUrl):''}">
+      html+=`<div class="cs-row" data-fid="${f.id}" data-url="${hasUrl?dispUrl:''}">
         ${thumbHtml}
         <div class="cs-info">
-          <div class="cs-name">${f.name}</div>
+          <div class="cs-name">${f.name}${upBadge}</div>
           <div class="cs-meta">${lvName}${f.width?' · '+f.width+'"':''}${f.weight?' · '+f.weight+'g/y':''}</div>
         </div>
         <div class="cs-actions">${actions}</div>
@@ -4103,14 +4307,16 @@ function renderColorSendList(){
 
 // 이미지 복사 (fetch → blob → ClipboardItem)
 async function copyCsImage(fid){
-  const f=ST.fabrics.find(x=>x.id===fid);if(!f||!f.colorUrl)return;
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+  const url=getColorImageUrl(f);
+  if(!url)return;
   if(!(navigator.clipboard&&window.ClipboardItem)){
     // 환경 미지원 → URL 텍스트 복사로 fallback
     copyCsImageUrl(fid);
     return;
   }
   try{
-    const resp=await fetch(f.colorUrl,{mode:'cors'});
+    const resp=await fetch(url,{mode:'cors'});
     if(!resp.ok)throw new Error('HTTP '+resp.status);
     let blob=await resp.blob();
     // 브라우저 Clipboard API는 image/png만 허용 — JPEG이면 변환 필요
@@ -4129,12 +4335,14 @@ async function copyCsImage(fid){
 
 // URL 텍스트 복사
 function copyCsImageUrl(fid,isFallback){
-  const f=ST.fabrics.find(x=>x.id===fid);if(!f||!f.colorUrl)return;
-  doCopyText(f.colorUrl).then(()=>{
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+  const url=getColorImageUrl(f);
+  if(!url)return;
+  doCopyText(url).then(()=>{
     if(!isFallback)toast(`${f.name} URL 복사됨 ✓`,'success');
     updateCsStatusBar(f.name,'url');
   }).catch(()=>{
-    showCopyPopup(f.colorUrl);
+    showCopyPopup(url);
     updateCsStatusBar(f.name,'url');
   });
 }
@@ -4186,10 +4394,12 @@ function updateCsStatusBar(name,type){
 
 // 이미지 확대 모달
 function openCsImgModal(fid){
-  const f=ST.fabrics.find(x=>x.id===fid);if(!f||!f.colorUrl)return;
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+  const url=getColorImageUrl(f);
+  if(!url)return;
   csModalCurrentFid=fid;
   document.getElementById('cs-img-modal-title').textContent=f.name;
-  document.getElementById('cs-img-modal-img').src=f.colorUrl;
+  document.getElementById('cs-img-modal-img').src=url;
   document.getElementById('cs-img-modal').classList.add('open');
 }
 function closeCsImgModal(){
