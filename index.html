@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.87</title>
+<title>RECOVERIC 단가관리 시스템 v4.88</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -247,6 +247,15 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 /* Image result box */
 #cap-img-wrap{display:none;text-align:center;padding:16px 0}
 #cap-img-wrap img{max-width:100%;border:1px solid #dde;border-radius:8px}
+/* 캡처 중 - 미리보기를 화면 밖으로 숨김 (html2canvas는 읽을 수 있지만 사용자 눈에는 안 보임) */
+#cap-preview.cap-offscreen{position:absolute!important;left:-99999px!important;top:0;width:900px;visibility:visible;pointer-events:none}
+/* 로딩 스피너 */
+#cap-loading{display:none;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:16px;color:#5a6b8a}
+#cap-loading.on{display:flex}
+.cap-spinner{width:44px;height:44px;border:3px solid #e8ecf4;border-top-color:#1a2c4e;border-radius:50%;animation:capSpin .9s linear infinite}
+@keyframes capSpin{to{transform:rotate(360deg)}}
+.cap-loading-text{font-size:13px;font-weight:600;letter-spacing:.3px}
+.cap-loading-sub{font-size:11px;color:#9aa0b8;margin-top:-8px}
 
 /* ─── CUSTOMERS ─── */
 .cust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
@@ -482,7 +491,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.87</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.88</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1060,6 +1069,12 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       <button onclick="closeCapture()" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:20px;color:#9aa0b8;line-height:1;border-radius:6px" onmouseover="this.style.background='#f0f2f8'" onmouseout="this.style.background='none'">✕</button>
     </div>
     <div class="cap-scroll-area">
+      <!-- 로딩 스피너 (캡처 중 표시) -->
+      <div id="cap-loading">
+        <div class="cap-spinner"></div>
+        <div class="cap-loading-text">이미지 생성 중...</div>
+        <div class="cap-loading-sub">잠시만 기다려주세요</div>
+      </div>
       <div id="cap-preview">
         <div class="cap-header">
           <div>
@@ -2133,8 +2148,10 @@ function selCapture(){
   }
   document.getElementById('cap-cn').textContent=title;
   document.getElementById('cap-dt').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'})+' 기준';
-  // 이전 결과 초기화
-  document.getElementById('cap-preview').style.display='block';
+  // 이전 결과 초기화 (프리뷰는 화면 밖에 대기)
+  const preview=document.getElementById('cap-preview');
+  preview.classList.add('cap-offscreen');
+  preview.style.display='none';
   const imgWrap=document.getElementById('cap-img-wrap');
   imgWrap.style.display='none';
   imgWrap.innerHTML='';
@@ -2387,8 +2404,10 @@ function openCapture(viewCtx){
   } else initGrade=activeGrade||'';
   capGrade=initGrade;
   buildCapTable();
-  // 이전 결과 초기화
-  document.getElementById('cap-preview').style.display='block';
+  // 이전 결과 초기화 (프리뷰는 화면 밖에 대기)
+  const preview=document.getElementById('cap-preview');
+  preview.classList.add('cap-offscreen');
+  preview.style.display='none';
   const imgWrap=document.getElementById('cap-img-wrap');
   imgWrap.style.display='none';
   imgWrap.innerHTML='';
@@ -2404,12 +2423,16 @@ function doCapture(){
   if(redoBtn){redoBtn.textContent='생성 중...';redoBtn.disabled=true;}
   if(dlBtn)dlBtn.disabled=true;
   if(cpBtn)cpBtn.disabled=true;
-  // 캡처 전에 이전 결과 이미지 숨기고 프리뷰 표시 (html2canvas가 프리뷰를 읽도록)
+  // 캡처 준비: 이전 결과 이미지 숨김 + 스피너 표시 + 프리뷰는 화면 밖으로 이동
   const target=document.getElementById('cap-preview');
-  target.style.display='block';
   const imgWrap=document.getElementById('cap-img-wrap');
+  const loading=document.getElementById('cap-loading');
   imgWrap.style.display='none';
   imgWrap.innerHTML='';
+  // 화면 밖으로 이동 — DOM에는 존재하여 html2canvas가 읽을 수 있지만 사용자 눈에는 안 보임
+  target.classList.add('cap-offscreen');
+  target.style.display='block';
+  if(loading)loading.classList.add('on');
   const targetW=Math.max(target.scrollWidth,900);
   const targetH=Math.max(target.scrollHeight,200);
 
@@ -2427,6 +2450,8 @@ function doCapture(){
       const clonedBody=clonedDoc.body;
       clonedBody.innerHTML='';
       clonedBody.style.cssText='margin:0;padding:0;background:#fff;overflow:visible;width:'+targetW+'px';
+      // 복제된 요소는 off-screen 클래스를 떼고 정상 위치로 렌더 (복제본은 가상 DOM이라 화면에 안 보임)
+      clonedEl.classList.remove('cap-offscreen');
       clonedEl.style.cssText='position:static;display:block;width:'+targetW+'px;overflow:visible;background:#fff;box-sizing:border-box';
       clonedBody.appendChild(clonedEl);
     },
@@ -2440,12 +2465,15 @@ function doCapture(){
       imgWrap.innerHTML='';
       imgWrap.appendChild(img);
       imgWrap.style.display='block';
+      // 스피너 숨기고 프리뷰는 계속 화면 밖에 유지 (다시 생성 대비)
+      if(loading)loading.classList.remove('on');
       target.style.display='none';
       if(redoBtn){redoBtn.textContent='🔄 다시 생성';redoBtn.disabled=false;}
       if(dlBtn)dlBtn.disabled=false;
       if(cpBtn)cpBtn.disabled=false;
     },'image/png');
   }).catch(e=>{
+    if(loading)loading.classList.remove('on');
     if(redoBtn){redoBtn.textContent='🔄 다시 생성';redoBtn.disabled=false;}
     if(dlBtn)dlBtn.disabled=false;
     if(cpBtn)cpBtn.disabled=false;
@@ -2483,11 +2511,15 @@ function capCopy(){
 }
 function closeCapture(){
   const prev=document.getElementById('cap-preview');
-  if(prev)prev.style.display='block';
+  if(prev){prev.style.display='none';prev.classList.add('cap-offscreen');}
   const imgWrap=document.getElementById('cap-img-wrap');
   if(imgWrap){imgWrap.style.display='none';imgWrap.innerHTML='';}
+  const loading=document.getElementById('cap-loading');
+  if(loading)loading.classList.remove('on');
   const redoBtn=document.getElementById('cap-redo-btn');
   if(redoBtn){redoBtn.textContent='🔄 다시 생성';redoBtn.disabled=false;}
+  const dlBtn=document.getElementById('cap-dl-btn');if(dlBtn)dlBtn.disabled=false;
+  const cpBtn=document.getElementById('cap-cp-btn');if(cpBtn)cpBtn.disabled=false;
   capBlob=null;
   document.getElementById('capture-overlay').classList.remove('open');
 }
