@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.92</title>
+<title>RECOVERIC 단가관리 시스템 v4.93</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -546,7 +546,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.92</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.93</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -3739,40 +3739,83 @@ function colorStatusOf(f){
 // 이미지 미리 로드 (비동기): 결과를 캐시에 저장하고 renderColorTable 재호출 불필요하게 해당 셀만 갱신
 function preloadColorImg(url){
   if(!url)return;
-  if(url in colorImgCache)return; // 이미 시도함
+  if(url in colorImgCache&&colorImgCache[url]!==undefined)return; // 결과 확정된 경우만 스킵
   colorImgCache[url]=undefined; // 진행 중 마킹
   const img=new Image();
-  img.onload=()=>{colorImgCache[url]=true;updateColorRowState(url);};
-  img.onerror=()=>{colorImgCache[url]=false;updateColorRowState(url);};
+  let settled=false;
+  const onDone=(ok)=>{
+    if(settled)return;
+    settled=true;
+    colorImgCache[url]=ok;
+    updateColorRowState(url);
+  };
+  img.onload=()=>onDone(true);
+  img.onerror=()=>onDone(false);
   img.src=url;
+  // 10초 타임아웃 - 응답 없으면 err 처리
+  setTimeout(()=>{if(!settled)onDone(false);},10000);
 }
 
 // 특정 URL을 쓰는 모든 행의 썸네일/상태/입력창 클래스를 갱신
 function updateColorRowState(url){
   if(!url)return;
-  const tbody=document.getElementById('color-tbody');if(!tbody)return;
-  const rows=tbody.querySelectorAll(`tr[data-url="${CSS.escape(url)}"]`);
-  rows.forEach(tr=>{
-    const fid=+tr.dataset.fid;
+  // ── 컬러 이미지 관리 화면 (color-tbody) ──
+  const tbody=document.getElementById('color-tbody');
+  if(tbody){
+    const rows=tbody.querySelectorAll(`tr[data-url="${CSS.escape(url)}"]`);
+    rows.forEach(tr=>{
+      const fid=+tr.dataset.fid;
+      const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+      const status=colorStatusOf(f);
+      const thumbTd=tr.querySelector('.color-thumb-td');
+      const statusTd=tr.querySelector('.color-status-td');
+      const input=tr.querySelector('.color-url-input');
+      if(thumbTd){
+        if(status==='ok')thumbTd.innerHTML=`<img src="${f.colorUrl}" class="color-thumb" alt="${f.name}">`;
+        else if(status==='err')thumbTd.innerHTML='<div class="color-thumb-empty" title="이미지 로드 실패">⚠</div>';
+        else if(status==='loading')thumbTd.innerHTML='<div class="color-thumb-empty">⏳</div>';
+        else thumbTd.innerHTML='<div class="color-thumb-empty">—</div>';
+      }
+      if(statusTd)statusTd.innerHTML=colorStatusBadge(status);
+      if(input){
+        input.classList.remove('ok','err');
+        if(status==='ok')input.classList.add('ok');
+        else if(status==='err')input.classList.add('err');
+      }
+    });
+    updateColorProgress();
+  }
+  // ── 컬러 발송 화면 (cs-list-wrap) ──
+  updateColorSendRowState(url);
+}
+
+// 컬러 발송 목록에서 특정 URL 행의 썸네일 갱신
+function updateColorSendRowState(url){
+  if(!url)return;
+  const wrap=document.getElementById('cs-list-wrap');if(!wrap)return;
+  const rows=wrap.querySelectorAll(`.cs-row[data-url="${CSS.escape(url)}"]`);
+  rows.forEach(row=>{
+    const fid=+row.dataset.fid;
     const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
     const status=colorStatusOf(f);
-    const thumbTd=tr.querySelector('.color-thumb-td');
-    const statusTd=tr.querySelector('.color-status-td');
-    const input=tr.querySelector('.color-url-input');
-    if(thumbTd){
-      if(status==='ok')thumbTd.innerHTML=`<img src="${f.colorUrl}" class="color-thumb" alt="${f.name}">`;
-      else if(status==='err')thumbTd.innerHTML='<div class="color-thumb-empty" title="이미지 로드 실패">⚠</div>';
-      else if(status==='loading')thumbTd.innerHTML='<div class="color-thumb-empty">⏳</div>';
-      else thumbTd.innerHTML='<div class="color-thumb-empty">—</div>';
+    // 썸네일 영역 첫 자식 교체
+    const oldThumb=row.querySelector('.cs-thumb, .cs-thumb-empty');
+    if(!oldThumb)return;
+    let newThumb;
+    if(status==='ok'){
+      newThumb=document.createElement('img');
+      newThumb.src=f.colorUrl;
+      newThumb.className='cs-thumb';
+      newThumb.alt=f.name;
+      newThumb.onclick=()=>openCsImgModal(f.id);
+    } else {
+      newThumb=document.createElement('div');
+      newThumb.className='cs-thumb-empty';
+      newThumb.textContent=status==='err'?'⚠':status==='loading'?'⏳':'—';
+      newThumb.title=status==='err'?'이미지 로드 실패':status==='loading'?'로드 중':'URL 미등록';
     }
-    if(statusTd)statusTd.innerHTML=colorStatusBadge(status);
-    if(input){
-      input.classList.remove('ok','err');
-      if(status==='ok')input.classList.add('ok');
-      else if(status==='err')input.classList.add('err');
-    }
+    oldThumb.replaceWith(newThumb);
   });
-  updateColorProgress();
 }
 
 // 상태 배지 HTML
@@ -3831,9 +3874,9 @@ function renderColorTable(){
     }
     const status=colorStatusOf(f);
     const url=f.colorUrl||'';
-    const thumbHtml=status==='ok'?`<img src="${url}" class="color-thumb" alt="${f.name}">`
+    const thumbHtml=(status==='ok'||status==='loading')&&url
+      ?`<img src="${url}" class="color-thumb" alt="${f.name}" onerror="this.outerHTML='<div class=&quot;color-thumb-empty&quot; title=&quot;이미지 로드 실패&quot;>⚠</div>'">`
       :status==='err'?'<div class="color-thumb-empty" title="이미지 로드 실패">⚠</div>'
-      :status==='loading'?'<div class="color-thumb-empty">⏳</div>'
       :'<div class="color-thumb-empty">—</div>';
     const inputCls=status==='ok'?'ok':(status==='err'?'err':'');
     html+=`<tr data-fid="${f.id}" data-url="${url}">
@@ -4027,11 +4070,10 @@ function renderColorSendList(){
     rows.forEach(f=>{
       const hasUrl=!!(f.colorUrl&&f.colorUrl.trim());
       const status=hasUrl?colorStatusOf(f):'empty'; // ok | err | loading | empty
-      // 썸네일 영역
+      // 썸네일 영역 - loading 상태에서도 img로 표시하여 브라우저가 직접 로드하게 함
       let thumbHtml='';
-      if(hasUrl&&status==='ok')thumbHtml=`<img src="${f.colorUrl}" class="cs-thumb" alt="${f.name}" onclick="openCsImgModal(${f.id})">`;
+      if(hasUrl&&(status==='ok'||status==='loading'))thumbHtml=`<img src="${f.colorUrl}" class="cs-thumb" alt="${f.name}" onclick="openCsImgModal(${f.id})" onerror="this.outerHTML='<div class=&quot;cs-thumb-empty&quot; title=&quot;이미지 로드 실패&quot;>⚠</div>'">`;
       else if(hasUrl&&status==='err')thumbHtml=`<div class="cs-thumb-empty" title="이미지 로드 실패">⚠</div>`;
-      else if(hasUrl)thumbHtml=`<div class="cs-thumb-empty" title="로드 중">⏳</div>`;
       else thumbHtml=`<div class="cs-thumb-empty" title="URL 미등록">—</div>`;
       // 백그라운드 로드 예약
       if(hasUrl&&!(f.colorUrl in colorImgCache))preloadColorImg(f.colorUrl);
@@ -4046,7 +4088,7 @@ function renderColorSendList(){
       } else {
         actions=`<span style="font-size:11px;color:var(--txt3);padding:6px 10px;background:var(--bg3);border-radius:6px">URL 미등록</span>`;
       }
-      html+=`<div class="cs-row">
+      html+=`<div class="cs-row" data-fid="${f.id}" data-url="${hasUrl?(f.colorUrl):''}">
         ${thumbHtml}
         <div class="cs-info">
           <div class="cs-name">${f.name}</div>
