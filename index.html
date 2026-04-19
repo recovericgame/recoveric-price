@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.96</title>
+<title>RECOVERIC 단가관리 시스템 v4.97</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -549,7 +549,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.96</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.97</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -580,6 +580,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       <button class="nav-btn" id="nb-colorsend" onclick="sv('colorsend',this)">
         <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         컬러 발송
+      </button>
+      <button class="nav-btn" id="nb-urlsend" onclick="sv('urlsend',this)">
+        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        원단 URL 발송
       </button>
       <div class="nav-section" id="ns-admin">관리</div>
       <button class="nav-btn" id="nb-admin" onclick="sv('admin',this)">
@@ -996,6 +1000,38 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       </div>
     </div>
 
+    <!-- ══ 원단 URL 발송 ══ -->
+    <div class="view" id="view-urlsend">
+      <div class="view-header">
+        <div class="view-title">원단 URL <span>발송</span></div>
+      </div>
+      <div style="background:linear-gradient(135deg,#fef7e6 0%,#fff9ee 100%);border:1.5px solid var(--gold);border-radius:10px;padding:12px 16px;font-size:12.5px;color:var(--txt);line-height:1.7;margin-bottom:14px">
+        <b style="color:#8b6100">🔗 원단 페이지 URL 빠른 발송</b><br>
+        recoveric.com 각 원단 상세 페이지 링크를 원클릭으로 복사할 수 있습니다.
+        고객사에게 카톡 또는 메신저로 원단 페이지를 공유할 때 사용하세요.
+      </div>
+      <!-- 필터 툴바 -->
+      <div class="cs-toolbar">
+        <input type="text" id="us-search" placeholder="원단명 검색..." class="cs-search-input" oninput="renderUrlSendList()">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--txt2);font-weight:600">조직</span>
+          <select id="us-cat-filter" onchange="renderUrlSendList()" class="filter-select" style="min-width:100px">
+            <option value="">전체</option>
+          </select>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--txt2);cursor:pointer">
+          <input type="checkbox" id="us-only-registered" onchange="renderUrlSendList()" checked>
+          URL 등록된 것만
+        </label>
+      </div>
+      <!-- 목록 -->
+      <div id="us-list-wrap" class="cs-list-wrap"></div>
+      <!-- 진행 상태 (하단 고정) -->
+      <div id="us-statusbar" class="cs-statusbar" style="display:none">
+        <span id="us-status-text">대기 중</span>
+      </div>
+    </div>
+
     <!-- ══ 컬러 이미지 관리 ══ -->
     <div class="view" id="view-color">
       <div class="view-header">
@@ -1337,47 +1373,81 @@ const DEFAULT_COLOR_URLS={
   'RS-400S':'https://recoveric.com/data/productall/1055_h?ver=2',
 };
 
+// [v4.97 신규] 원단 페이지 URL 매핑 (원단명 → recoveric.com 상품 페이지 URL)
+const DEFAULT_FABRIC_URLS={
+  '피그먼트반팔티':'https://recoveric.com/main/product.html?divi=apparel&item=shortt',
+  '스포츠싱글':'https://recoveric.com/main/product.html?divi=single&item=ss',
+  '노블싱글(스판)':'https://recoveric.com/main/product.html?divi=single&item=no',
+  '울트라싱글':'https://recoveric.com/main/product.html?divi=single&item=ul',
+  '슈퍼싱글':'https://recoveric.com/main/product.html?divi=single&item=su',
+  '프리미엄싱글':'https://recoveric.com/main/product.html?divi=single&item=pr',
+  'RS-400S':'https://recoveric.com/main/product.html?divi=single&item=rs400s',
+  'RS-500S':'https://recoveric.com/main/product.html?divi=single&item=rs500s',
+  'V싱글':'https://recoveric.com/main/product.html?divi=single&item=vsingle',
+  '이너폰테':'https://recoveric.com/main/product.html?divi=punto&item=in',
+  '실켓분또':'https://recoveric.com/main/product.html?divi=punto&item=sk',
+  '컴팩미니쭈리':'https://recoveric.com/main/product.html?divi=terry&item=cp',
+  '헤비M쭈리':'https://recoveric.com/main/product.html?divi=terry&item=hem',
+  '4S클래스':'https://recoveric.com/main/product.html?divi=terry&item=4s',
+  '다이아헤비쭈리':'https://recoveric.com/main/product.html?divi=terry&item=da',
+  'RS-850T':'https://recoveric.com/main/product.html?divi=terry&item=rs850t',
+  'RS-365T(3단)':'https://recoveric.com/main/product.html?divi=terry&item=rs365t',
+  'RS-080GT':'https://recoveric.com/main/product.html?divi=terry&item=rs080',
+  '5S클래스':'https://recoveric.com/main/product.html?divi=terry&item=5s',
+  'TDEG':'https://recoveric.com/main/product.html?divi=terry&item=tdeg',
+  'V쭈리':'https://recoveric.com/main/product.html?divi=terry&item=vterry',
+  '2X2GB골지':'https://recoveric.com/main/product.html?divi=corduroy&item=si',
+  'RS-헤비니트':'https://recoveric.com/main/product.html?divi=corduroy&item=rsh',
+  'RS-600GD':'https://recoveric.com/main/product.html?divi=double&item=rs600',
+  '물나염싱글':'https://recoveric.com/main/product.html?divi=tie&item=ms',
+  '물나염쭈리':'https://recoveric.com/main/product.html?divi=tie&item=mj',
+  '소프트후리스':'https://recoveric.com/main/product.html?divi=napping&item=sh',
+  'RS-800ZG':'https://recoveric.com/main/product.html?divi=napping&item=zp',
+  '365기모':'https://recoveric.com/main/product.html?divi=napping&item=rs365gm',
+  '노블PK':'https://recoveric.com/main/product.html?divi=pk&item=nos',
+};
+
 const DFABRICS=[
   // ── Promotion ──
-  {id:1,level:'promo',category:'싱글',name:'V싱글',mg:null,baek:4300,muji:4300,rib:7300,width:'70/74',weight:370,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
+  {id:1,level:'promo',category:'싱글',name:'V싱글',mg:null,baek:4300,muji:4300,rib:7300,width:'70/74',weight:370,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔','이너'],url:'https://recoveric.com/main/product.html?divi=single&item=vsingle',description:null},
   {id:2,level:'promo',category:'싱글',name:'면20수싱글',mg:null,baek:3600,muji:4300,rib:7400,width:'70/74',weight:340,c:100,p:0,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
-  {id:3,level:'promo',category:'싱글',name:'스포츠싱글',mg:5100,baek:5000,muji:5100,rib:7400,width:'62/64',weight:380,c:0,p:76,sp:0,r:24,tags:['반팔','긴팔','이너'],url:null,description:null},
-  {id:4,level:'promo',category:'싱글',name:'프리미엄싱글',mg:5500,baek:5700,muji:5800,rib:8400,width:'72/74',weight:420,c:55,p:45,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
-  {id:5,level:'promo',category:'싱글',name:'슈퍼싱글',mg:5500,baek:5500,muji:5700,rib:8400,width:'72/74',weight:430,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
-  {id:6,level:'promo',category:'싱글',name:'울트라싱글',mg:6000,baek:6200,muji:6300,rib:9300,width:'72/74',weight:500,c:66,p:34,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:3,level:'promo',category:'싱글',name:'스포츠싱글',mg:5100,baek:5000,muji:5100,rib:7400,width:'62/64',weight:380,c:0,p:76,sp:0,r:24,tags:['반팔','긴팔','이너'],url:'https://recoveric.com/main/product.html?divi=single&item=ss',description:null},
+  {id:4,level:'promo',category:'싱글',name:'프리미엄싱글',mg:5500,baek:5700,muji:5800,rib:8400,width:'72/74',weight:420,c:55,p:45,sp:0,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=single&item=pr',description:null},
+  {id:5,level:'promo',category:'싱글',name:'슈퍼싱글',mg:5500,baek:5500,muji:5700,rib:8400,width:'72/74',weight:430,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=single&item=su',description:null},
+  {id:6,level:'promo',category:'싱글',name:'울트라싱글',mg:6000,baek:6200,muji:6300,rib:9300,width:'72/74',weight:500,c:66,p:34,sp:0,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=single&item=ul',description:null},
   {id:7,level:'promo',category:'싱글',name:'쉬폰싱글',mg:null,baek:4300,muji:4300,rib:7400,width:'60/62',weight:360,c:0,p:100,sp:0,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
-  {id:8,level:'promo',category:'양면',name:'이너폰테',mg:null,baek:4900,muji:5000,rib:7400,width:'62/64',weight:330,c:23,p:77,sp:0,r:0,tags:['이너','반팔','긴팔'],url:null,description:null},
-  {id:9,level:'promo',category:'양면',name:'RS-600GD',mg:6900,baek:7000,muji:7200,rib:9300,width:'76/78',weight:600,c:35,p:65,sp:0,r:0,tags:['맨투맨','후드','긴팔'],url:null,description:null},
-  {id:10,level:'promo',category:'쭈리',name:'V쭈리',mg:null,baek:6500,muji:6500,rib:8300,width:'70/72',weight:570,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
-  {id:11,level:'promo',category:'쭈리',name:'RS-365T(3단)',mg:7300,baek:7400,muji:7600,rib:9300,width:'74/76',weight:620,c:43,p:57,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
-  {id:12,level:'promo',category:'쭈리',name:'컴팩미니쭈리',mg:6200,baek:6300,muji:6500,rib:8400,width:'74/76',weight:500,c:30,p:70,sp:0,r:0,tags:['맨투맨','후드'],url:null,description:null},
-  {id:13,level:'promo',category:'쭈리',name:'헤비M쭈리',mg:null,baek:6400,muji:6500,rib:9500,width:'64/66',weight:500,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드','후드집업','트레이닝세트'],url:null,description:null},
+  {id:8,level:'promo',category:'양면',name:'이너폰테',mg:null,baek:4900,muji:5000,rib:7400,width:'62/64',weight:330,c:23,p:77,sp:0,r:0,tags:['이너','반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=punto&item=in',description:null},
+  {id:9,level:'promo',category:'양면',name:'RS-600GD',mg:6900,baek:7000,muji:7200,rib:9300,width:'76/78',weight:600,c:35,p:65,sp:0,r:0,tags:['맨투맨','후드','긴팔'],url:'https://recoveric.com/main/product.html?divi=double&item=rs600',description:null},
+  {id:10,level:'promo',category:'쭈리',name:'V쭈리',mg:null,baek:6500,muji:6500,rib:8300,width:'70/72',weight:570,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:'https://recoveric.com/main/product.html?divi=terry&item=vterry',description:null},
+  {id:11,level:'promo',category:'쭈리',name:'RS-365T(3단)',mg:7300,baek:7400,muji:7600,rib:9300,width:'74/76',weight:620,c:43,p:57,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:'https://recoveric.com/main/product.html?divi=terry&item=rs365t',description:null},
+  {id:12,level:'promo',category:'쭈리',name:'컴팩미니쭈리',mg:6200,baek:6300,muji:6500,rib:8400,width:'74/76',weight:500,c:30,p:70,sp:0,r:0,tags:['맨투맨','후드'],url:'https://recoveric.com/main/product.html?divi=terry&item=cp',description:null},
+  {id:13,level:'promo',category:'쭈리',name:'헤비M쭈리',mg:null,baek:6400,muji:6500,rib:9500,width:'64/66',weight:500,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드','후드집업','트레이닝세트'],url:'https://recoveric.com/main/product.html?divi=terry&item=hem',description:null},
   {id:14,level:'promo',category:'쭈리',name:'헤비M쭈리(8%)',mg:5800,baek:null,muji:null,rib:9500,width:'64/66',weight:460,c:23,p:77,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
   {id:15,level:'promo',category:'후라이스',name:'쉬폰후라이스',mg:null,baek:7800,muji:7800,rib:7400,width:'60/62',weight:490,c:0,p:98,sp:2,r:0,tags:['반팔','긴팔'],url:null,description:null},
-  {id:35,level:'promo',category:'쭈리',name:'4S클래스',mg:9400,baek:9600,muji:9800,rib:9300,width:'70/74',weight:780,c:68,p:32,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
+  {id:35,level:'promo',category:'쭈리',name:'4S클래스',mg:9400,baek:9600,muji:9800,rib:9300,width:'70/74',weight:780,c:68,p:32,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:'https://recoveric.com/main/product.html?divi=terry&item=4s',description:null},
   // ── Standard ──
-  {id:16,level:'standard',category:'몰나염',name:'몰나염싱글',mg:null,baek:null,muji:8400,rib:9300,width:'72/74',weight:420,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
-  {id:17,level:'standard',category:'쭈리',name:'RS-080GT',mg:10800,baek:11200,muji:11400,rib:9300,width:'74/76',weight:820,c:62,p:38,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
-  {id:18,level:'standard',category:'쭈리',name:'TDEG',mg:8300,baek:8300,muji:8700,rib:9300,width:'70/72',weight:640,c:49,p:51,sp:0,r:0,tags:['맨투맨','후드'],url:null,description:null},
-  {id:19,level:'standard',category:'기모',name:'365기모',mg:8700,baek:9000,muji:9100,rib:9300,width:'70/72',weight:660,c:40,p:60,sp:0,r:0,tags:['맨투맨','후드','긴바지','트레이닝세트'],url:null,description:null},
+  {id:16,level:'standard',category:'물나염',name:'물나염싱글',mg:null,baek:null,muji:8400,rib:9300,width:'72/74',weight:420,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=tie&item=ms',description:null},
+  {id:17,level:'standard',category:'쭈리',name:'RS-080GT',mg:10800,baek:11200,muji:11400,rib:9300,width:'74/76',weight:820,c:62,p:38,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:'https://recoveric.com/main/product.html?divi=terry&item=rs080',description:null},
+  {id:18,level:'standard',category:'쭈리',name:'TDEG',mg:8300,baek:8300,muji:8700,rib:9300,width:'70/72',weight:640,c:49,p:51,sp:0,r:0,tags:['맨투맨','후드'],url:'https://recoveric.com/main/product.html?divi=terry&item=tdeg',description:null},
+  {id:19,level:'standard',category:'기모',name:'365기모',mg:8700,baek:9000,muji:9100,rib:9300,width:'70/72',weight:660,c:40,p:60,sp:0,r:0,tags:['맨투맨','후드','긴바지','트레이닝세트'],url:'https://recoveric.com/main/product.html?divi=napping&item=rs365gm',description:null},
   // ── Premium ──
-  {id:20,level:'premium',category:'싱글',name:'RS-400S',mg:7500,baek:7800,muji:7900,rib:9500,width:'72/74',weight:420,c:55,p:45,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
-  {id:21,level:'premium',category:'싱글',name:'RS-500S',mg:9400,baek:9600,muji:9700,rib:9500,width:'72/74',weight:500,c:66,p:34,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
-  {id:22,level:'premium',category:'싱글',name:'노블싱글(스판)',mg:null,baek:7300,muji:7400,rib:9500,width:'62/64',weight:320,c:63,p:33,sp:4,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
-  {id:23,level:'premium',category:'PK',name:'노블PK',mg:null,baek:7800,muji:7900,rib:1900,ribUnit:'EA',width:'60/62',weight:420,c:27,p:70,sp:3,r:0,tags:['반팔','긴팔'],url:null,description:null},
-  {id:24,level:'premium',category:'골지',name:'2X2GB골지',mg:null,baek:7800,muji:7900,rib:null,width:'60/62',weight:420,c:74,p:26,sp:0,r:0,tags:['이너'],url:null,description:null},
-  {id:25,level:'premium',category:'양면',name:'실켓분또',mg:null,baek:8800,muji:9100,rib:null,width:'62/64',weight:440,c:20,p:74,sp:6,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
-  {id:26,level:'premium',category:'몰나염',name:'몰나염쭈리',mg:null,baek:null,muji:9600,rib:10000,width:'64/66',weight:520,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드'],url:null,description:null},
-  {id:27,level:'premium',category:'쭈리',name:'5S클래스',mg:10200,baek:10200,muji:10700,rib:9300,width:'70/74',weight:790,c:46,p:54,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
-  {id:28,level:'premium',category:'쭈리',name:'RS-850T',mg:14500,baek:14800,muji:15000,rib:12100,width:'72/74',weight:760,c:70,p:30,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
-  {id:29,level:'premium',category:'기모',name:'소프트후리스',mg:10600,baek:10800,muji:11000,rib:9500,width:'60/62',weight:580,c:60,p:40,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
+  {id:20,level:'premium',category:'싱글',name:'RS-400S',mg:7500,baek:7800,muji:7900,rib:9500,width:'72/74',weight:420,c:55,p:45,sp:0,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=single&item=rs400s',description:null},
+  {id:21,level:'premium',category:'싱글',name:'RS-500S',mg:9400,baek:9600,muji:9700,rib:9500,width:'72/74',weight:500,c:66,p:34,sp:0,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=single&item=rs500s',description:null},
+  {id:22,level:'premium',category:'싱글',name:'노블싱글(스판)',mg:null,baek:7300,muji:7400,rib:9500,width:'62/64',weight:320,c:63,p:33,sp:4,r:0,tags:['반팔','긴팔','이너'],url:'https://recoveric.com/main/product.html?divi=single&item=no',description:null},
+  {id:23,level:'premium',category:'PK',name:'노블PK',mg:null,baek:7800,muji:7900,rib:1900,ribUnit:'EA',width:'60/62',weight:420,c:27,p:70,sp:3,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=pk&item=nos',description:null},
+  {id:24,level:'premium',category:'골지',name:'2X2GB골지',mg:null,baek:7800,muji:7900,rib:null,width:'60/62',weight:420,c:74,p:26,sp:0,r:0,tags:['이너'],url:'https://recoveric.com/main/product.html?divi=corduroy&item=si',description:null},
+  {id:25,level:'premium',category:'양면',name:'실켓분또',mg:null,baek:8800,muji:9100,rib:null,width:'62/64',weight:440,c:20,p:74,sp:6,r:0,tags:['반팔','긴팔','이너'],url:'https://recoveric.com/main/product.html?divi=punto&item=sk',description:null},
+  {id:26,level:'premium',category:'물나염',name:'물나염쭈리',mg:null,baek:null,muji:9600,rib:10000,width:'64/66',weight:520,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드'],url:'https://recoveric.com/main/product.html?divi=tie&item=mj',description:null},
+  {id:27,level:'premium',category:'쭈리',name:'5S클래스',mg:10200,baek:10200,muji:10700,rib:9300,width:'70/74',weight:790,c:46,p:54,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:'https://recoveric.com/main/product.html?divi=terry&item=5s',description:null},
+  {id:28,level:'premium',category:'쭈리',name:'RS-850T',mg:14500,baek:14800,muji:15000,rib:12100,width:'72/74',weight:760,c:70,p:30,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:'https://recoveric.com/main/product.html?divi=terry&item=rs850t',description:null},
+  {id:29,level:'premium',category:'기모',name:'소프트후리스',mg:10600,baek:10800,muji:11000,rib:9500,width:'60/62',weight:580,c:60,p:40,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:'https://recoveric.com/main/product.html?divi=napping&item=sh',description:null},
   // ── Luxury ──
-  {id:30,level:'luxury',category:'헤비니트',name:'RS-헤비니트',mg:14500,baek:14800,muji:15000,rib:null,width:'72/74',weight:810,c:47,p:50,sp:3,r:0,tags:['가디건','긴팔'],url:null,description:null},
+  {id:30,level:'luxury',category:'헤비니트',name:'RS-헤비니트',mg:14500,baek:14800,muji:15000,rib:null,width:'72/74',weight:810,c:47,p:50,sp:3,r:0,tags:['가디건','긴팔'],url:'https://recoveric.com/main/product.html?divi=corduroy&item=rsh',description:null},
   {id:31,level:'luxury',category:'실켓양면',name:'아머',mg:18300,baek:18600,muji:18900,rib:15800,width:'72/74',weight:850,c:32,p:68,sp:0,r:0,tags:['맨투맨','후드','자켓'],url:null,description:null},
-  {id:32,level:'luxury',category:'쭈리',name:'다이아헤비쭈리',mg:15600,baek:15900,muji:16100,rib:12600,width:'62/64',weight:820,c:45,p:55,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
-  {id:33,level:'luxury',category:'기모',name:'RS-800ZG',mg:14600,baek:14900,muji:15100,rib:12600,width:'64/66',weight:830,c:44,p:56,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
+  {id:32,level:'luxury',category:'쭈리',name:'다이아헤비쭈리',mg:15600,baek:15900,muji:16100,rib:12600,width:'62/64',weight:820,c:45,p:55,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:'https://recoveric.com/main/product.html?divi=terry&item=da',description:null},
+  {id:33,level:'luxury',category:'기모',name:'RS-800ZG',mg:14600,baek:14900,muji:15100,rib:12600,width:'64/66',weight:830,c:44,p:56,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:'https://recoveric.com/main/product.html?divi=napping&item=zp',description:null},
   // ── 의류 ──
-  {id:34,level:'apparel',category:'의류',name:'피그먼트반팔티',mg:null,baek:null,muji:16400,rib:null,width:null,weight:null,c:55,p:45,sp:0,r:0,tags:['반팔'],url:null,description:null},
+  {id:34,level:'apparel',category:'의류',name:'피그먼트반팔티',mg:null,baek:null,muji:16400,rib:null,width:null,weight:null,c:55,p:45,sp:0,r:0,tags:['반팔'],url:'https://recoveric.com/main/product.html?divi=apparel&item=shortt',description:null},
 ];
 const DSTATE={
   dataVersion:4,
@@ -1399,7 +1469,7 @@ const DSTATE={
     {id:'luxury', name:'Luxury'},
     {id:'apparel', name:'의류'},
   ],
-  categories:['싱글','쭈리','기모','양면','PK','골지','몰나염','헤비니트','후라이스','실켓양면','의류'],
+  categories:['싱글','쭈리','기모','양면','PK','골지','물나염','헤비니트','후라이스','실켓양면','의류'],
   tags:['반팔','긴팔','민소매','크롭티','맨투맨','후드','후드집업','이너','반바지','칠부바지','긴바지','스커트','가디건','집업','자켓','트레이닝세트'],
   sheetsUrl:'https://script.google.com/macros/s/AKfycbyfqmMcjWpwzgtM4GH_QReK1COzBJrrXt7cPGsviMfLAtSfNAT_OKnV91XyXMBbY-6Qag/exec',
   nextCid:4,nextFid:36,
@@ -1476,6 +1546,40 @@ function migrate(old){
   if(!s.tags||!s.tags.length)s.tags=[...TAGS];
   // colorUrl 필드 보장
   if(s.fabrics)s.fabrics.forEach(f=>{if(f.colorUrl===undefined||f.colorUrl===null)f.colorUrl='';});
+
+  // [v4.97 마이그레이션] "몰나염" → "물나염" 오타 수정
+  if(s.fabrics){
+    s.fabrics.forEach(f=>{
+      if(f.category==='몰나염')f.category='물나염';
+      if(f.name&&f.name.includes('몰나염'))f.name=f.name.replace(/몰나염/g,'물나염');
+    });
+  }
+  if(s.categories&&s.categories.length){
+    s.categories=s.categories.map(c=>c==='몰나염'?'물나염':c);
+  }
+  // 고객사 priceOverrides 키도 마이그레이션
+  if(s.customers){
+    s.customers.forEach(c=>{
+      if(c.priceOverrides){
+        const newOv={};
+        Object.keys(c.priceOverrides).forEach(k=>{
+          const newKey=k.includes('몰나염')?k.replace(/몰나염/g,'물나염'):k;
+          newOv[newKey]=c.priceOverrides[k];
+        });
+        c.priceOverrides=newOv;
+      }
+    });
+  }
+
+  // [v4.97 마이그레이션] 원단 페이지 URL 자동 적용 (url 필드 비어있는 원단만)
+  if(s.fabrics){
+    s.fabrics.forEach(f=>{
+      if(!f.url){
+        const u=DEFAULT_FABRIC_URLS[f.name];
+        if(u)f.url=u;
+      }
+    });
+  }
   return s;
 }
 function load(){
@@ -1581,6 +1685,7 @@ function sv(name,btn,skipHistory){
   else if(name==='admin'){renderAdminTbl();fillLevelSelects();fillCatList();renderTagMgmt();loadSeasonInput();}
   else if(name==='color'){initColorView();}
   else if(name==='colorsend'){initColorSendView();}
+  else if(name==='urlsend'){initUrlSendView();}
   else if(name==='special'){
     // 사이드바에서 진입 시 등급 필터 초기화 + 카드 목록으로 리셋
     spGradeFilter='';
@@ -1641,7 +1746,7 @@ function migrateLevels(){
   }
   if(!ST.categories){
     const fromFabrics=[...new Set(ST.fabrics.map(f=>f.category))];
-    const base=['싱글','쭈리','기모','양면','PK','골지','몰나염','헤비니트','후라이스','실켓양면'];
+    const base=['싱글','쭈리','기모','양면','PK','골지','물나염','헤비니트','후라이스','실켓양면'];
     ST.categories=[...new Set([...base,...fromFabrics,...(ST.customCats||[])])].filter(Boolean);
   }
 }
@@ -4434,6 +4539,107 @@ function copyCsImageFromModal(){
 }
 
 
+// ─ 원단 URL 발송 ─ (v4.97 신규)
+
+// 뷰 진입 시 초기화
+function initUrlSendView(){
+  const catSel=document.getElementById('us-cat-filter');
+  if(catSel){
+    const cats=[...new Set(ST.fabrics.map(f=>f.category).filter(Boolean))].sort();
+    const prev=catSel.value;
+    catSel.innerHTML='<option value="">전체</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+    if(prev)catSel.value=prev;
+  }
+  renderUrlSendList();
+}
+
+// 목록 렌더
+function renderUrlSendList(){
+  const wrap=document.getElementById('us-list-wrap');if(!wrap)return;
+  const catFilter=(document.getElementById('us-cat-filter')||{}).value||'';
+  const srch=((document.getElementById('us-search')||{}).value||'').trim().toLowerCase();
+  const onlyReg=!!(document.getElementById('us-only-registered')||{}).checked;
+
+  let fabs=ST.fabrics.filter(f=>f.name);
+  if(onlyReg)fabs=fabs.filter(f=>(f.url||'').trim());
+  if(catFilter)fabs=fabs.filter(f=>f.category===catFilter);
+  if(srch)fabs=fabs.filter(f=>(f.name||'').toLowerCase().includes(srch));
+
+  // 라인 → 조직 → 이름 순 정렬
+  const lvOrder={promo:1,standard:2,premium:3,luxury:4,apparel:5};
+  fabs.sort((a,b)=>{
+    const la=lvOrder[a.level]||9,lb=lvOrder[b.level]||9;
+    if(la!==lb)return la-lb;
+    if(a.category!==b.category)return (a.category||'').localeCompare(b.category||'');
+    return (a.name||'').localeCompare(b.name||'');
+  });
+
+  if(!fabs.length){
+    wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--txt3)">표시할 원단이 없습니다</div>';
+    return;
+  }
+
+  // 조직별 그룹핑
+  const grouped={};
+  fabs.forEach(f=>{const k=f.category||'기타';if(!grouped[k])grouped[k]=[];grouped[k].push(f);});
+
+  let html='';
+  Object.keys(grouped).forEach(cat=>{
+    const rows=grouped[cat];
+    html+=`<div class="cs-sect-header">${cat} · ${rows.length}종</div>`;
+    rows.forEach(f=>{
+      const url=(f.url||'').trim();
+      const hasUrl=!!url;
+      const allLvs=getAllLevels();
+      const lvName=allLvs[f.level]||f.level||'';
+      // 액션 버튼
+      let actions='';
+      if(hasUrl){
+        actions=`<button class="btn btn-gold btn-sm" onclick="copyFabricUrl(${f.id})" title="URL 복사" style="font-size:12px;padding:6px 12px">📋 URL 복사</button>
+          <a href="${url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" title="새 탭에서 열기" style="font-size:12px;padding:6px 12px;text-decoration:none">🔗 열기</a>`;
+      } else {
+        actions=`<span style="font-size:11px;color:var(--txt3);padding:6px 10px;background:var(--bg3,#f4f6fa);border-radius:6px">URL 미등록</span>`;
+      }
+      // URL 미리보기 (호버 시 보이도록 title)
+      const urlPreview=hasUrl?`<div style="font-size:11px;color:var(--txt3);font-family:'JetBrains Mono',monospace;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:380px" title="${url}">${url.replace('https://','')}</div>`:'';
+      html+=`<div class="cs-row" data-fid="${f.id}" style="grid-template-columns:1fr auto">
+        <div class="cs-info" style="min-width:0">
+          <div class="cs-name">${f.name}</div>
+          <div class="cs-meta">${lvName}${f.width?' · '+f.width+'"':''}${f.weight?' · '+f.weight+'g/y':''}</div>
+          ${urlPreview}
+        </div>
+        <div class="cs-actions">${actions}</div>
+      </div>`;
+    });
+  });
+  wrap.innerHTML=html;
+}
+
+// URL 복사 (텍스트)
+function copyFabricUrl(fid){
+  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
+  const url=(f.url||'').trim();
+  if(!url){toast('URL이 등록되지 않았습니다','error');return;}
+  doCopyText(url).then(()=>{
+    toast(`${f.name} URL 복사됨 ✓`,'success');
+    updateUsStatusBar(f.name);
+  }).catch(()=>{
+    showCopyPopup(url);
+    updateUsStatusBar(f.name);
+  });
+}
+
+// 하단 상태바 갱신 (마지막 복사 항목 표시)
+function updateUsStatusBar(fabName){
+  const bar=document.getElementById('us-statusbar');
+  const txt=document.getElementById('us-status-text');
+  if(!bar||!txt)return;
+  const tm=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+  txt.innerHTML=`<b style="color:var(--green)">복사됨</b> · ${fabName} <span style="color:var(--txt3);font-size:11px">(${tm})</span>`;
+  bar.style.display='block';
+}
+
+
 // ─ 원단 소개 ─
 let introFid=null;
 
@@ -4541,17 +4747,19 @@ function openIntroEditById(fid){
   openIntroEdit();
 }
 
-// 카톡 메세지 생성 (공통)
+// 카톡 메세지 생성 (공통) — RECOVERIC 표준 형식 (이모지 없음, 특수기호 사용)
 function buildIntroMsg(f){
   const specLine=[f.width?f.width+'"':null,f.weight?f.weight+'g/y':null].filter(Boolean).join(' x ');
-  const tags=(f.tags||[]).join(' · ')||'—';
-  const url=f.url||'recoveric.com (상세페이지 준비중)';
+  const tags=(f.tags||[]).join(' · ')||'';
+  const url=(f.url||'').trim();
   let msg=`[${f.name}]  RECOVERIC\n\n`;
   msg+=`▸ 소재 : ${comp(f)||'—'}\n`;
   if(specLine)msg+=`▸ 폭/중량 : ${specLine}\n`;
-  msg+=`▸ 추천의류 : ${tags}\n`;
-  if(f.description)msg+=`\n📌 ${f.description}\n`;
-  msg+=`\n🔗 ${url}\n\n리커버릭 CS팀 드림`;
+  if(tags)msg+=`▸ 추천 의류 : ${tags}\n`;
+  if(f.description)msg+=`\n■ ${f.description}\n`;
+  // [v4.97] URL 자동 추가 - 등록된 URL만 표시 (없으면 라인 자체를 생략)
+  if(url)msg+=`\n▷ 상세 : ${url}\n`;
+  msg+=`\n현일텍스 CS팀 드림`;
   return msg;
 }
 
@@ -4682,7 +4890,7 @@ function applyNewPrices(){
     'RS-365T(3단)': {mg:7300, baek:7400, muji:7600, rib:9300},
     '쉬폰후라이스':   {mg:null, baek:7800, muji:7800, rib:7400},
     '365기모':       {mg:8700, baek:9000, muji:9100, rib:9300},
-    '몰나염싱글':     {mg:null, baek:null, muji:8400, rib:9300},
+    '물나염싱글':     {mg:null, baek:null, muji:8400, rib:9300},
     '프리미엄싱글':   {mg:5500, baek:5700, muji:5800, rib:8400},
     '슈퍼싱글':       {mg:5500, baek:5500, muji:5700, rib:8400},
     '울트라싱글':     {mg:6000, baek:6200, muji:6300, rib:9300},
@@ -4690,7 +4898,7 @@ function applyNewPrices(){
     'RS-080GT':      {mg:10800,baek:11200,muji:11400,rib:9300},
     '소프트후리스':   {mg:10600,baek:10800,muji:11000,rib:9500},
     '2X2GB골지':     {mg:null, baek:7800, muji:7900, rib:null},
-    '몰나염쭈리':     {mg:null, baek:null, muji:9600, rib:10000},
+    '물나염쭈리':     {mg:null, baek:null, muji:9600, rib:10000},
     '노블싱글(스판)': {mg:null, baek:7300, muji:7400, rib:9500},
     'RS-400S':       {mg:7500, baek:7800, muji:7900, rib:9500},
     'RS-500S':       {mg:9400, baek:9600, muji:9700, rib:9500},
