@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.112</title>
+<title>RECOVERIC 단가관리 시스템 v4.113</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -197,14 +197,14 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .btn-green:hover{opacity:.9}
 .btn-sm{padding:7px 14px;font-size:12px}
 
+/* 캡처 오버레이 */
 /* ─── CAPTURE OVERLAY ─── */
 #capture-overlay{position:fixed;inset:0;background:rgba(20,30,60,.7);z-index:800;display:none;align-items:center;justify-content:center;padding:20px}
 #capture-overlay.open{display:flex}
-/* [v4.110] 모달 내부 모든 직접 자식은 흰 배경 강제 — 파란 필터 완전 차단 */
-#capture-overlay .cap-box,
-#capture-overlay .cap-box > *,
-#capture-overlay .cap-scroll-area,
-#capture-overlay #cap-img-wrap{background:#ffffff!important}
+/* [v4.113] 모달 박스와 모든 하위 요소 — 흰 배경 강제, z-index 명시 */
+#capture-overlay .cap-box{background:#ffffff!important;isolation:isolate}
+#capture-overlay .cap-scroll-area{background:#ffffff!important;position:relative;z-index:1}
+#capture-overlay #cap-img-wrap{background:#ffffff!important;position:relative;z-index:2}
 /* [v4.111] 오버레이 내부의 cap-preview 는 절대 보이지 않게 원천 차단 */
 #capture-overlay #cap-preview{display:none!important;visibility:hidden!important;opacity:0!important;position:absolute!important;left:-99999px!important;top:-99999px!important;width:0!important;height:0!important;overflow:hidden!important;pointer-events:none!important}
 .cap-box{background:#fff!important;border-radius:16px;max-width:1000px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.4);position:relative;z-index:1}
@@ -560,7 +560,7 @@ body #cap-preview.cap-offscreen{display:block!important;position:fixed!important
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.112</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.113</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2908,8 +2908,8 @@ function doCapture(){
         restoreTarget();
         if(dlBtn)dlBtn.disabled=false;
         if(cpBtn)cpBtn.disabled=false;
-        // [v4.112] 진단 로그 — 캡처 완료 시점 DOM/CSS 상태 전체 출력
-        console.log('=== [진단] 캡처 완료 시점 DOM/CSS 상태 ===');
+        // [v4.113] 진단 로그 — 모든 중간 요소 포함
+        console.log('=== [진단 v4.113] 캡처 완료 시점 ===');
         const ov=document.getElementById('capture-overlay');
         const cb=document.querySelector('#capture-overlay .cap-box');
         const sa=document.querySelector('#capture-overlay .cap-scroll-area');
@@ -2920,20 +2920,28 @@ function doCapture(){
           if(!el){console.log(name+': NOT FOUND');return;}
           const cs=getComputedStyle(el);
           const rect=el.getBoundingClientRect();
-          console.log(name+':',{
+          console.log(name,'→',JSON.stringify({
             parent:el.parentNode?.id||el.parentNode?.tagName,
+            bg:cs.backgroundColor,
             display:cs.display,
-            background:cs.backgroundColor,
-            position:cs.position,
-            zIndex:cs.zIndex,
+            pos:cs.position,
+            z:cs.zIndex,
             opacity:cs.opacity,
-            visibility:cs.visibility,
-            width:Math.round(rect.width),
-            height:Math.round(rect.height),
-            top:Math.round(rect.top),
-            left:Math.round(rect.left),
-          });
+            vis:cs.visibility,
+            w:Math.round(rect.width),
+            h:Math.round(rect.height),
+            t:Math.round(rect.top),
+            l:Math.round(rect.left),
+          }));
         });
+        // body 직계 자식 목록 (html2canvas 임시 요소 확인용)
+        const bodyKids=[...document.body.children].map(el=>({
+          id:el.id||'(no id)',
+          tag:el.tagName,
+          cls:el.className||'(no class)',
+          display:getComputedStyle(el).display,
+        }));
+        console.log('body children:',JSON.stringify(bodyKids));
         console.log('=== 진단 종료 ===');
         // 강제 리페인트 — Chrome stale frame 이슈 회피
         const box=document.querySelector('#capture-overlay .cap-box');
