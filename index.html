@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.114</title>
+<title>RECOVERIC 단가관리 시스템 v4.115</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -561,7 +561,7 @@ body #cap-preview.cap-offscreen{display:block!important;position:fixed!important
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.114</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.115</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2909,50 +2909,17 @@ function doCapture(){
         restoreTarget();
         if(dlBtn)dlBtn.disabled=false;
         if(cpBtn)cpBtn.disabled=false;
-        // [v4.113] 진단 로그 — 모든 중간 요소 포함
-        console.log('=== [진단 v4.113] 캡처 완료 시점 ===');
-        const ov=document.getElementById('capture-overlay');
-        const cb=document.querySelector('#capture-overlay .cap-box');
-        const sa=document.querySelector('#capture-overlay .cap-scroll-area');
-        const iw=document.getElementById('cap-img-wrap');
+        // [v4.115] cap-preview 를 body 에서 완전히 제거 + 숨은 컨테이너에 보관
         const cp=document.getElementById('cap-preview');
-        const resultImg=document.getElementById('cap-result-img');
-        [['overlay',ov],['cap-box',cb],['scroll-area',sa],['img-wrap',iw],['cap-preview',cp],['result-img',resultImg]].forEach(([name,el])=>{
-          if(!el){console.log(name+': NOT FOUND');return;}
-          const cs=getComputedStyle(el);
-          const rect=el.getBoundingClientRect();
-          console.log(name,'→',JSON.stringify({
-            parent:el.parentNode?.id||el.parentNode?.tagName,
-            bg:cs.backgroundColor,
-            display:cs.display,
-            pos:cs.position,
-            z:cs.zIndex,
-            opacity:cs.opacity,
-            vis:cs.visibility,
-            w:Math.round(rect.width),
-            h:Math.round(rect.height),
-            t:Math.round(rect.top),
-            l:Math.round(rect.left),
-          }));
-        });
-        // body 직계 자식 목록 (html2canvas 임시 요소 확인용)
-        const bodyKids=[...document.body.children].map(el=>({
-          id:el.id||'(no id)',
-          tag:el.tagName,
-          cls:el.className||'(no class)',
-          display:getComputedStyle(el).display,
-        }));
-        console.log('body children:',JSON.stringify(bodyKids));
-        console.log('=== 진단 종료 ===');
-        // 강제 리페인트 — Chrome stale frame 이슈 회피
-        const box=document.querySelector('#capture-overlay .cap-box');
-        if(box){
-          requestAnimationFrame(()=>{
-            box.style.transform='translateZ(0)';
-            requestAnimationFrame(()=>{
-              box.style.transform='';
-            });
-          });
+        if(cp){
+          let hiddenBox=document.getElementById('cap-hidden-container');
+          if(!hiddenBox){
+            hiddenBox=document.createElement('div');
+            hiddenBox.id='cap-hidden-container';
+            hiddenBox.style.cssText='position:fixed;left:-99999px;top:-99999px;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none;opacity:0;z-index:-99999';
+            document.body.appendChild(hiddenBox);
+          }
+          hiddenBox.appendChild(cp);
         }
         setTimeout(()=>selectCapImg(),50);
       },{once:true});
