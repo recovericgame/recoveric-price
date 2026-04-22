@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.105</title>
+<title>RECOVERIC 단가관리 시스템 v4.106</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -553,7 +553,7 @@ body #cap-preview.cap-offscreen{display:block!important;position:fixed!important
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.105</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.106</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2827,18 +2827,34 @@ function doCapture(){
       backgroundColor:'#ffffff',
       useCORS:true,
       allowTaint:true,
-      logging:false,
+      logging:true,
       width:targetW,
       height:targetH,
       windowWidth:targetW,
       windowHeight:targetH,
+      removeContainer:true,
+      foreignObjectRendering:false,
+      ignoreElements:(el)=>{
+        // cap-preview 외의 모든 요소는 캡처 대상에서 제외 (오버레이 배경 간섭 차단)
+        if(el.id==='cap-preview')return false;
+        if(el.closest&&el.closest('#cap-preview'))return false;
+        // capture-overlay 와 그 하위는 무조건 무시
+        if(el.id==='capture-overlay'||el.closest&&el.closest('#capture-overlay'))return true;
+        return false;
+      },
       onclone:(clonedDoc,clonedEl)=>{
-        const clonedBody=clonedDoc.body;
-        clonedBody.innerHTML='';
-        clonedBody.style.cssText='margin:0;padding:0;background:#fff;overflow:visible;width:'+targetW+'px';
+        // 복제 문서에서 오버레이 등 간섭 요소 완전 제거
+        const overlay=clonedDoc.getElementById('capture-overlay');
+        if(overlay&&overlay.parentNode)overlay.parentNode.removeChild(overlay);
+        const modal=clonedDoc.getElementById('modal-ov');
+        if(modal&&modal.parentNode)modal.parentNode.removeChild(modal);
+        const toast=clonedDoc.getElementById('toast');
+        if(toast&&toast.parentNode)toast.parentNode.removeChild(toast);
+        // cap-preview 를 화면에 보이도록 복원
         clonedEl.classList.remove('cap-offscreen');
-        clonedEl.style.cssText='position:static;display:block;width:'+targetW+'px;overflow:visible;background:#fff;box-sizing:border-box';
-        clonedBody.appendChild(clonedEl);
+        clonedEl.style.cssText='position:static!important;display:block!important;width:'+targetW+'px!important;overflow:visible!important;background:#fff!important;box-sizing:border-box!important;visibility:visible!important;opacity:1!important;left:auto!important;top:auto!important;z-index:auto!important';
+        // body 배경도 흰색으로 강제
+        clonedDoc.body.style.cssText='margin:0;padding:0;background:#fff!important;overflow:visible;width:'+targetW+'px';
       },
     });
   }catch(syncErr){
