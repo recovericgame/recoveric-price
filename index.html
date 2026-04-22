@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.110</title>
+<title>RECOVERIC 단가관리 시스템 v4.111 🟡</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -200,11 +200,12 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 /* ─── CAPTURE OVERLAY ─── */
 #capture-overlay{position:fixed;inset:0;background:rgba(20,30,60,.7);z-index:800;display:none;align-items:center;justify-content:center;padding:20px}
 #capture-overlay.open{display:flex}
-/* [v4.110] 모달 내부 모든 직접 자식은 흰 배경 강제 — 파란 필터 완전 차단 */
-#capture-overlay .cap-box,
-#capture-overlay .cap-box > *,
-#capture-overlay .cap-scroll-area,
-#capture-overlay #cap-img-wrap{background:#ffffff!important}
+/* [v4.111] 모달 내부 전체를 흰색으로 강제 — 페이지 배경 #f2f5fc 침투 완전 차단 */
+html body #capture-overlay .cap-box{background-color:#ffffff!important}
+html body #capture-overlay .cap-box .cap-scroll-area{background-color:#ffffff!important}
+html body #capture-overlay .cap-box #cap-img-wrap{background-color:#ffffff!important}
+html body #capture-overlay .cap-box #cap-img-wrap img{background-color:#ffffff!important}
+html body #capture-overlay .cap-box .cap-actions{background-color:#fafbfe!important}
 .cap-box{background:#fff!important;border-radius:16px;max-width:1000px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.4);position:relative;z-index:1}
 .cap-header{display:flex;justify-content:space-between;align-items:flex-start;padding:24px 28px 16px;border-bottom:1px solid #e0e4f0}
 .cap-logo{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;letter-spacing:3px;color:#111}
@@ -558,7 +559,7 @@ body #cap-preview.cap-offscreen{display:block!important;position:fixed!important
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.110</div>
+      <div style="font-size:11px;color:#ffcc00;margin-top:4px;letter-spacing:1px;font-weight:700">v4.111 🟡</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2753,11 +2754,18 @@ function openCapture(viewCtx){
     if(c)initGrade=c.grade||'';
   } else initGrade=activeGrade||'';
   capGrade=initGrade;
+  // [v4.111] 이전 캡처에서 DOM 제거된 cap-preview 복구 (body 직하위로)
+  if(window._capPreviewRemoved&&!document.getElementById('cap-preview')){
+    document.body.appendChild(window._capPreviewRemoved);
+    window._capPreviewRemoved=null;
+  }
   buildCapTable();
-  // 이전 결과 초기화 (프리뷰는 CSS로 기본 숨김)
+  // 이전 결과 초기화
   const preview=document.getElementById('cap-preview');
-  preview.classList.remove('cap-offscreen');
-  preview.style.cssText='';
+  if(preview){
+    preview.classList.add('cap-offscreen');
+    preview.style.cssText='';
+  }
   const imgWrap=document.getElementById('cap-img-wrap');
   imgWrap.style.display='none';
   imgWrap.innerHTML='';
