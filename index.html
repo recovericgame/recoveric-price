@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.116</title>
+<title>RECOVERIC 단가관리 시스템 v4.117</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -198,13 +198,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .btn-sm{padding:7px 14px;font-size:12px}
 
 /* ─── CAPTURE OVERLAY ─── */
-#capture-overlay{position:fixed;inset:0;background:rgba(50,60,80,.55);z-index:800;display:none;align-items:center;justify-content:center;padding:20px}
+#capture-overlay{position:fixed;inset:0;background:rgba(20,30,60,.7);z-index:800;display:none;align-items:center;justify-content:center;padding:20px}
 #capture-overlay.open{display:flex}
-.cap-box{background:#ffffff;border-radius:16px;max-width:1000px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.4);position:relative;z-index:1}
-/* [v4.116] cap-preview 는 오버레이 밖에 있는 독립 컨테이너 — 기본 숨김 */
-#cap-preview{display:none;background:#fff;width:900px;box-sizing:border-box}
-/* 캡처 실행 중에만 화면 밖으로 보내서 렌더링 (JS 로 .capturing 클래스 토글) */
-#cap-preview.capturing{display:block;position:fixed;left:-99999px;top:0;z-index:-9999;visibility:visible;opacity:1;pointer-events:none}
+.cap-box{background:#fff;border-radius:16px;max-width:1000px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.4)}
 .cap-header{display:flex;justify-content:space-between;align-items:flex-start;padding:24px 28px 16px;border-bottom:1px solid #e0e4f0}
 .cap-logo{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;letter-spacing:3px;color:#111}
 .cap-logo-sub{font-size:9px;color:#888;letter-spacing:2px;margin-top:2px}
@@ -254,9 +250,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .cap-footer{margin:16px 28px 0;padding-top:12px;border-top:1px solid #e0e4f0;display:flex;justify-content:space-between;font-size:10px;color:#999;padding-bottom:20px}
 .cap-actions{display:flex;gap:8px;padding:14px 28px;border-top:1px solid #eee;background:#fafbfe;border-radius:0 0 16px 16px;flex-shrink:0;flex-wrap:wrap;align-items:center}
 /* Image result box */
-#cap-img-wrap{display:none;text-align:center;padding:16px 0;background:#fff;position:relative;z-index:10}
-#cap-img-wrap img{max-width:100%;border:1px solid #dde;border-radius:8px;background:#fff;position:relative;z-index:11}
+#cap-img-wrap{display:none;text-align:center;padding:16px 0}
+#cap-img-wrap img{max-width:100%;border:1px solid #dde;border-radius:8px}
 /* 캡처 중 - 미리보기를 화면 밖으로 숨김 (html2canvas는 읽을 수 있지만 사용자 눈에는 안 보임) */
+#cap-preview.cap-offscreen{position:absolute!important;left:-99999px!important;top:0;width:900px;visibility:visible;pointer-events:none}
 /* 로딩 스피너 */
 #cap-loading{display:none;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:16px;color:#5a6b8a}
 #cap-loading.on{display:flex}
@@ -554,7 +551,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.116</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.117</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1290,7 +1287,52 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         <div class="cap-loading-text">이미지 생성 중...</div>
         <div class="cap-loading-sub">잠시만 기다려주세요</div>
       </div>
-      <!-- [v4.116] cap-preview 는 오버레이 밖으로 이동됨 (아래 참조) -->
+      <div id="cap-preview">
+        <div class="cap-header">
+          <div>
+            <div class="cap-logo">RECOVERIC</div>
+            <div class="cap-logo-sub">PREMIUM CIRCULAR KNIT FABRIC · recoveric.com</div>
+          </div>
+          <div class="cap-meta">
+            <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px" id="cap-cn"></div>
+            <div id="cap-grade-badge" style="display:none;margin-bottom:4px"></div>
+            <div id="cap-dt" style="font-size:10px;color:#666"></div>
+            <div id="cap-tag-badge" style="font-size:9px;color:#888;margin-top:2px;display:none"></div>
+            <div style="font-size:9px;color:#aaa;margin-top:2px">본 단가표는 고객사 전용입니다</div>
+          </div>
+        </div>
+        <div class="cap-body">
+          <table class="cap-tbl" id="captbl">
+            <colgroup>
+              <col style="width:22%">
+              <col style="width:8%">
+              <col style="width:9%">
+              <col style="width:10%">
+              <col style="width:9%">
+              <col style="width:10%">
+              <col style="width:7%">
+              <col style="width:6%">
+              <col style="width:19%">
+            </colgroup>
+            <thead><tr>
+              <th style="text-align:left">품목명</th>
+              <th>구분</th>
+              <th>8%MG<br><span style="font-size:8px;font-weight:400;opacity:.65">원/YD</span></th>
+              <th>백/백아이<br><span style="font-size:8px;font-weight:400;opacity:.65">원/YD</span></th>
+              <th>무지<br><span style="font-size:8px;font-weight:400;opacity:.65">원/YD</span></th>
+              <th>부속(RIB)<br><span style="font-size:8px;font-weight:400;opacity:.65">원/YD</span></th>
+              <th>폭(인치)</th>
+              <th>g/y</th>
+              <th>혼용률</th>
+            </tr></thead>
+            <tbody id="captbody"></tbody>
+          </table>
+        </div>
+        <div class="cap-footer">
+          <span>RECOVERIC · recoveric.com · 현일텍스 주식회사</span>
+          <span>※ 단가는 야드(YD) 기준 / 원사가격 변동 시 단가 변동 가능</span>
+        </div>
+      </div>
       <div id="cap-img-wrap"></div>
     </div>
     <div class="cap-actions">
@@ -1299,54 +1341,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       <span id="cap-cp-hint" style="font-size:11px;color:var(--txt2)">이미지 클릭 → Ctrl+C 또는 📋 클릭 → 카톡 붙여넣기</span>
       <button class="btn btn-outline btn-sm" onclick="closeCapture()" style="margin-left:auto">닫기</button>
     </div>
-  </div>
-</div>
-
-<!-- [v4.116] cap-preview: 오버레이 밖의 독립 컨테이너 — 절대 모달에 보이지 않음 -->
-<div id="cap-preview">
-  <div class="cap-header">
-    <div>
-      <div class="cap-logo">RECOVERIC</div>
-      <div class="cap-logo-sub">PREMIUM CIRCULAR KNIT FABRIC · recoveric.com</div>
-    </div>
-    <div class="cap-meta">
-      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px" id="cap-cn"></div>
-      <div id="cap-grade-badge" style="display:none;margin-bottom:4px"></div>
-      <div id="cap-dt" style="font-size:10px;color:#666"></div>
-      <div id="cap-tag-badge" style="font-size:9px;color:#888;margin-top:2px;display:none"></div>
-      <div style="font-size:9px;color:#aaa;margin-top:2px">본 단가표는 고객사 전용입니다</div>
-    </div>
-  </div>
-  <div class="cap-body">
-    <table class="cap-tbl" id="captbl">
-      <colgroup>
-        <col style="width:22%">
-        <col style="width:8%">
-        <col style="width:9%">
-        <col style="width:10%">
-        <col style="width:9%">
-        <col style="width:10%">
-        <col style="width:7%">
-        <col style="width:6%">
-        <col style="width:19%">
-      </colgroup>
-      <thead><tr>
-        <th style="text-align:left">품목명</th>
-        <th>구분</th>
-        <th>8%MG<br><span style="font-size:8px;font-weight:400;opacity:.65">원/YD</span></th>
-        <th>백/백아이<br><span style="font-size:8px;font-weight:400;opacity:.65">원/YD</span></th>
-        <th>무지<br><span style="font-size:8px;font-weight:400;opacity:.65">원/YD</span></th>
-        <th>부속(RIB)<br><span style="font-size:8px;font-weight:400;opacity:.65">원/YD</span></th>
-        <th>폭(인치)</th>
-        <th>g/y</th>
-        <th>혼용률</th>
-      </tr></thead>
-      <tbody id="captbody"></tbody>
-    </table>
-  </div>
-  <div class="cap-footer">
-    <span>RECOVERIC · recoveric.com · 현일텍스 주식회사</span>
-    <span>※ 단가는 야드(YD) 기준 / 원사가격 변동 시 단가 변동 가능</span>
   </div>
 </div>
 
@@ -1780,13 +1774,6 @@ window.addEventListener('load',()=>{
     window._html2canvasLoadFailed=true;
   }else{
     console.log('[Boot] ✓ html2canvas 라이브러리 로드 성공');
-  }
-  // [v4.105] cap-preview 를 오버레이 밖 body 직하위로 영구 이동
-  // 이렇게 해야 html2canvas 가 오버레이의 파란 배경을 함께 캡처하지 않음
-  const preview=document.getElementById('cap-preview');
-  if(preview&&preview.parentNode!==document.body){
-    document.body.appendChild(preview);
-    console.log('[Boot] ✓ cap-preview → body 직하위로 이동 완료');
   }
 });
 
@@ -2496,10 +2483,10 @@ function selCapture(){
   }
   document.getElementById('cap-cn').textContent=title;
   document.getElementById('cap-dt').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'})+' 기준';
-  // 이전 결과 초기화 (프리뷰는 CSS로 기본 숨김)
+  // 이전 결과 초기화 (프리뷰는 화면 밖에 대기)
   const preview=document.getElementById('cap-preview');
-  preview.classList.remove('capturing');
-  preview.style.cssText='';
+  preview.classList.add('cap-offscreen');
+  preview.style.display='none';
   const imgWrap=document.getElementById('cap-img-wrap');
   imgWrap.style.display='none';
   imgWrap.innerHTML='';
@@ -2752,10 +2739,10 @@ function openCapture(viewCtx){
   } else initGrade=activeGrade||'';
   capGrade=initGrade;
   buildCapTable();
-  // 이전 결과 초기화 (프리뷰는 CSS로 기본 숨김)
+  // 이전 결과 초기화 (프리뷰는 화면 밖에 대기)
   const preview=document.getElementById('cap-preview');
-  preview.classList.remove('capturing');
-  preview.style.cssText='';
+  preview.classList.add('cap-offscreen');
+  preview.style.display='none';
   const imgWrap=document.getElementById('cap-img-wrap');
   imgWrap.style.display='none';
   imgWrap.innerHTML='';
@@ -2799,18 +2786,11 @@ function doCapture(){
   const imgWrap=document.getElementById('cap-img-wrap');
   const loading=document.getElementById('cap-loading');
 
-  // [v4.111] cap-preview 가 어디에 있든 무조건 body 직하위로 이동 (이전 상태 무시)
-  if(target.parentNode!==document.body){
-    document.body.appendChild(target);
-    console.log('[Capture] cap-preview 강제 이동 → body');
-  }
-
   // ★ 0단계: html2canvas 라이브러리 로드 여부 확인
   if(typeof html2canvas!=='function'){
     if(loading)loading.classList.remove('on');
-    // capturing 제거 → CSS 기본값 display:none 자동 적용
-    target.classList.remove('capturing');
-    target.style.cssText='';
+    target.classList.add('cap-offscreen');
+    target.style.display='none';
     if(dlBtn)dlBtn.disabled=false;
     if(cpBtn)cpBtn.disabled=false;
     imgWrap.innerHTML='<div style="padding:40px;text-align:center;color:#c02828"><div style="font-size:36px;margin-bottom:12px">⚠️</div><div style="font-weight:700;margin-bottom:8px">html2canvas 라이브러리가 로드되지 않았습니다</div><div style="font-size:12px;color:#666">인터넷 연결을 확인하거나 페이지를 새로고침(F5) 해주세요.</div></div>';
@@ -2821,16 +2801,16 @@ function doCapture(){
 
   imgWrap.style.display='none';
   imgWrap.innerHTML='';
-  // [v4.105] cap-preview 는 이미 페이지 로드 시 body 직하위로 이동되어 오버레이와 분리됨
-  target.classList.add('capturing');
-  target.style.cssText='';
+  // 화면 밖으로 이동 — DOM 에는 존재하여 html2canvas 가 읽을 수 있지만 사용자 눈에는 안 보임
+  target.classList.add('cap-offscreen');
+  target.style.display='block';
   if(loading)loading.classList.add('on');
   const targetW=Math.max(target.scrollWidth,900);
   const targetH=Math.max(target.scrollHeight,200);
   const restoreTarget=()=>{
-    // capturing 제거 → CSS 기본값 display:none 자동 적용
-    target.classList.remove('capturing');
-    target.style.cssText='';
+    // cap-offscreen 유지 + display:none — 화면 밖 유지
+    target.classList.add('cap-offscreen');
+    target.style.display='none';
   };
 
   // ★ 1단계: try/catch 로 감싸서 동기 에러도 잡기
@@ -2841,34 +2821,19 @@ function doCapture(){
       backgroundColor:'#ffffff',
       useCORS:true,
       allowTaint:true,
-      logging:true,
+      logging:false,
       width:targetW,
       height:targetH,
       windowWidth:targetW,
       windowHeight:targetH,
-      removeContainer:true,
-      foreignObjectRendering:false,
-      ignoreElements:(el)=>{
-        // cap-preview 외의 모든 요소는 캡처 대상에서 제외 (오버레이 배경 간섭 차단)
-        if(el.id==='cap-preview')return false;
-        if(el.closest&&el.closest('#cap-preview'))return false;
-        // capture-overlay 와 그 하위는 무조건 무시
-        if(el.id==='capture-overlay'||el.closest&&el.closest('#capture-overlay'))return true;
-        return false;
-      },
       onclone:(clonedDoc,clonedEl)=>{
-        // 복제 문서에서 오버레이 등 간섭 요소 완전 제거
-        const overlay=clonedDoc.getElementById('capture-overlay');
-        if(overlay&&overlay.parentNode)overlay.parentNode.removeChild(overlay);
-        const modal=clonedDoc.getElementById('modal-ov');
-        if(modal&&modal.parentNode)modal.parentNode.removeChild(modal);
-        const toast=clonedDoc.getElementById('toast');
-        if(toast&&toast.parentNode)toast.parentNode.removeChild(toast);
-        // cap-preview 를 화면에 보이도록 복원
-        clonedEl.classList.remove('capturing');
-        clonedEl.style.cssText='position:static!important;display:block!important;width:'+targetW+'px!important;overflow:visible!important;background:#fff!important;box-sizing:border-box!important;visibility:visible!important;opacity:1!important;left:auto!important;top:auto!important;z-index:auto!important';
-        // body 배경도 흰색으로 강제
-        clonedDoc.body.style.cssText='margin:0;padding:0;background:#fff!important;overflow:visible;width:'+targetW+'px';
+        const clonedBody=clonedDoc.body;
+        clonedBody.innerHTML='';
+        clonedBody.style.cssText='margin:0;padding:0;background:#fff;overflow:visible;width:'+targetW+'px';
+        // 복제된 요소는 off-screen 클래스를 떼고 정상 위치로 렌더 (복제본은 가상 DOM 이라 화면에 안 보임)
+        clonedEl.classList.remove('cap-offscreen');
+        clonedEl.style.cssText='position:static;display:block;width:'+targetW+'px;overflow:visible;background:#fff;box-sizing:border-box';
+        clonedBody.appendChild(clonedEl);
       },
     });
   }catch(syncErr){
@@ -2972,7 +2937,7 @@ function capCopy(){
 }
 function closeCapture(){
   const prev=document.getElementById('cap-preview');
-  if(prev){prev.classList.remove('capturing');prev.style.cssText='';}
+  if(prev){prev.style.display='none';prev.classList.add('cap-offscreen');}
   const imgWrap=document.getElementById('cap-img-wrap');
   if(imgWrap){imgWrap.style.display='none';imgWrap.innerHTML='';}
   const loading=document.getElementById('cap-loading');
