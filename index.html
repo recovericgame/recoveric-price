@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.104</title>
+<title>RECOVERIC 단가관리 시스템 v4.105</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -553,7 +553,7 @@ body #cap-preview.cap-offscreen{display:block!important;position:fixed!important
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.104</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.105</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1778,6 +1778,13 @@ window.addEventListener('load',()=>{
   }else{
     console.log('[Boot] ✓ html2canvas 라이브러리 로드 성공');
   }
+  // [v4.105] cap-preview 를 오버레이 밖 body 직하위로 영구 이동
+  // 이렇게 해야 html2canvas 가 오버레이의 파란 배경을 함께 캡처하지 않음
+  const preview=document.getElementById('cap-preview');
+  if(preview&&preview.parentNode!==document.body){
+    document.body.appendChild(preview);
+    console.log('[Boot] ✓ cap-preview → body 직하위로 이동 완료');
+  }
 });
 
 // ─ 레벨/조직 관리 ─
@@ -2800,10 +2807,7 @@ function doCapture(){
 
   imgWrap.style.display='none';
   imgWrap.innerHTML='';
-  // ★ 핵심: cap-preview 를 body 직하위로 이동시켜 오버레이 영향에서 완전히 분리
-  const origParent=target.parentNode;
-  const origNext=target.nextSibling;
-  try{document.body.appendChild(target);}catch(e){console.error('[Capture] DOM 이동 실패:',e);}
+  // [v4.105] cap-preview 는 이미 페이지 로드 시 body 직하위로 이동되어 오버레이와 분리됨
   target.classList.add('cap-offscreen');
   target.style.cssText='';
   if(loading)loading.classList.add('on');
@@ -2813,10 +2817,6 @@ function doCapture(){
     // cap-offscreen 제거 → CSS 기본값 display:none 자동 적용
     target.classList.remove('cap-offscreen');
     target.style.cssText='';
-    try{
-      if(origNext&&origNext.parentNode===origParent){origParent.insertBefore(target,origNext);}
-      else if(origParent){origParent.appendChild(target);}
-    }catch(e){console.error('[Capture] DOM 복귀 실패:',e);}
   };
 
   // ★ 1단계: try/catch 로 감싸서 동기 에러도 잡기
