@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.111</title>
+<title>RECOVERIC 단가관리 시스템 v4.112</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -560,7 +560,7 @@ body #cap-preview.cap-offscreen{display:block!important;position:fixed!important
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.111</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.112</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2908,10 +2908,36 @@ function doCapture(){
         restoreTarget();
         if(dlBtn)dlBtn.disabled=false;
         if(cpBtn)cpBtn.disabled=false;
+        // [v4.112] 진단 로그 — 캡처 완료 시점 DOM/CSS 상태 전체 출력
+        console.log('=== [진단] 캡처 완료 시점 DOM/CSS 상태 ===');
+        const ov=document.getElementById('capture-overlay');
+        const cb=document.querySelector('#capture-overlay .cap-box');
+        const sa=document.querySelector('#capture-overlay .cap-scroll-area');
+        const iw=document.getElementById('cap-img-wrap');
+        const cp=document.getElementById('cap-preview');
+        const resultImg=document.getElementById('cap-result-img');
+        [['overlay',ov],['cap-box',cb],['scroll-area',sa],['img-wrap',iw],['cap-preview',cp],['result-img',resultImg]].forEach(([name,el])=>{
+          if(!el){console.log(name+': NOT FOUND');return;}
+          const cs=getComputedStyle(el);
+          const rect=el.getBoundingClientRect();
+          console.log(name+':',{
+            parent:el.parentNode?.id||el.parentNode?.tagName,
+            display:cs.display,
+            background:cs.backgroundColor,
+            position:cs.position,
+            zIndex:cs.zIndex,
+            opacity:cs.opacity,
+            visibility:cs.visibility,
+            width:Math.round(rect.width),
+            height:Math.round(rect.height),
+            top:Math.round(rect.top),
+            left:Math.round(rect.left),
+          });
+        });
+        console.log('=== 진단 종료 ===');
         // 강제 리페인트 — Chrome stale frame 이슈 회피
         const box=document.querySelector('#capture-overlay .cap-box');
         if(box){
-          // 모달 박스를 2프레임 후 스타일 토글하여 페인트 강제
           requestAnimationFrame(()=>{
             box.style.transform='translateZ(0)';
             requestAnimationFrame(()=>{
