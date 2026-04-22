@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.106</title>
+<title>RECOVERIC 단가관리 시스템 v4.107</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -255,7 +255,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 /* 캡처 중 - 미리보기를 화면 밖으로 숨김 (html2canvas는 읽을 수 있지만 사용자 눈에는 안 보임) */
 /* [v4.104] cap-preview: 기본은 절대 화면 안 보이게 (specificity 최대화) */
 body #cap-preview:not(.cap-offscreen){display:none!important;visibility:hidden!important}
-body #cap-preview.cap-offscreen{display:block!important;position:fixed!important;left:-99999px!important;top:0!important;width:900px!important;height:auto!important;visibility:visible!important;pointer-events:none!important;z-index:-999!important;background:#fff!important}
+body #cap-preview.cap-offscreen{display:block!important;position:fixed!important;left:-99999px!important;top:-99999px!important;width:900px!important;height:auto!important;visibility:visible!important;pointer-events:none!important;z-index:-9999!important;background:#fff!important;overflow:hidden!important;clip-path:inset(0)!important}
 /* 로딩 스피너 */
 #cap-loading{display:none;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:16px;color:#5a6b8a}
 #cap-loading.on{display:flex}
@@ -553,7 +553,7 @@ body #cap-preview.cap-offscreen{display:block!important;position:fixed!important
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.106</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.107</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2774,13 +2774,18 @@ function hookCapCopyKey(){
     if(!capBlob)return;
     const ae=document.activeElement;
     if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.isContentEditable))return;
+    // 500ms 이내 중복 실행 방지 (capCopy 와 공유)
+    const now=Date.now();
+    if(window._capLastCopyAt&&now-window._capLastCopyAt<500)return;
+    window._capLastCopyAt=now;
     if(navigator.clipboard&&window.ClipboardItem){
       e.preventDefault();
+      e.stopImmediatePropagation();
       navigator.clipboard.write([new ClipboardItem({'image/png':capBlob})])
         .then(()=>toast('이미지 복사됨 ✓ 카톡에 붙여넣기 하세요','success'))
         .catch(()=>toast('복사 실패 — 📋 버튼 또는 다운로드를 이용하세요','error'));
     }
-  });
+  },true);
 }
 function doCapture(){
   const dlBtn=document.getElementById('cap-dl-btn');
@@ -2923,12 +2928,15 @@ function capDownload(){
 }
 function capCopy(){
   if(!capBlob)return;
+  // 500ms 이내 중복 실행 방지 (hookCapCopyKey 의 _lastCopyAt 과 공유)
+  const now=Date.now();
+  if(window._capLastCopyAt&&now-window._capLastCopyAt<500)return;
+  window._capLastCopyAt=now;
   // PNG ClipboardItem — 카카오톡·슬랙·메모 앱에 바로 붙여넣기 가능
   if(navigator.clipboard&&window.ClipboardItem){
     navigator.clipboard.write([new ClipboardItem({'image/png':capBlob})])
       .then(()=>toast('이미지 복사됨 ✓ 카톡에 붙여넣기 하세요','success'))
       .catch(()=>{
-        // Clipboard API 실패 시 다운로드 fallback
         const a=document.createElement('a');
         a.href=URL.createObjectURL(capBlob);
         a.download='RECOVERIC_단가표_'+new Date().toISOString().slice(0,10)+'.png';
