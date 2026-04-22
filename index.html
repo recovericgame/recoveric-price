@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.100</title>
+<title>RECOVERIC 단가관리 시스템 v4.101</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -253,7 +253,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 #cap-img-wrap{display:none;text-align:center;padding:16px 0}
 #cap-img-wrap img{max-width:100%;border:1px solid #dde;border-radius:8px}
 /* 캡처 중 - 미리보기를 화면 밖으로 숨김 (html2canvas는 읽을 수 있지만 사용자 눈에는 안 보임) */
-#cap-preview.cap-offscreen{position:fixed!important;left:-99999px!important;top:0!important;width:900px!important;height:auto!important;visibility:visible!important;pointer-events:none!important;z-index:-1!important;background:#fff}
+#cap-preview.cap-offscreen{position:fixed!important;left:-99999px!important;top:0!important;width:900px!important;height:auto!important;visibility:visible!important;pointer-events:none!important;z-index:-999!important;background:#fff;display:block!important}
 /* 로딩 스피너 */
 #cap-loading{display:none;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:16px;color:#5a6b8a}
 #cap-loading.on{display:flex}
@@ -551,7 +551,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.100</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.101</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2776,13 +2776,25 @@ function doCapture(){
   const loading=document.getElementById('cap-loading');
   imgWrap.style.display='none';
   imgWrap.innerHTML='';
-  // cap-offscreen 클래스가 fixed + left:-99999px!important 로 확실히 화면 밖으로 보냄
+  // ★ 핵심: cap-preview 를 body 직하위로 이동시켜 오버레이 영향에서 완전히 분리
+  // 원래 부모와 위치를 기억해두었다가 캡처 완료/실패 시 복귀
+  const origParent=target.parentNode;
+  const origNext=target.nextSibling;
+  document.body.appendChild(target);
   target.classList.add('cap-offscreen');
   target.style.cssText='';
   if(loading)loading.classList.add('on');
   const targetW=Math.max(target.scrollWidth,900);
   const targetH=Math.max(target.scrollHeight,200);
-  const hideTarget=()=>{target.classList.add('cap-offscreen');target.style.cssText='display:none';};
+  const restoreTarget=()=>{
+    target.classList.add('cap-offscreen');
+    target.style.cssText='display:none';
+    // 원래 부모로 복귀 (다음 캡처 시에도 DOM 구조 유지)
+    try{
+      if(origNext&&origNext.parentNode===origParent){origParent.insertBefore(target,origNext);}
+      else{origParent.appendChild(target);}
+    }catch(e){}
+  };
 
   html2canvas(target,{
     scale:2,
@@ -2805,7 +2817,7 @@ function doCapture(){
   }).then(canvas=>{
     canvas.toBlob(blob=>{
       if(!blob){
-        hideTarget();
+        restoreTarget();
         if(loading)loading.classList.remove('on');
         toast('캡처 실패: 이미지 생성 실패','error');
         return;
@@ -2823,15 +2835,14 @@ function doCapture(){
       imgWrap.appendChild(img);
       imgWrap.style.display='block';
       if(loading)loading.classList.remove('on');
-      hideTarget();
+      restoreTarget();
       if(dlBtn)dlBtn.disabled=false;
       if(cpBtn)cpBtn.disabled=false;
-      // 이미지 로드 직후 자동 선택 → Ctrl+C 한 번에 복사 가능
       img.addEventListener('load',()=>{setTimeout(()=>selectCapImg(),50);},{once:true});
     },'image/png');
   }).catch(e=>{
     if(loading)loading.classList.remove('on');
-    hideTarget();
+    restoreTarget();
     if(dlBtn)dlBtn.disabled=false;
     if(cpBtn)cpBtn.disabled=false;
     toast('캡처 실패: '+(e&&e.message?e.message:'알 수 없는 오류'),'error');
