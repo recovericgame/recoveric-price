@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.113</title>
+<title>RECOVERIC 단가관리 시스템 v4.114</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -197,16 +197,17 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .btn-green:hover{opacity:.9}
 .btn-sm{padding:7px 14px;font-size:12px}
 
-/* 캡처 오버레이 */
 /* ─── CAPTURE OVERLAY ─── */
-#capture-overlay{position:fixed;inset:0;background:rgba(20,30,60,.7);z-index:800;display:none;align-items:center;justify-content:center;padding:20px}
+/* [v4.114] 오버레이 배경 완전 제거 — 파란색 원천 차단 */
+#capture-overlay{position:fixed;inset:0;background:transparent;z-index:800;display:none;align-items:center;justify-content:center;padding:20px;pointer-events:none}
 #capture-overlay.open{display:flex}
-/* [v4.113] 모달 박스와 모든 하위 요소 — 흰 배경 강제, z-index 명시 */
-#capture-overlay .cap-box{background:#ffffff!important;isolation:isolate}
+#capture-overlay .cap-box{pointer-events:auto;background:#ffffff!important;isolation:isolate;border:1px solid #e0e4f0}
 #capture-overlay .cap-scroll-area{background:#ffffff!important;position:relative;z-index:1}
 #capture-overlay #cap-img-wrap{background:#ffffff!important;position:relative;z-index:2}
 /* [v4.111] 오버레이 내부의 cap-preview 는 절대 보이지 않게 원천 차단 */
 #capture-overlay #cap-preview{display:none!important;visibility:hidden!important;opacity:0!important;position:absolute!important;left:-99999px!important;top:-99999px!important;width:0!important;height:0!important;overflow:hidden!important;pointer-events:none!important}
+/* 뒤쪽 페이지를 덮는 별도 딤 레이어 — 클릭 가능 + 회색 반투명 */
+#capture-overlay::before{content:'';position:fixed;inset:0;background:rgba(50,60,80,.55);z-index:-1;pointer-events:auto}
 .cap-box{background:#fff!important;border-radius:16px;max-width:1000px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.4);position:relative;z-index:1}
 .cap-header{display:flex;justify-content:space-between;align-items:flex-start;padding:24px 28px 16px;border-bottom:1px solid #e0e4f0}
 .cap-logo{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;letter-spacing:3px;color:#111}
@@ -560,7 +561,7 @@ body #cap-preview.cap-offscreen{display:block!important;position:fixed!important
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.113</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.114</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
