@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.101</title>
+<title>RECOVERIC 단가관리 시스템 v4.102</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -551,7 +551,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.101</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.102</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1769,6 +1769,13 @@ window.addEventListener('load',()=>{
     // 로그인 후에만 적용 — 앱 진입 이후에 처리
     window._initialView=hash;
   }
+  // [v4.102] html2canvas 라이브러리 로드 상태 확인
+  if(typeof html2canvas!=='function'){
+    console.warn('[Boot] ⚠️ html2canvas 라이브러리 로드 실패 — 이미지 캡처 기능이 작동하지 않습니다. 인터넷 연결 또는 CDN 접근을 확인하세요.');
+    window._html2canvasLoadFailed=true;
+  }else{
+    console.log('[Boot] ✓ html2canvas 라이브러리 로드 성공');
+  }
 });
 
 // ─ 레벨/조직 관리 ─
@@ -2774,13 +2781,27 @@ function doCapture(){
   const target=document.getElementById('cap-preview');
   const imgWrap=document.getElementById('cap-img-wrap');
   const loading=document.getElementById('cap-loading');
+
+  // ★ 0단계: html2canvas 라이브러리 로드 여부 확인
+  if(typeof html2canvas!=='function'){
+    if(loading)loading.classList.remove('on');
+    // 프리뷰가 이미 보이는 상황이면 강제로 숨김
+    target.classList.add('cap-offscreen');
+    target.style.cssText='display:none';
+    if(dlBtn)dlBtn.disabled=false;
+    if(cpBtn)cpBtn.disabled=false;
+    imgWrap.innerHTML='<div style="padding:40px;text-align:center;color:#c02828"><div style="font-size:36px;margin-bottom:12px">⚠️</div><div style="font-weight:700;margin-bottom:8px">html2canvas 라이브러리가 로드되지 않았습니다</div><div style="font-size:12px;color:#666">인터넷 연결을 확인하거나 페이지를 새로고침(F5) 해주세요.</div></div>';
+    imgWrap.style.display='block';
+    toast('캡처 라이브러리 로드 실패 — F5로 새로고침하세요','error');
+    return;
+  }
+
   imgWrap.style.display='none';
   imgWrap.innerHTML='';
   // ★ 핵심: cap-preview 를 body 직하위로 이동시켜 오버레이 영향에서 완전히 분리
-  // 원래 부모와 위치를 기억해두었다가 캡처 완료/실패 시 복귀
   const origParent=target.parentNode;
   const origNext=target.nextSibling;
-  document.body.appendChild(target);
+  try{document.body.appendChild(target);}catch(e){console.error('[Capture] DOM 이동 실패:',e);}
   target.classList.add('cap-offscreen');
   target.style.cssText='';
   if(loading)loading.classList.add('on');
@@ -2789,32 +2810,45 @@ function doCapture(){
   const restoreTarget=()=>{
     target.classList.add('cap-offscreen');
     target.style.cssText='display:none';
-    // 원래 부모로 복귀 (다음 캡처 시에도 DOM 구조 유지)
     try{
       if(origNext&&origNext.parentNode===origParent){origParent.insertBefore(target,origNext);}
-      else{origParent.appendChild(target);}
-    }catch(e){}
+      else if(origParent){origParent.appendChild(target);}
+    }catch(e){console.error('[Capture] DOM 복귀 실패:',e);}
   };
 
-  html2canvas(target,{
-    scale:2,
-    backgroundColor:'#ffffff',
-    useCORS:true,
-    allowTaint:true,
-    logging:false,
-    width:targetW,
-    height:targetH,
-    windowWidth:targetW,
-    windowHeight:targetH,
-    onclone:(clonedDoc,clonedEl)=>{
-      const clonedBody=clonedDoc.body;
-      clonedBody.innerHTML='';
-      clonedBody.style.cssText='margin:0;padding:0;background:#fff;overflow:visible;width:'+targetW+'px';
-      clonedEl.classList.remove('cap-offscreen');
-      clonedEl.style.cssText='position:static;display:block;width:'+targetW+'px;overflow:visible;background:#fff;box-sizing:border-box';
-      clonedBody.appendChild(clonedEl);
-    },
-  }).then(canvas=>{
+  // ★ 1단계: try/catch 로 감싸서 동기 에러도 잡기
+  let capturePromise;
+  try{
+    capturePromise=html2canvas(target,{
+      scale:2,
+      backgroundColor:'#ffffff',
+      useCORS:true,
+      allowTaint:true,
+      logging:false,
+      width:targetW,
+      height:targetH,
+      windowWidth:targetW,
+      windowHeight:targetH,
+      onclone:(clonedDoc,clonedEl)=>{
+        const clonedBody=clonedDoc.body;
+        clonedBody.innerHTML='';
+        clonedBody.style.cssText='margin:0;padding:0;background:#fff;overflow:visible;width:'+targetW+'px';
+        clonedEl.classList.remove('cap-offscreen');
+        clonedEl.style.cssText='position:static;display:block;width:'+targetW+'px;overflow:visible;background:#fff;box-sizing:border-box';
+        clonedBody.appendChild(clonedEl);
+      },
+    });
+  }catch(syncErr){
+    if(loading)loading.classList.remove('on');
+    restoreTarget();
+    if(dlBtn)dlBtn.disabled=false;
+    if(cpBtn)cpBtn.disabled=false;
+    toast('캡처 실패(동기): '+(syncErr&&syncErr.message?syncErr.message:'알 수 없음'),'error');
+    console.error('[Capture] 동기 에러:',syncErr);
+    return;
+  }
+
+  capturePromise.then(canvas=>{
     canvas.toBlob(blob=>{
       if(!blob){
         restoreTarget();
@@ -2846,7 +2880,7 @@ function doCapture(){
     if(dlBtn)dlBtn.disabled=false;
     if(cpBtn)cpBtn.disabled=false;
     toast('캡처 실패: '+(e&&e.message?e.message:'알 수 없는 오류'),'error');
-    console.error('[Capture] 실패:',e);
+    console.error('[Capture] 비동기 에러:',e);
   });
 }
 // 결과 이미지를 Range 로 선택 — Ctrl+C 한 번에 이미지 복사 가능
