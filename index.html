@@ -20,6 +20,7 @@
   --gold:#c8900a;--gold-lt:#fff7e6;--gold-bd:#ffd980;
   --silver:#5570a0;--silver-lt:#f0f4ff;
   --vip:#7040b8;--vip-lt:#f5f0ff;
+  --std-grade:#6b7280;--std-grade-lt:#f3f4f6;
   --promo:#2060e0;--promo-lt:#eff4ff;
   --standard:#0e9060;--standard-lt:#effaf4;
   --premium:#c07010;--premium-lt:#fff8ee;
@@ -120,6 +121,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .grade-pill.silver{background:var(--silver-lt);color:var(--silver)}
 .grade-pill.gold{background:var(--gold-lt);color:var(--gold)}
 .grade-pill.vip{background:var(--vip-lt);color:var(--vip)}
+.grade-pill.standard{background:var(--std-grade-lt);color:var(--std-grade)}
 .disc-txt{font-size:12px;color:var(--txt2)}
 
 /* ─── TABLE ─── */
@@ -1570,6 +1572,15 @@ function migrate(old){
     });
   }
 
+  // [v4.98 마이그레이션] 비활성화된 등급(enabled:false)으로 등록된 고객사는 표준단가로 전환
+  if(s.customers&&s.grades){
+    s.customers.forEach(c=>{
+      if(c.grade&&c.grade!=='standard'&&s.grades[c.grade]&&s.grades[c.grade].enabled===false){
+        c.grade='standard';
+      }
+    });
+  }
+
   // [v4.97 마이그레이션] 원단 페이지 URL 자동 적용 (url 필드 비어있는 원단만)
   if(s.fabrics){
     s.fabrics.forEach(f=>{
@@ -1588,6 +1599,33 @@ function load(){
     // migrate/dedup 결과를 즉시 localStorage에 반영
     if(raw)localStorage.setItem('rcv2',JSON.stringify(ST));
   }catch(e){ST=JSON.parse(JSON.stringify(DSTATE));}
+}
+
+// [v4.98] 고객사 등급 선택 옵션: 표준단가(항상 포함) + enabled 등급만
+function getCustGradeOptions(){
+  const opts=[{value:'standard',label:'표준단가',discount:0}];
+  ['silver','gold','vip'].forEach(g=>{
+    const info=ST.grades[g];
+    if(info&&info.enabled!==false){
+      const L={silver:'Silver',gold:'Gold',vip:'VIP'}[g];
+      opts.push({value:g,label:L,discount:info.discount||0});
+    }
+  });
+  return opts;
+}
+// 등급 표시 라벨 (배지/텍스트용)
+function gradeLabel(g){
+  if(g==='standard')return'표준단가';
+  return(g||'').toUpperCase();
+}
+// 등급 색상
+function gradeColor(g){
+  return({silver:'#5570a0',gold:'#c8900a',vip:'#7040b8',standard:'#6b7280'})[g]||'#888';
+}
+// 등급 할인율 (standard=0)
+function gradeDiscount(g){
+  if(g==='standard')return 0;
+  return ST.grades[g]?.discount||0;
 }
 
 // ─ Login ─
@@ -2429,8 +2467,7 @@ function selCapture(){
   if(selView==='special'&&specialCid){
     const c=ST.customers.find(x=>x.id===specialCid);
     if(c){
-      const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};
-      title=`${c.name} 선택 단가표 [${gl[c.grade]||c.grade.toUpperCase()}]`;
+      title=`${c.name} 선택 단가표 [${gradeLabel(c.grade)}]`;
       capGrade=c.grade;
     }
   } else if(selGrade){
@@ -2542,7 +2579,7 @@ function copyAllSpecial(){
   const fabs=ST.fabrics;
   copyFabsToKakao(fabs,(f)=>{
     const ov=(c.priceOverrides||{})[f.name];
-    return ST.grades[c.grade]?.discount||0;
+    return gradeDiscount(c.grade);
   });
 }
 
@@ -2671,8 +2708,7 @@ function openCapture(viewCtx){
   if(ctx==='special'&&specialCid){
     const c=ST.customers.find(x=>x.id===specialCid);
     if(c){
-      const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};
-      titleText=`${c.name} 전용 단가표 [${gl[c.grade]||c.grade.toUpperCase()}]`;
+      titleText=`${c.name} 전용 단가표 [${gradeLabel(c.grade)}]`;
     }
   } else if(ctx==='byline'&&activeBl){
     const allLvs=getAllLevels();titleText=`${allLvs[activeBl]||activeBl} 단가표`;
@@ -2718,7 +2754,6 @@ function hookCapCopyKey(){
     const overlay=document.getElementById('capture-overlay');
     if(!overlay||!overlay.classList.contains('open'))return;
     if(!capBlob)return;
-    // 입력 필드에 포커스 있으면 텍스트 복사 우선
     const ae=document.activeElement;
     if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.isContentEditable))return;
     if(navigator.clipboard&&window.ClipboardItem){
@@ -2734,18 +2769,18 @@ function doCapture(){
   const cpBtn=document.getElementById('cap-cp-btn');
   if(dlBtn)dlBtn.disabled=true;
   if(cpBtn)cpBtn.disabled=true;
-  // 캡처 준비: 이전 결과 이미지 숨김 + 스피너 표시 + 프리뷰는 화면 밖으로 이동
   const target=document.getElementById('cap-preview');
   const imgWrap=document.getElementById('cap-img-wrap');
   const loading=document.getElementById('cap-loading');
   imgWrap.style.display='none';
   imgWrap.innerHTML='';
-  // 화면 밖으로 이동 — DOM에는 존재하여 html2canvas가 읽을 수 있지만 사용자 눈에는 안 보임
+  // 화면 밖으로 이동 — inline style 로 강제 (class 만으로는 다른 style 과 경쟁 가능성)
   target.classList.add('cap-offscreen');
-  target.style.display='block';
+  target.style.cssText='position:absolute!important;left:-99999px!important;top:0!important;width:900px;visibility:visible;pointer-events:none;display:block';
   if(loading)loading.classList.add('on');
   const targetW=Math.max(target.scrollWidth,900);
   const targetH=Math.max(target.scrollHeight,200);
+  const hideTarget=()=>{target.style.cssText='display:none';};
 
   html2canvas(target,{
     scale:2,
@@ -2761,13 +2796,18 @@ function doCapture(){
       const clonedBody=clonedDoc.body;
       clonedBody.innerHTML='';
       clonedBody.style.cssText='margin:0;padding:0;background:#fff;overflow:visible;width:'+targetW+'px';
-      // 복제된 요소는 off-screen 클래스를 떼고 정상 위치로 렌더 (복제본은 가상 DOM이라 화면에 안 보임)
       clonedEl.classList.remove('cap-offscreen');
       clonedEl.style.cssText='position:static;display:block;width:'+targetW+'px;overflow:visible;background:#fff;box-sizing:border-box';
       clonedBody.appendChild(clonedEl);
     },
   }).then(canvas=>{
     canvas.toBlob(blob=>{
+      if(!blob){
+        hideTarget();
+        if(loading)loading.classList.remove('on');
+        toast('캡처 실패: 이미지 생성 실패','error');
+        return;
+      }
       capBlob=blob;
       const url=URL.createObjectURL(blob);
       const img=document.createElement('img');
@@ -2775,14 +2815,13 @@ function doCapture(){
       img.id='cap-result-img';
       img.alt='RECOVERIC 단가표';
       img.title='클릭 후 Ctrl+C 로 복사';
-      img.style.cssText='max-width:100%;border-radius:8px;border:1px solid #dde;display:block;cursor:pointer';
+      img.style.cssText='max-width:100%;border-radius:8px;border:1px solid #dde;display:block;cursor:pointer;margin:0 auto';
       img.onclick=selectCapImg;
       imgWrap.innerHTML='';
       imgWrap.appendChild(img);
       imgWrap.style.display='block';
-      // 스피너 숨기고 프리뷰는 계속 화면 밖에 유지
       if(loading)loading.classList.remove('on');
-      target.style.display='none';
+      hideTarget();
       if(dlBtn)dlBtn.disabled=false;
       if(cpBtn)cpBtn.disabled=false;
       // 이미지 로드 직후 자동 선택 → Ctrl+C 한 번에 복사 가능
@@ -2790,9 +2829,11 @@ function doCapture(){
     },'image/png');
   }).catch(e=>{
     if(loading)loading.classList.remove('on');
+    hideTarget();
     if(dlBtn)dlBtn.disabled=false;
     if(cpBtn)cpBtn.disabled=false;
-    toast('캡처 실패: '+e.message,'error');
+    toast('캡처 실패: '+(e&&e.message?e.message:'알 수 없는 오류'),'error');
+    console.error('[Capture] 실패:',e);
   });
 }
 // 결과 이미지를 Range 로 선택 — Ctrl+C 한 번에 이미지 복사 가능
@@ -2838,7 +2879,7 @@ function capCopy(){
 }
 function closeCapture(){
   const prev=document.getElementById('cap-preview');
-  if(prev){prev.style.display='none';prev.classList.add('cap-offscreen');}
+  if(prev){prev.style.cssText='display:none';prev.classList.add('cap-offscreen');}
   const imgWrap=document.getElementById('cap-img-wrap');
   if(imgWrap){imgWrap.style.display='none';imgWrap.innerHTML='';}
   const loading=document.getElementById('cap-loading');
@@ -2863,16 +2904,17 @@ function renderCust(){
   const grid=document.getElementById('cgrid');
   if(!list.length){grid.innerHTML='<p style="color:var(--txt3);font-size:13px;padding:20px 0">조건에 맞는 고객사 없음</p>';return;}
   grid.innerHTML=list.map(c=>{
-    const d=ST.grades[c.grade]?.discount||0;
+    const d=gradeDiscount(c.grade);
     const ex=Object.entries(c.overrides||{}).filter(([,v])=>v!==0);
     const isSpecial=ex.length>0;
     const specialBadge=isSpecial?`<span style="font-size:9px;font-weight:800;background:#fff3e0;color:#b06000;border:1px solid #ffc060;padding:2px 8px;border-radius:4px;letter-spacing:.5px">특별단가</span>`:'';
+    const infoTxt=c.grade==='standard'?`표준단가 적용${ex.length?` · 품목별 조정 ${ex.length}건`:''}`:`기본 할인 −${d}%${ex.length?` · 품목별 조정 ${ex.length}건`:''}`;
     return `<div class="cc" style="${isSpecial?'border-color:#ffd080;border-width:2px':''}">
       <div class="cc-head">
         <div style="display:flex;align-items:center;gap:7px"><div class="cc-name">${c.name}</div>${specialBadge}</div>
-        <span class="grade-pill ${c.grade}">${c.grade.toUpperCase()}</span>
+        <span class="grade-pill ${c.grade}">${gradeLabel(c.grade)}</span>
       </div>
-      <div class="cc-info">기본 할인 −${d}%${ex.length?` · 품목별 조정 ${ex.length}건`:''}</div>
+      <div class="cc-info">${infoTxt}</div>
       ${ex.length?`<div class="cc-ovr">${ex.map(([k,v])=>`${k} ${v>0?'추가−'+v+'%':'마크업+'+Math.abs(v)+'%'}`).join(' · ')}</div>`:''}
       <div class="cc-acts">
         <button class="btn btn-outline btn-sm" onclick="openEditC(${c.id})">편집</button>
@@ -2892,14 +2934,16 @@ function cForm(c){
       <td style="padding:4px;font-size:11px;color:var(--txt3)">%</td>
       <td style="padding:4px 8px;font-size:10px;color:var(--txt3)">${v>0?'추가할인':v<0?'⬆마크업':''}</td></tr>`;
   }).join('');
+  const opts=getCustGradeOptions();
+  const curGrade=c?.grade||'standard';
+  const hasCur=opts.some(o=>o.value===curGrade);
+  const inactiveLabel={silver:'Silver',gold:'Gold',vip:'VIP'}[curGrade]||gradeLabel(curGrade);
+  const optsHtml=opts.map(o=>`<option value="${o.value}"${curGrade===o.value?' selected':''}>${o.label}</option>`).join('')
+    +(hasCur?'':`<option value="${curGrade}" selected>${inactiveLabel} (비활성)</option>`);
   return `<div class="form-row"><div class="fg"><label class="flabel">업체명</label>
     <input class="finput" id="cf-n" value="${c?.name||''}" placeholder="업체명"></div>
     <div class="fg"><label class="flabel">등급</label>
-    <select class="fsel" id="cf-g">
-      <option value="silver"${c?.grade==='silver'?' selected':''}>Silver</option>
-      <option value="gold"${c?.grade==='gold'?' selected':''}>Gold</option>
-      <option value="vip"${c?.grade==='vip'?' selected':''}>VIP</option>
-    </select></div></div>
+    <select class="fsel" id="cf-g">${optsHtml}</select></div></div>
     <div style="font-size:11px;color:var(--txt2);margin-bottom:8px;font-weight:600">품목별 추가 할인율 (0 = 등급 기본 할인만)</div>
     <div style="max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
       <table style="width:100%;border-collapse:collapse">${rows}</table></div>`;
@@ -3350,8 +3394,6 @@ function renderSpCustCards(){
     if(copyBtn)copyBtn.style.display='none';
   }
   const isAdm=role==='superadmin'||role==='admin';
-  const colors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
-  const labels={silver:'SILVER',gold:'GOLD',vip:'VIP'};
   // 등급 필터 적용
   const list=spGradeFilter?ST.customers.filter(c=>(c.grade||'').toLowerCase()===spGradeFilter):ST.customers;
   if(!ST.customers.length){
@@ -3363,8 +3405,10 @@ function renderSpCustCards(){
     return;
   }
   wrap.innerHTML=list.map(c=>{
-    const col=colors[c.grade]||'#888';
+    const col=gradeColor(c.grade);
     const ovCnt=Object.keys(c.priceOverrides||{}).length;
+    const disc=gradeDiscount(c.grade);
+    const discTxt=c.grade==='standard'?`표준단가 적용${ovCnt?' · '+ovCnt+'개 품목에 직접 단가 적용':''}`:`기본 할인 −${disc}%${ovCnt?' · '+ovCnt+'개 품목에 직접 단가 적용':''}`;
     return `<div style="width:100%;box-sizing:border-box;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:box-shadow .15s;box-shadow:var(--shadow)"
       onclick="pickCust(${c.id})"
       onmouseover="this.style.boxShadow='var(--shadow-md)';this.style.borderColor='var(--border2)'"
@@ -3372,10 +3416,10 @@ function renderSpCustCards(){
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-size:15px;font-weight:700;color:var(--txt)">${c.name}</span>
-          <span style="padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col}">${labels[c.grade]||c.grade}</span>
+          <span style="padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col}">${gradeLabel(c.grade)}</span>
           ${ovCnt?`<span style="font-size:11px;color:var(--red);font-weight:600">직접단가 ${ovCnt}개 품목</span>`:'<span style="font-size:11px;color:var(--txt3)">등급할인 자동 적용</span>'}
         </div>
-        <div style="font-size:12px;color:var(--txt3);margin-top:4px">기본 할인 −${ST.grades[c.grade]?.discount||0}%${ovCnt?' · '+ovCnt+'개 품목에 직접 단가 적용':''}</div>
+        <div style="font-size:12px;color:var(--txt3);margin-top:4px">${discTxt}</div>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0" onclick="event.stopPropagation()">
         <button class="btn btn-gold btn-sm" onclick="pickCust(${c.id})" style="font-size:12px;padding:7px 16px">단가표 보기</button>
@@ -3471,19 +3515,27 @@ function updSpCustInfo(){
   document.getElementById('sp-cust-info').style.display='flex';
   document.getElementById('sp-cust-name').textContent=c.name;
   const badge=document.getElementById('sp-grade-badge');
-  const colors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
-  const col=colors[c.grade]||'#888';
-  badge.textContent=c.grade.toUpperCase();
+  const col=gradeColor(c.grade);
+  badge.textContent=gradeLabel(c.grade);
   badge.style.background=col+'22';badge.style.color=col;badge.style.border='1.5px solid '+col;
-  const d=ST.grades[c.grade]?.discount||0;
-  document.getElementById('sp-grade-txt').textContent=`기본 할인 −${d}% | 빨간색=직접 지정 단가`;
+  const d=gradeDiscount(c.grade);
+  document.getElementById('sp-grade-txt').textContent=c.grade==='standard'?'표준단가 적용 | 빨간색=직접 지정 단가':`기본 할인 −${d}% | 빨간색=직접 지정 단가`;
 }
 function changeCustGrade(){
   const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
-  const grades=['silver','gold','vip'];
-  const labels={silver:'🥈 Silver(−3%)',gold:'🥇 Gold(−5%)',vip:'💎 VIP(−8%)'};
+  const opts=getCustGradeOptions();
+  const icons={standard:'⚪',silver:'🥈',gold:'🥇',vip:'💎'};
+  const hasCur=opts.some(o=>o.value===c.grade);
+  if(!hasCur&&c.grade){
+    opts.push({value:c.grade,label:gradeLabel(c.grade)+' (비활성)',discount:ST.grades[c.grade]?.discount||0,inactive:true});
+  }
+  const mkLabel=o=>{
+    const ic=icons[o.value]||'⚪';
+    const dt=o.value==='standard'?'할인 없음':`−${o.discount}%`;
+    return `${ic} ${o.label}(${dt})`;
+  };
   openM('등급 변경',`<div style="display:flex;flex-direction:column;gap:10px;padding:8px 0">
-    ${grades.map(g=>`<button onclick="setSpGrade('${g}')" class="btn ${c.grade===g?'btn-gold':'btn-outline'}" style="justify-content:center;padding:12px">${labels[g]}</button>`).join('')}
+    ${opts.map(o=>`<button onclick="setSpGrade('${o.value}')" class="btn ${c.grade===o.value?'btn-gold':'btn-outline'}" style="justify-content:center;padding:12px${o.inactive?';opacity:.6':''}">${mkLabel(o)}</button>`).join('')}
   </div>`,[{label:'닫기',cls:'btn-outline',fn:closeM}]);
 }
 function setSpGrade(g){
@@ -3493,12 +3545,12 @@ function setSpGrade(g){
 // 카드 목록에서 삭제 (팝업)
 function confirmDelCust(id){
   const c=ST.customers.find(x=>x.id===id);if(!c)return;
-  const col={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'}[c.grade]||'#888';
+  const col=gradeColor(c.grade);
   openM('고객사 삭제',
     `<div style="text-align:center;padding:8px 0">
       <div style="font-size:32px;margin-bottom:12px">🗑</div>
       <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:8px">
-        <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col};margin-right:6px">${(c.grade||'').toUpperCase()}</span>${c.name}
+        <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col};margin-right:6px">${gradeLabel(c.grade)}</span>${c.name}
       </div>
       <div style="font-size:13px;color:var(--txt2);margin-bottom:4px">고객사를 삭제하시겠습니까?</div>
       <div style="font-size:12px;color:var(--red)">삭제 후 복구할 수 없습니다.</div>
@@ -3512,12 +3564,12 @@ function confirmDelCust(id){
 }
 function delSpecialCust(){
   const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
-  const col={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'}[c.grade]||'#888';
+  const col=gradeColor(c.grade);
   openM('고객사 삭제',
     `<div style="text-align:center;padding:8px 0">
       <div style="font-size:32px;margin-bottom:12px">🗑</div>
       <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:8px">
-        <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col};margin-right:6px">${(c.grade||'').toUpperCase()}</span>${c.name}
+        <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col};margin-right:6px">${gradeLabel(c.grade)}</span>${c.name}
       </div>
       <div style="font-size:13px;color:var(--txt2);margin-bottom:4px">고객사를 삭제하시겠습니까?</div>
       <div style="font-size:12px;color:var(--red)">삭제 후 복구할 수 없습니다.</div>
@@ -3535,8 +3587,14 @@ function delSpecialCust(){
 }
 function openAddCust(){
   editCid=null;
+  const opts=getCustGradeOptions();
+  const hasGold=opts.some(o=>o.value==='gold');
+  const optsHtml=opts.map((o,i)=>{
+    const sel=hasGold?(o.value==='gold'?' selected':''):(i===0?' selected':'');
+    return `<option value="${o.value}"${sel}>${o.label}</option>`;
+  }).join('');
   openM('고객사 추가',`<div class="fg"><label class="flabel">고객사명</label><input class="finput" id="cn" placeholder="예: LOKWARD" style="width:220px"></div>
-    <div class="fg"><label class="flabel">등급</label><select class="fsel" id="cg"><option value="silver">Silver</option><option value="gold" selected>Gold</option><option value="vip">VIP</option></select></div>`,
+    <div class="fg"><label class="flabel">등급</label><select class="fsel" id="cg">${optsHtml}</select></div>`,
     [{label:'추가',cls:'btn-gold',fn:()=>{
       const name=document.getElementById('cn').value.trim();
       if(!name){toast('고객사명 필요','error');return;}
@@ -3550,7 +3608,7 @@ function openAddCust(){
 function getSpPrice(c,f,field){
   const ov=(c.priceOverrides||{})[f.name];
   if(ov&&typeof ov==='object'&&ov[field]!=null)return{price:ov[field],direct:true};
-  const d=ST.grades[c.grade]?.discount||0;
+  const d=gradeDiscount(c.grade);
   const p=f[field];if(!p)return{price:null,direct:false};
   return{price:applyD(p,d),direct:false};
 }
@@ -3617,22 +3675,24 @@ function renderSpecialTbl(){
 function restoreSpPrice(fid,field){
   const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
   const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-  const d=ST.grades[c.grade]?.discount||0;
+  const d=gradeDiscount(c.grade);
   const basePrice=f[field]?applyD(f[field],d):null;
   const fieldLabel={mg:'8%MG',baek:'백/백아이',muji:'무지',rib:'부속(RIB)'}[field]||field;
   const curPrice=(c.priceOverrides||{})[f.name]?.[field];
+  const gLbl=gradeLabel(c.grade);
+  const restoreLabel=c.grade==='standard'?`표준단가`:`${gLbl} 등급 할인가`;
   openM('직접 단가 복원',
     `<div style="font-size:13px;color:var(--txt);line-height:2">
       <b>${f.name}</b> — ${fieldLabel}<br>
       <span style="color:var(--red);font-weight:700">직접 지정가: ${curPrice?curPrice.toLocaleString()+'원':'—'}</span><br>
-      <span style="color:var(--txt2)">→ ${c.grade.toUpperCase()} 등급 할인가: <b>${basePrice?basePrice.toLocaleString()+'원':'—'}</b></span><br><br>
-      <span style="font-size:12px;color:var(--txt2)">직접 지정 단가를 삭제하고 등급 할인가로 복원하시겠습니까?</span>
+      <span style="color:var(--txt2)">→ ${restoreLabel}: <b>${basePrice?basePrice.toLocaleString()+'원':'—'}</b></span><br><br>
+      <span style="font-size:12px;color:var(--txt2)">직접 지정 단가를 삭제하고 ${c.grade==='standard'?'표준단가':'등급 할인가'}로 복원하시겠습니까?</span>
     </div>`,
     [{label:'복원',cls:'btn-gold',fn:()=>{
       if(!c.priceOverrides)c.priceOverrides={};
       if(c.priceOverrides[f.name])delete c.priceOverrides[f.name][field];
       if(c.priceOverrides[f.name]&&!Object.keys(c.priceOverrides[f.name]).length)delete c.priceOverrides[f.name];
-      saveCustomersDirty();renderSpecialTbl();closeM();toast('등급 할인가로 복원됨 ✓','success');
+      saveCustomersDirty();renderSpecialTbl();closeM();toast('복원됨 ✓','success');
     }},{label:'취소',cls:'btn-outline',fn:closeM}]
   );
 }
@@ -3645,16 +3705,17 @@ function openSpSlidePanel(fid){
   spSlideFid=fid;
   if(!c.priceOverrides)c.priceOverrides={};
   const ov=c.priceOverrides[f.name]||{};
-  const d=ST.grades[c.grade]?.discount||0;
-  const gradeLabel=c.grade.toUpperCase();
+  const d=gradeDiscount(c.grade);
+  const gLbl=gradeLabel(c.grade);
   // 표준가 + 할인가 정보
   const priceInfo=field=>{
     const std=f[field];
     if(!std)return '';
     const discounted=applyD(std,d);
+    const discLabel=c.grade==='standard'?'표준가 적용':`${gLbl}할인가`;
     return `<div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
       <span style="font-size:10px;color:var(--txt3)">표준가 <b style="color:var(--txt2)">${std.toLocaleString()}원</b></span>
-      <span style="font-size:10px;color:var(--txt3)">${gradeLabel}할인가 <b style="color:var(--blue)">${discounted.toLocaleString()}원</b></span>
+      <span style="font-size:10px;color:var(--txt3)">${discLabel} <b style="color:var(--blue)">${discounted.toLocaleString()}원</b></span>
     </div>`;
   };
   document.getElementById('sp-slide-title').textContent=`${f.name} — ${c.name} 직접 단가`;
