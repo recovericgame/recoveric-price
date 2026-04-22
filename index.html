@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.107</title>
+<title>RECOVERIC 단가관리 시스템 v4.108</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -553,7 +553,7 @@ body #cap-preview.cap-offscreen{display:block!important;position:fixed!important
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.107</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.108</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2883,20 +2883,41 @@ function doCapture(){
       capBlob=blob;
       const url=URL.createObjectURL(blob);
       const img=document.createElement('img');
-      img.src=url;
       img.id='cap-result-img';
       img.alt='RECOVERIC 단가표';
       img.title='클릭 후 Ctrl+C 로 복사';
       img.style.cssText='max-width:100%;border-radius:8px;border:1px solid #dde;display:block;cursor:pointer;margin:0 auto';
       img.onclick=selectCapImg;
+      // 이미지 load 완료 후에 imgWrap 표시 (stale frame 방지)
+      img.addEventListener('load',()=>{
+        imgWrap.style.display='block';
+        if(loading)loading.classList.remove('on');
+        restoreTarget();
+        if(dlBtn)dlBtn.disabled=false;
+        if(cpBtn)cpBtn.disabled=false;
+        // 강제 리페인트 — Chrome stale frame 이슈 회피
+        const box=document.querySelector('#capture-overlay .cap-box');
+        if(box){
+          // 모달 박스를 2프레임 후 스타일 토글하여 페인트 강제
+          requestAnimationFrame(()=>{
+            box.style.transform='translateZ(0)';
+            requestAnimationFrame(()=>{
+              box.style.transform='';
+            });
+          });
+        }
+        setTimeout(()=>selectCapImg(),50);
+      },{once:true});
+      img.addEventListener('error',()=>{
+        if(loading)loading.classList.remove('on');
+        restoreTarget();
+        if(dlBtn)dlBtn.disabled=false;
+        if(cpBtn)cpBtn.disabled=false;
+        toast('이미지 로드 실패','error');
+      },{once:true});
       imgWrap.innerHTML='';
       imgWrap.appendChild(img);
-      imgWrap.style.display='block';
-      if(loading)loading.classList.remove('on');
-      restoreTarget();
-      if(dlBtn)dlBtn.disabled=false;
-      if(cpBtn)cpBtn.disabled=false;
-      img.addEventListener('load',()=>{setTimeout(()=>selectCapImg(),50);},{once:true});
+      img.src=url;  // appendChild 후 src 설정 — load 이벤트 보장
     },'image/png');
   }).catch(e=>{
     if(loading)loading.classList.remove('on');
