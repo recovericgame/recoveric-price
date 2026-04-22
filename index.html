@@ -3,13 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.97</title>
+<title>RECOVERIC 단가관리 시스템 v4.87</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<!-- Firebase Web SDK (compat mode) for Storage -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" onerror="window._fbSDKFailed=true;console.warn('[FB] app SDK 로드 실패')"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js" onerror="window._fbSDKFailed=true;console.warn('[FB] storage SDK 로드 실패')"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -20,6 +17,7 @@
   --gold:#c8900a;--gold-lt:#fff7e6;--gold-bd:#ffd980;
   --silver:#5570a0;--silver-lt:#f0f4ff;
   --vip:#7040b8;--vip-lt:#f5f0ff;
+  --std-grade:#6b7280;--std-grade-lt:#f3f4f6;
   --promo:#2060e0;--promo-lt:#eff4ff;
   --standard:#0e9060;--standard-lt:#effaf4;
   --premium:#c07010;--premium-lt:#fff8ee;
@@ -120,6 +118,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .grade-pill.silver{background:var(--silver-lt);color:var(--silver)}
 .grade-pill.gold{background:var(--gold-lt);color:var(--gold)}
 .grade-pill.vip{background:var(--vip-lt);color:var(--vip)}
+.grade-pill.standard{background:var(--std-grade-lt);color:var(--std-grade)}
 .disc-txt{font-size:12px;color:var(--txt2)}
 
 /* ─── TABLE ─── */
@@ -250,70 +249,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 /* Image result box */
 #cap-img-wrap{display:none;text-align:center;padding:16px 0}
 #cap-img-wrap img{max-width:100%;border:1px solid #dde;border-radius:8px}
-/* 캡처 중 - 미리보기를 화면 밖으로 숨김 (html2canvas는 읽을 수 있지만 사용자 눈에는 안 보임) */
-#cap-preview.cap-offscreen{position:absolute!important;left:-99999px!important;top:0;width:900px;visibility:visible;pointer-events:none}
-/* 로딩 스피너 */
-#cap-loading{display:none;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:16px;color:#5a6b8a}
-#cap-loading.on{display:flex}
-.cap-spinner{width:44px;height:44px;border:3px solid #e8ecf4;border-top-color:#1a2c4e;border-radius:50%;animation:capSpin .9s linear infinite}
-@keyframes capSpin{to{transform:rotate(360deg)}}
-.cap-loading-text{font-size:13px;font-weight:600;letter-spacing:.3px}
-.cap-loading-sub{font-size:11px;color:#9aa0b8;margin-top:-8px}
-
-/* ─── COLOR IMAGE MANAGEMENT ─── */
-#view-color{padding:16px 20px;gap:12px}
-.color-toolbar{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--shadow)}
-.color-progress{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg3);border-radius:20px;font-size:12px;font-weight:700;color:var(--txt2)}
-.color-progress .color-progress-bar{width:90px;height:6px;background:#e5e8f0;border-radius:3px;overflow:hidden}
-.color-progress .color-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),#e0b040);transition:width .3s}
-.color-tbl-wrap{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
-.color-tbl{width:100%;border-collapse:collapse}
-.color-tbl th{background:var(--sidebar);color:#fff;padding:10px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.5px}
-.color-tbl td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
-.color-tbl tr.color-sect td{background:var(--bg3);color:var(--txt2);font-size:11px;font-weight:800;letter-spacing:1px;padding:6px 14px}
-.color-tbl tr:hover:not(.color-sect) td{background:rgba(200,144,10,.05)}
-.color-thumb{width:46px;height:46px;border-radius:8px;border:1.5px solid var(--border);object-fit:cover;background:#f8f9fd;display:block}
-.color-thumb-empty{width:46px;height:46px;border-radius:8px;border:1.5px dashed var(--border2);background:#fafbfe;display:flex;align-items:center;justify-content:center;color:var(--txt3);font-size:16px}
-.color-url-input{width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:7px;font-size:12px;font-family:'Outfit',sans-serif;background:#fff;color:var(--txt);transition:.15s}
-.color-url-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,144,10,.12)}
-.color-url-input.ok{border-color:#16a34a;background:#f0fdf4}
-.color-url-input.err{border-color:var(--red);background:#fff1f1}
-.color-status{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:13px;font-weight:700}
-.color-status.ok{background:#dcfce7;color:#16a34a}
-.color-status.err{background:#fee2e2;color:var(--red)}
-.color-status.empty{background:#e5e8f0;color:var(--txt3)}
-.color-status.loading{background:#fef3c7;color:#b45309}
-.color-bulk-box{background:#fff9ee;border:1.5px dashed var(--gold);border-radius:10px;padding:14px 16px;font-size:12px;color:var(--txt2);line-height:1.6}
-.color-bulk-textarea{width:100%;min-height:100px;padding:10px;border:1.5px solid var(--border2);border-radius:8px;font-family:'Outfit',monospace;font-size:12px;resize:vertical;margin-top:8px}
-
-/* ─── COLOR SEND (컬러 발송) ─── */
-#view-colorsend{padding:16px 20px;gap:12px}
-.cs-list-wrap{flex:1;overflow-y:auto;min-height:0;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;box-shadow:var(--shadow)}
-.cs-sect-header{background:var(--bg3);color:var(--txt2);font-size:11px;font-weight:800;letter-spacing:1px;padding:8px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2}
-.cs-row{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--border);transition:.15s}
-.cs-row:hover{background:rgba(200,144,10,.04)}
-.cs-row:last-child{border-bottom:none}
-.cs-thumb{width:52px;height:52px;border-radius:8px;border:1.5px solid var(--border);object-fit:cover;background:#f8f9fd;flex-shrink:0;cursor:pointer;transition:.15s}
-.cs-thumb:hover{border-color:var(--gold);transform:scale(1.05)}
-.cs-thumb-empty{width:52px;height:52px;border-radius:8px;border:1.5px dashed var(--border2);background:#fafbfe;display:flex;align-items:center;justify-content:center;color:var(--txt3);font-size:18px;flex-shrink:0}
-.cs-info{flex:1;min-width:0}
-.cs-name{font-size:14px;font-weight:700;color:var(--txt)}
-.cs-meta{font-size:11px;color:var(--txt3);margin-top:2px}
-.cs-actions{display:flex;gap:6px;flex-shrink:0}
-.cs-empty-notice{padding:50px 20px;text-align:center;color:var(--txt3)}
-.cs-empty-notice .cs-empty-ic{font-size:36px;margin-bottom:10px;opacity:.4}
-.cs-status-bar{background:linear-gradient(135deg,#fef7e6 0%,#fff9ee 100%);border:2px solid var(--gold);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;flex-shrink:0;box-shadow:0 4px 14px rgba(200,144,10,.12);transition:.2s}
-.cs-status-bar.empty{background:var(--bg2);border-color:var(--border2);border-style:dashed;box-shadow:none;opacity:.7}
-.cs-status-ic{width:40px;height:40px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.cs-status-bar.empty .cs-status-ic{background:var(--border2);color:var(--txt3)}
-.cs-status-text{flex:1;min-width:0}
-.cs-status-title{font-size:13px;font-weight:700;color:var(--txt)}
-.cs-status-hint{font-size:11px;color:var(--txt2);margin-top:2px}
-.cs-img-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;flex-direction:column;gap:14px}
-.cs-img-modal.open{display:flex}
-.cs-img-modal img{max-width:92vw;max-height:82vh;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
-.cs-img-modal-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.12);border:none;color:#fff;width:44px;height:44px;border-radius:50%;font-size:22px;cursor:pointer;backdrop-filter:blur(8px)}
-.cs-img-modal-title{color:#fff;font-size:15px;font-weight:700}
 
 /* ─── CUSTOMERS ─── */
 .cust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
@@ -549,7 +484,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.97</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.87</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -577,22 +512,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
         <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         원단 소개
       </button>
-      <button class="nav-btn" id="nb-colorsend" onclick="sv('colorsend',this)">
-        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        컬러 발송
-      </button>
-      <button class="nav-btn" id="nb-urlsend" onclick="sv('urlsend',this)">
-        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-        원단 URL 발송
-      </button>
       <div class="nav-section" id="ns-admin">관리</div>
       <button class="nav-btn" id="nb-admin" onclick="sv('admin',this)">
         <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/></svg>
         관리 및 설정
-      </button>
-      <button class="nav-btn" id="nb-color" onclick="sv('color',this)">
-        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        컬러 이미지 관리
       </button>
       <button class="nav-btn" id="nb-sheets" onclick="sv('sheets',this)">
         <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -959,144 +882,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       </div>
     </div>
 
-    <!-- ══ 컬러 발송 ══ -->
-    <div class="view" id="view-colorsend">
-      <div class="view-header">
-        <div class="view-title">컬러 <span>발송</span></div>
-      </div>
-      <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow)">
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <span style="font-size:12px;color:var(--txt2);font-weight:600">조직</span>
-          <select id="cs-cat-filter" onchange="renderColorSendList()" class="filter-select" style="min-width:100px">
-            <option value="">전체</option>
-          </select>
-        </div>
-        <div style="position:relative;flex:1;min-width:160px;max-width:280px">
-          <input type="text" id="cs-search" class="search-input" placeholder="원단명 검색..." oninput="renderColorSendList()" autocomplete="off" style="padding-left:12px">
-        </div>
-        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2);cursor:pointer;user-select:none">
-          <input type="checkbox" id="cs-only-registered" onchange="renderColorSendList()" checked>
-          <span>등록된 원단만</span>
-        </label>
-      </div>
-      <div class="cs-list-wrap" id="cs-list-wrap"></div>
-      <!-- 하단 고정: 마지막 복사 안내 -->
-      <div class="cs-status-bar empty" id="cs-status-bar">
-        <div class="cs-status-ic">📋</div>
-        <div class="cs-status-text">
-          <div class="cs-status-title" id="cs-status-title">복사된 이미지 없음</div>
-          <div class="cs-status-hint" id="cs-status-hint">원단 옆 [📋 이미지] 버튼을 클릭하면 여기에 상태가 표시됩니다.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 컬러 이미지 확대 보기 모달 -->
-    <div class="cs-img-modal" id="cs-img-modal" onclick="if(event.target.id==='cs-img-modal')closeCsImgModal()">
-      <button class="cs-img-modal-close" onclick="closeCsImgModal()">✕</button>
-      <div class="cs-img-modal-title" id="cs-img-modal-title"></div>
-      <img id="cs-img-modal-img" src="" alt="">
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-gold btn-sm" onclick="copyCsImageFromModal()">📋 이미지 복사</button>
-      </div>
-    </div>
-
-    <!-- ══ 원단 URL 발송 ══ -->
-    <div class="view" id="view-urlsend">
-      <div class="view-header">
-        <div class="view-title">원단 URL <span>발송</span></div>
-      </div>
-      <div style="background:linear-gradient(135deg,#fef7e6 0%,#fff9ee 100%);border:1.5px solid var(--gold);border-radius:10px;padding:12px 16px;font-size:12.5px;color:var(--txt);line-height:1.7;margin-bottom:14px">
-        <b style="color:#8b6100">🔗 원단 페이지 URL 빠른 발송</b><br>
-        recoveric.com 각 원단 상세 페이지 링크를 원클릭으로 복사할 수 있습니다.
-        고객사에게 카톡 또는 메신저로 원단 페이지를 공유할 때 사용하세요.
-      </div>
-      <!-- 필터 툴바 -->
-      <div class="cs-toolbar">
-        <input type="text" id="us-search" placeholder="원단명 검색..." class="cs-search-input" oninput="renderUrlSendList()">
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <span style="font-size:12px;color:var(--txt2);font-weight:600">조직</span>
-          <select id="us-cat-filter" onchange="renderUrlSendList()" class="filter-select" style="min-width:100px">
-            <option value="">전체</option>
-          </select>
-        </div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--txt2);cursor:pointer">
-          <input type="checkbox" id="us-only-registered" onchange="renderUrlSendList()" checked>
-          URL 등록된 것만
-        </label>
-      </div>
-      <!-- 목록 -->
-      <div id="us-list-wrap" class="cs-list-wrap"></div>
-      <!-- 진행 상태 (하단 고정) -->
-      <div id="us-statusbar" class="cs-statusbar" style="display:none">
-        <span id="us-status-text">대기 중</span>
-      </div>
-    </div>
-
-    <!-- ══ 컬러 이미지 관리 ══ -->
-    <div class="view" id="view-color">
-      <div class="view-header">
-        <div class="view-title">컬러 이미지 <span>관리</span></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-outline btn-sm" onclick="openColorBulkPaste()">📋 엑셀 붙여넣기</button>
-          <button class="btn btn-gold btn-sm" onclick="applyDefaultColorUrls()" title="기본 등록된 6개 원단의 URL을 일괄 적용">⚡ 기본값 일괄 적용</button>
-        </div>
-      </div>
-      <div style="background:linear-gradient(135deg,#fef7e6 0%,#fff9ee 100%);border:1.5px solid var(--gold);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--txt);line-height:1.7;margin-bottom:4px">
-        <b style="color:#8b6100">📷 이미지 업로드 방식 권장</b><br>
-        각 원단의 <b>📷 업로드</b> 버튼으로 이미지 파일을 직접 올리면, Firebase Storage에 저장되어 카톡에 <b>이미지 직접 복사</b>가 가능합니다.<br>
-        URL만 등록하는 방식은 recoveric.com 서버 CORS 설정 상태에 따라 이미지 복사가 실패할 수 있습니다.
-      </div>
-      <div class="color-toolbar">
-        <div class="color-progress">
-          <span id="color-progress-text">0 / 0 등록됨</span>
-          <div class="color-progress-bar"><div class="color-progress-fill" id="color-progress-fill" style="width:0%"></div></div>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <span style="font-size:12px;color:var(--txt2);font-weight:600">조직</span>
-          <select id="color-cat-filter" onchange="renderColorTable()" class="filter-select" style="min-width:100px">
-            <option value="">전체</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <span style="font-size:12px;color:var(--txt2);font-weight:600">상태</span>
-          <select id="color-status-filter" onchange="renderColorTable()" class="filter-select" style="min-width:110px">
-            <option value="">전체</option>
-            <option value="ok">✓ 등록 완료</option>
-            <option value="empty">○ 미등록</option>
-            <option value="err">⚠ URL 오류</option>
-          </select>
-        </div>
-        <div style="position:relative;flex:1;min-width:160px;max-width:260px">
-          <input type="text" id="color-search" class="search-input" placeholder="원단명 검색..." oninput="renderColorTable()" autocomplete="off">
-        </div>
-      </div>
-      <div style="flex:1;overflow-y:auto;min-height:0">
-        <div class="color-tbl-wrap">
-          <table class="color-tbl">
-            <colgroup>
-              <col style="width:20%"><!-- 원단명 -->
-              <col style="width:8%"><!-- 조직 -->
-              <col style="width:70px"><!-- 미리보기 -->
-              <col style="width:auto"><!-- URL 입력/업로드 상태 -->
-              <col style="width:60px"><!-- 상태 -->
-              <col style="width:170px"><!-- 액션 -->
-            </colgroup>
-            <thead>
-              <tr>
-                <th>원단명</th>
-                <th>조직</th>
-                <th style="text-align:center">미리보기</th>
-                <th>컬러 이미지 URL / 업로드</th>
-                <th style="text-align:center">상태</th>
-                <th style="text-align:center">관리</th>
-              </tr>
-            </thead>
-            <tbody id="color-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
 
     <div class="view" id="view-admin">
       <div class="view-header">
@@ -1271,18 +1056,28 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 <div id="slide-dim" class="slide-panel-dim" onclick="closeSlidePanelByDim()"></div>
 <div id="capture-overlay" onclick="capOutsideClick(event)">
   <div class="cap-box" id="cap-box">
-    <!-- 상단 타이틀 (닫기 버튼만) -->
+    <!-- 상단 타이틀 + 이미지생성 버튼 -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;border-bottom:1px solid #e8ecf4">
       <div style="font-size:13px;font-weight:700;color:#1a2035">단가표 이미지 캡처</div>
-      <button onclick="closeCapture()" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:20px;color:#9aa0b8;line-height:1;border-radius:6px" onmouseover="this.style.background='#f0f2f8'" onmouseout="this.style.background='none'">✕</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-gold btn-sm" id="cap-do-btn-top" onclick="doCapture()" style="font-size:12px;padding:7px 14px">
+          📸 이미지 생성
+        </button>
+        <button onclick="closeCapture()" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:20px;color:#9aa0b8;line-height:1;border-radius:6px" onmouseover="this.style.background='#f0f2f8'" onmouseout="this.style.background='none'">✕</button>
+      </div>
+    </div>
+    <!-- 등급 선택 바 -->
+    <div id="cap-grade-bar" style="display:flex;align-items:center;gap:12px;padding:10px 20px;background:#f7f9fd;border-bottom:1px solid #e8ecf4;flex-wrap:wrap">
+      <span style="font-size:12px;color:#5a6b8a;font-weight:600">캡처 등급 선택</span>
+      <div style="display:flex;gap:6px">
+        <button class="cap-grade-btn active" data-grade="" onclick="selectCapGrade(this,'')">표준 단가</button>
+        <button class="cap-grade-btn" data-grade="silver" onclick="selectCapGrade(this,'silver')">🥈 Silver</button>
+        <button class="cap-grade-btn" data-grade="gold" onclick="selectCapGrade(this,'gold')">🥇 Gold</button>
+        <button class="cap-grade-btn" data-grade="vip" onclick="selectCapGrade(this,'vip')">💎 VIP</button>
+      </div>
+      <span id="cap-grade-info" style="font-size:11px;color:#9aa0b8"></span>
     </div>
     <div class="cap-scroll-area">
-      <!-- 로딩 스피너 (캡처 중 표시) -->
-      <div id="cap-loading">
-        <div class="cap-spinner"></div>
-        <div class="cap-loading-text">이미지 생성 중...</div>
-        <div class="cap-loading-sub">잠시만 기다려주세요</div>
-      </div>
       <div id="cap-preview">
         <div class="cap-header">
           <div>
@@ -1333,11 +1128,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       <div id="cap-img-wrap"></div>
     </div>
     <div class="cap-actions">
-      <button class="btn btn-gold btn-sm" id="cap-dl-btn" onclick="capDownload()">⬇ 다운로드</button>
-      <button class="btn btn-outline btn-sm" id="cap-cp-btn" onclick="capCopy()">📋 클립보드 복사</button>
-      <span id="cap-cp-hint" style="font-size:11px;color:var(--txt2)">Ctrl+C 또는 📋 클릭 → 카톡 붙여넣기</span>
-      <button class="btn btn-outline btn-sm" id="cap-redo-btn" onclick="doCapture()" style="margin-left:auto">🔄 다시 생성</button>
-      <button class="btn btn-outline btn-sm" onclick="closeCapture()">닫기</button>
+      <button class="btn btn-gold btn-sm" id="cap-do-btn" onclick="doCapture()">📸 이미지 생성</button>
+      <button class="btn btn-outline btn-sm" id="cap-dl-btn" onclick="capDownload()" style="display:none">⬇ 다운로드</button>
+      <button class="btn btn-outline btn-sm" id="cap-cp-btn" onclick="capCopy()" style="display:none">📋 클립보드 복사</button>
+      <span id="cap-cp-hint" style="font-size:11px;color:var(--txt2);display:none">카톡에 바로 붙여넣기 가능합니다</span>
+      <button class="btn btn-outline btn-sm" onclick="closeCapture()" style="margin-left:auto">닫기</button>
     </div>
   </div>
 </div>
@@ -1363,91 +1158,47 @@ const LVNAMES={promo:'프로모션',standard:'Standard',premium:'Premium',luxury
 const LVCLS={promo:'promo',standard:'standard',premium:'premium',luxury:'luxury',apparel:'apparel'};
 const TAGS=['반팔','긴팔','민소매','크롭티','맨투맨','후드','후드집업','이너','반바지','칠부바지','긴바지','스커트','가디건','집업','자켓','트레이닝세트'];
 
-// 기본 컬러 이미지 URL 매핑 (원단명 → recoveric.com 컬러 전체보기 URL)
-const DEFAULT_COLOR_URLS={
-  '스포츠싱글':'https://recoveric.com/data/productall/1050_h?ver=2',
-  '노블싱글(스판)':'https://recoveric.com/data/productall/1020_h?ver=2',
-  '울트라싱글':'https://recoveric.com/data/productall/1010_h?ver=2',
-  '슈퍼싱글':'https://recoveric.com/data/productall/1030_h?ver=2',
-  '프리미엄싱글':'https://recoveric.com/data/productall/1040_h?ver=2',
-  'RS-400S':'https://recoveric.com/data/productall/1055_h?ver=2',
-};
-
-// [v4.97 신규] 원단 페이지 URL 매핑 (원단명 → recoveric.com 상품 페이지 URL)
-const DEFAULT_FABRIC_URLS={
-  '피그먼트반팔티':'https://recoveric.com/main/product.html?divi=apparel&item=shortt',
-  '스포츠싱글':'https://recoveric.com/main/product.html?divi=single&item=ss',
-  '노블싱글(스판)':'https://recoveric.com/main/product.html?divi=single&item=no',
-  '울트라싱글':'https://recoveric.com/main/product.html?divi=single&item=ul',
-  '슈퍼싱글':'https://recoveric.com/main/product.html?divi=single&item=su',
-  '프리미엄싱글':'https://recoveric.com/main/product.html?divi=single&item=pr',
-  'RS-400S':'https://recoveric.com/main/product.html?divi=single&item=rs400s',
-  'RS-500S':'https://recoveric.com/main/product.html?divi=single&item=rs500s',
-  'V싱글':'https://recoveric.com/main/product.html?divi=single&item=vsingle',
-  '이너폰테':'https://recoveric.com/main/product.html?divi=punto&item=in',
-  '실켓분또':'https://recoveric.com/main/product.html?divi=punto&item=sk',
-  '컴팩미니쭈리':'https://recoveric.com/main/product.html?divi=terry&item=cp',
-  '헤비M쭈리':'https://recoveric.com/main/product.html?divi=terry&item=hem',
-  '4S클래스':'https://recoveric.com/main/product.html?divi=terry&item=4s',
-  '다이아헤비쭈리':'https://recoveric.com/main/product.html?divi=terry&item=da',
-  'RS-850T':'https://recoveric.com/main/product.html?divi=terry&item=rs850t',
-  'RS-365T(3단)':'https://recoveric.com/main/product.html?divi=terry&item=rs365t',
-  'RS-080GT':'https://recoveric.com/main/product.html?divi=terry&item=rs080',
-  '5S클래스':'https://recoveric.com/main/product.html?divi=terry&item=5s',
-  'TDEG':'https://recoveric.com/main/product.html?divi=terry&item=tdeg',
-  'V쭈리':'https://recoveric.com/main/product.html?divi=terry&item=vterry',
-  '2X2GB골지':'https://recoveric.com/main/product.html?divi=corduroy&item=si',
-  'RS-헤비니트':'https://recoveric.com/main/product.html?divi=corduroy&item=rsh',
-  'RS-600GD':'https://recoveric.com/main/product.html?divi=double&item=rs600',
-  '물나염싱글':'https://recoveric.com/main/product.html?divi=tie&item=ms',
-  '물나염쭈리':'https://recoveric.com/main/product.html?divi=tie&item=mj',
-  '소프트후리스':'https://recoveric.com/main/product.html?divi=napping&item=sh',
-  'RS-800ZG':'https://recoveric.com/main/product.html?divi=napping&item=zp',
-  '365기모':'https://recoveric.com/main/product.html?divi=napping&item=rs365gm',
-  '노블PK':'https://recoveric.com/main/product.html?divi=pk&item=nos',
-};
-
 const DFABRICS=[
   // ── Promotion ──
-  {id:1,level:'promo',category:'싱글',name:'V싱글',mg:null,baek:4300,muji:4300,rib:7300,width:'70/74',weight:370,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔','이너'],url:'https://recoveric.com/main/product.html?divi=single&item=vsingle',description:null},
+  {id:1,level:'promo',category:'싱글',name:'V싱글',mg:null,baek:4300,muji:4300,rib:7300,width:'70/74',weight:370,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
   {id:2,level:'promo',category:'싱글',name:'면20수싱글',mg:null,baek:3600,muji:4300,rib:7400,width:'70/74',weight:340,c:100,p:0,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
-  {id:3,level:'promo',category:'싱글',name:'스포츠싱글',mg:5100,baek:5000,muji:5100,rib:7400,width:'62/64',weight:380,c:0,p:76,sp:0,r:24,tags:['반팔','긴팔','이너'],url:'https://recoveric.com/main/product.html?divi=single&item=ss',description:null},
-  {id:4,level:'promo',category:'싱글',name:'프리미엄싱글',mg:5500,baek:5700,muji:5800,rib:8400,width:'72/74',weight:420,c:55,p:45,sp:0,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=single&item=pr',description:null},
-  {id:5,level:'promo',category:'싱글',name:'슈퍼싱글',mg:5500,baek:5500,muji:5700,rib:8400,width:'72/74',weight:430,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=single&item=su',description:null},
-  {id:6,level:'promo',category:'싱글',name:'울트라싱글',mg:6000,baek:6200,muji:6300,rib:9300,width:'72/74',weight:500,c:66,p:34,sp:0,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=single&item=ul',description:null},
+  {id:3,level:'promo',category:'싱글',name:'스포츠싱글',mg:5100,baek:5000,muji:5100,rib:7400,width:'62/64',weight:380,c:0,p:76,sp:0,r:24,tags:['반팔','긴팔','이너'],url:null,description:null},
+  {id:4,level:'promo',category:'싱글',name:'프리미엄싱글',mg:5500,baek:5700,muji:5800,rib:8400,width:'72/74',weight:420,c:55,p:45,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:5,level:'promo',category:'싱글',name:'슈퍼싱글',mg:5500,baek:5500,muji:5700,rib:8400,width:'72/74',weight:430,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:6,level:'promo',category:'싱글',name:'울트라싱글',mg:6000,baek:6200,muji:6300,rib:9300,width:'72/74',weight:500,c:66,p:34,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
   {id:7,level:'promo',category:'싱글',name:'쉬폰싱글',mg:null,baek:4300,muji:4300,rib:7400,width:'60/62',weight:360,c:0,p:100,sp:0,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
-  {id:8,level:'promo',category:'양면',name:'이너폰테',mg:null,baek:4900,muji:5000,rib:7400,width:'62/64',weight:330,c:23,p:77,sp:0,r:0,tags:['이너','반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=punto&item=in',description:null},
-  {id:9,level:'promo',category:'양면',name:'RS-600GD',mg:6900,baek:7000,muji:7200,rib:9300,width:'76/78',weight:600,c:35,p:65,sp:0,r:0,tags:['맨투맨','후드','긴팔'],url:'https://recoveric.com/main/product.html?divi=double&item=rs600',description:null},
-  {id:10,level:'promo',category:'쭈리',name:'V쭈리',mg:null,baek:6500,muji:6500,rib:8300,width:'70/72',weight:570,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:'https://recoveric.com/main/product.html?divi=terry&item=vterry',description:null},
-  {id:11,level:'promo',category:'쭈리',name:'RS-365T(3단)',mg:7300,baek:7400,muji:7600,rib:9300,width:'74/76',weight:620,c:43,p:57,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:'https://recoveric.com/main/product.html?divi=terry&item=rs365t',description:null},
-  {id:12,level:'promo',category:'쭈리',name:'컴팩미니쭈리',mg:6200,baek:6300,muji:6500,rib:8400,width:'74/76',weight:500,c:30,p:70,sp:0,r:0,tags:['맨투맨','후드'],url:'https://recoveric.com/main/product.html?divi=terry&item=cp',description:null},
-  {id:13,level:'promo',category:'쭈리',name:'헤비M쭈리',mg:null,baek:6400,muji:6500,rib:9500,width:'64/66',weight:500,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드','후드집업','트레이닝세트'],url:'https://recoveric.com/main/product.html?divi=terry&item=hem',description:null},
+  {id:8,level:'promo',category:'양면',name:'이너폰테',mg:null,baek:4900,muji:5000,rib:7400,width:'62/64',weight:330,c:23,p:77,sp:0,r:0,tags:['이너','반팔','긴팔'],url:null,description:null},
+  {id:9,level:'promo',category:'양면',name:'RS-600GD',mg:6900,baek:7000,muji:7200,rib:9300,width:'76/78',weight:600,c:35,p:65,sp:0,r:0,tags:['맨투맨','후드','긴팔'],url:null,description:null},
+  {id:10,level:'promo',category:'쭈리',name:'V쭈리',mg:null,baek:6500,muji:6500,rib:8300,width:'70/72',weight:570,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
+  {id:11,level:'promo',category:'쭈리',name:'RS-365T(3단)',mg:7300,baek:7400,muji:7600,rib:9300,width:'74/76',weight:620,c:43,p:57,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
+  {id:12,level:'promo',category:'쭈리',name:'컴팩미니쭈리',mg:6200,baek:6300,muji:6500,rib:8400,width:'74/76',weight:500,c:30,p:70,sp:0,r:0,tags:['맨투맨','후드'],url:null,description:null},
+  {id:13,level:'promo',category:'쭈리',name:'헤비M쭈리',mg:null,baek:6400,muji:6500,rib:9500,width:'64/66',weight:500,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드','후드집업','트레이닝세트'],url:null,description:null},
   {id:14,level:'promo',category:'쭈리',name:'헤비M쭈리(8%)',mg:5800,baek:null,muji:null,rib:9500,width:'64/66',weight:460,c:23,p:77,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
   {id:15,level:'promo',category:'후라이스',name:'쉬폰후라이스',mg:null,baek:7800,muji:7800,rib:7400,width:'60/62',weight:490,c:0,p:98,sp:2,r:0,tags:['반팔','긴팔'],url:null,description:null},
-  {id:35,level:'promo',category:'쭈리',name:'4S클래스',mg:9400,baek:9600,muji:9800,rib:9300,width:'70/74',weight:780,c:68,p:32,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:'https://recoveric.com/main/product.html?divi=terry&item=4s',description:null},
+  {id:35,level:'promo',category:'쭈리',name:'4S클래스',mg:9400,baek:9600,muji:9800,rib:9300,width:'70/74',weight:780,c:68,p:32,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
   // ── Standard ──
-  {id:16,level:'standard',category:'물나염',name:'물나염싱글',mg:null,baek:null,muji:8400,rib:9300,width:'72/74',weight:420,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=tie&item=ms',description:null},
-  {id:17,level:'standard',category:'쭈리',name:'RS-080GT',mg:10800,baek:11200,muji:11400,rib:9300,width:'74/76',weight:820,c:62,p:38,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:'https://recoveric.com/main/product.html?divi=terry&item=rs080',description:null},
-  {id:18,level:'standard',category:'쭈리',name:'TDEG',mg:8300,baek:8300,muji:8700,rib:9300,width:'70/72',weight:640,c:49,p:51,sp:0,r:0,tags:['맨투맨','후드'],url:'https://recoveric.com/main/product.html?divi=terry&item=tdeg',description:null},
-  {id:19,level:'standard',category:'기모',name:'365기모',mg:8700,baek:9000,muji:9100,rib:9300,width:'70/72',weight:660,c:40,p:60,sp:0,r:0,tags:['맨투맨','후드','긴바지','트레이닝세트'],url:'https://recoveric.com/main/product.html?divi=napping&item=rs365gm',description:null},
+  {id:16,level:'standard',category:'몰나염',name:'몰나염싱글',mg:null,baek:null,muji:8400,rib:9300,width:'72/74',weight:420,c:35,p:65,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:17,level:'standard',category:'쭈리',name:'RS-080GT',mg:10800,baek:11200,muji:11400,rib:9300,width:'74/76',weight:820,c:62,p:38,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
+  {id:18,level:'standard',category:'쭈리',name:'TDEG',mg:8300,baek:8300,muji:8700,rib:9300,width:'70/72',weight:640,c:49,p:51,sp:0,r:0,tags:['맨투맨','후드'],url:null,description:null},
+  {id:19,level:'standard',category:'기모',name:'365기모',mg:8700,baek:9000,muji:9100,rib:9300,width:'70/72',weight:660,c:40,p:60,sp:0,r:0,tags:['맨투맨','후드','긴바지','트레이닝세트'],url:null,description:null},
   // ── Premium ──
-  {id:20,level:'premium',category:'싱글',name:'RS-400S',mg:7500,baek:7800,muji:7900,rib:9500,width:'72/74',weight:420,c:55,p:45,sp:0,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=single&item=rs400s',description:null},
-  {id:21,level:'premium',category:'싱글',name:'RS-500S',mg:9400,baek:9600,muji:9700,rib:9500,width:'72/74',weight:500,c:66,p:34,sp:0,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=single&item=rs500s',description:null},
-  {id:22,level:'premium',category:'싱글',name:'노블싱글(스판)',mg:null,baek:7300,muji:7400,rib:9500,width:'62/64',weight:320,c:63,p:33,sp:4,r:0,tags:['반팔','긴팔','이너'],url:'https://recoveric.com/main/product.html?divi=single&item=no',description:null},
-  {id:23,level:'premium',category:'PK',name:'노블PK',mg:null,baek:7800,muji:7900,rib:1900,ribUnit:'EA',width:'60/62',weight:420,c:27,p:70,sp:3,r:0,tags:['반팔','긴팔'],url:'https://recoveric.com/main/product.html?divi=pk&item=nos',description:null},
-  {id:24,level:'premium',category:'골지',name:'2X2GB골지',mg:null,baek:7800,muji:7900,rib:null,width:'60/62',weight:420,c:74,p:26,sp:0,r:0,tags:['이너'],url:'https://recoveric.com/main/product.html?divi=corduroy&item=si',description:null},
-  {id:25,level:'premium',category:'양면',name:'실켓분또',mg:null,baek:8800,muji:9100,rib:null,width:'62/64',weight:440,c:20,p:74,sp:6,r:0,tags:['반팔','긴팔','이너'],url:'https://recoveric.com/main/product.html?divi=punto&item=sk',description:null},
-  {id:26,level:'premium',category:'물나염',name:'물나염쭈리',mg:null,baek:null,muji:9600,rib:10000,width:'64/66',weight:520,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드'],url:'https://recoveric.com/main/product.html?divi=tie&item=mj',description:null},
-  {id:27,level:'premium',category:'쭈리',name:'5S클래스',mg:10200,baek:10200,muji:10700,rib:9300,width:'70/74',weight:790,c:46,p:54,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:'https://recoveric.com/main/product.html?divi=terry&item=5s',description:null},
-  {id:28,level:'premium',category:'쭈리',name:'RS-850T',mg:14500,baek:14800,muji:15000,rib:12100,width:'72/74',weight:760,c:70,p:30,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:'https://recoveric.com/main/product.html?divi=terry&item=rs850t',description:null},
-  {id:29,level:'premium',category:'기모',name:'소프트후리스',mg:10600,baek:10800,muji:11000,rib:9500,width:'60/62',weight:580,c:60,p:40,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:'https://recoveric.com/main/product.html?divi=napping&item=sh',description:null},
+  {id:20,level:'premium',category:'싱글',name:'RS-400S',mg:7500,baek:7800,muji:7900,rib:9500,width:'72/74',weight:420,c:55,p:45,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:21,level:'premium',category:'싱글',name:'RS-500S',mg:9400,baek:9600,muji:9700,rib:9500,width:'72/74',weight:500,c:66,p:34,sp:0,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:22,level:'premium',category:'싱글',name:'노블싱글(스판)',mg:null,baek:7300,muji:7400,rib:9500,width:'62/64',weight:320,c:63,p:33,sp:4,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
+  {id:23,level:'premium',category:'PK',name:'노블PK',mg:null,baek:7800,muji:7900,rib:1900,ribUnit:'EA',width:'60/62',weight:420,c:27,p:70,sp:3,r:0,tags:['반팔','긴팔'],url:null,description:null},
+  {id:24,level:'premium',category:'골지',name:'2X2GB골지',mg:null,baek:7800,muji:7900,rib:null,width:'60/62',weight:420,c:74,p:26,sp:0,r:0,tags:['이너'],url:null,description:null},
+  {id:25,level:'premium',category:'양면',name:'실켓분또',mg:null,baek:8800,muji:9100,rib:null,width:'62/64',weight:440,c:20,p:74,sp:6,r:0,tags:['반팔','긴팔','이너'],url:null,description:null},
+  {id:26,level:'premium',category:'몰나염',name:'몰나염쭈리',mg:null,baek:null,muji:9600,rib:10000,width:'64/66',weight:520,c:25,p:75,sp:0,r:0,tags:['맨투맨','후드'],url:null,description:null},
+  {id:27,level:'premium',category:'쭈리',name:'5S클래스',mg:10200,baek:10200,muji:10700,rib:9300,width:'70/74',weight:790,c:46,p:54,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
+  {id:28,level:'premium',category:'쭈리',name:'RS-850T',mg:14500,baek:14800,muji:15000,rib:12100,width:'72/74',weight:760,c:70,p:30,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
+  {id:29,level:'premium',category:'기모',name:'소프트후리스',mg:10600,baek:10800,muji:11000,rib:9500,width:'60/62',weight:580,c:60,p:40,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
   // ── Luxury ──
-  {id:30,level:'luxury',category:'헤비니트',name:'RS-헤비니트',mg:14500,baek:14800,muji:15000,rib:null,width:'72/74',weight:810,c:47,p:50,sp:3,r:0,tags:['가디건','긴팔'],url:'https://recoveric.com/main/product.html?divi=corduroy&item=rsh',description:null},
+  {id:30,level:'luxury',category:'헤비니트',name:'RS-헤비니트',mg:14500,baek:14800,muji:15000,rib:null,width:'72/74',weight:810,c:47,p:50,sp:3,r:0,tags:['가디건','긴팔'],url:null,description:null},
   {id:31,level:'luxury',category:'실켓양면',name:'아머',mg:18300,baek:18600,muji:18900,rib:15800,width:'72/74',weight:850,c:32,p:68,sp:0,r:0,tags:['맨투맨','후드','자켓'],url:null,description:null},
-  {id:32,level:'luxury',category:'쭈리',name:'다이아헤비쭈리',mg:15600,baek:15900,muji:16100,rib:12600,width:'62/64',weight:820,c:45,p:55,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:'https://recoveric.com/main/product.html?divi=terry&item=da',description:null},
-  {id:33,level:'luxury',category:'기모',name:'RS-800ZG',mg:14600,baek:14900,muji:15100,rib:12600,width:'64/66',weight:830,c:44,p:56,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:'https://recoveric.com/main/product.html?divi=napping&item=zp',description:null},
+  {id:32,level:'luxury',category:'쭈리',name:'다이아헤비쭈리',mg:15600,baek:15900,muji:16100,rib:12600,width:'62/64',weight:820,c:45,p:55,sp:0,r:0,tags:['맨투맨','후드','후드집업'],url:null,description:null},
+  {id:33,level:'luxury',category:'기모',name:'RS-800ZG',mg:14600,baek:14900,muji:15100,rib:12600,width:'64/66',weight:830,c:44,p:56,sp:0,r:0,tags:['맨투맨','후드','트레이닝세트'],url:null,description:null},
   // ── 의류 ──
-  {id:34,level:'apparel',category:'의류',name:'피그먼트반팔티',mg:null,baek:null,muji:16400,rib:null,width:null,weight:null,c:55,p:45,sp:0,r:0,tags:['반팔'],url:'https://recoveric.com/main/product.html?divi=apparel&item=shortt',description:null},
+  {id:34,level:'apparel',category:'의류',name:'피그먼트반팔티',mg:null,baek:null,muji:16400,rib:null,width:null,weight:null,c:55,p:45,sp:0,r:0,tags:['반팔'],url:null,description:null},
 ];
 const DSTATE={
   dataVersion:4,
@@ -1469,7 +1220,7 @@ const DSTATE={
     {id:'luxury', name:'Luxury'},
     {id:'apparel', name:'의류'},
   ],
-  categories:['싱글','쭈리','기모','양면','PK','골지','물나염','헤비니트','후라이스','실켓양면','의류'],
+  categories:['싱글','쭈리','기모','양면','PK','골지','몰나염','헤비니트','후라이스','실켓양면','의류'],
   tags:['반팔','긴팔','민소매','크롭티','맨투맨','후드','후드집업','이너','반바지','칠부바지','긴바지','스커트','가디건','집업','자켓','트레이닝세트'],
   sheetsUrl:'https://script.google.com/macros/s/AKfycbyfqmMcjWpwzgtM4GH_QReK1COzBJrrXt7cPGsviMfLAtSfNAT_OKnV91XyXMBbY-6Qag/exec',
   nextCid:4,nextFid:36,
@@ -1508,13 +1259,17 @@ function migrate(old){
   if(old.customers&&old.customers.length){
     s.customers=old.customers.map(c=>{
       if(!c.priceOverrides){c.priceOverrides={};delete c.overrides;}
+      // 비활성 등급으로 저장된 고객사는 표준단가(standard)로 자동 변환
+      if(c.grade&&c.grade!=='standard'&&s.grades[c.grade]&&s.grades[c.grade].enabled===false){
+        c.grade='standard';
+      }
       return c;
     });
     s.nextCid=old.nextCid||s.nextCid;
   }
   // 원단 데이터: v4 이상으로 저장된 데이터만 신뢰 (구버전은 DFABRICS로 리셋)
   if(old.dataVersion>=4&&old.fabrics&&old.fabrics.length){
-    s.fabrics=old.fabrics.map(f=>({url:null,description:null,colorUrl:'',colorImage:'',colorImagePath:'',...f}));
+    s.fabrics=old.fabrics.map(f=>({url:null,description:null,...f}));
     s.nextFid=old.nextFid||s.nextFid;
   }
   // 필수 필드 보장
@@ -1544,42 +1299,6 @@ function migrate(old){
   if(!s.seasonName)s.seasonName='2026 상반기';
   if(!s.sheetsUrl)s.sheetsUrl=DEFAULT_SHEETS_URL;
   if(!s.tags||!s.tags.length)s.tags=[...TAGS];
-  // colorUrl 필드 보장
-  if(s.fabrics)s.fabrics.forEach(f=>{if(f.colorUrl===undefined||f.colorUrl===null)f.colorUrl='';});
-
-  // [v4.97 마이그레이션] "몰나염" → "물나염" 오타 수정
-  if(s.fabrics){
-    s.fabrics.forEach(f=>{
-      if(f.category==='몰나염')f.category='물나염';
-      if(f.name&&f.name.includes('몰나염'))f.name=f.name.replace(/몰나염/g,'물나염');
-    });
-  }
-  if(s.categories&&s.categories.length){
-    s.categories=s.categories.map(c=>c==='몰나염'?'물나염':c);
-  }
-  // 고객사 priceOverrides 키도 마이그레이션
-  if(s.customers){
-    s.customers.forEach(c=>{
-      if(c.priceOverrides){
-        const newOv={};
-        Object.keys(c.priceOverrides).forEach(k=>{
-          const newKey=k.includes('몰나염')?k.replace(/몰나염/g,'물나염'):k;
-          newOv[newKey]=c.priceOverrides[k];
-        });
-        c.priceOverrides=newOv;
-      }
-    });
-  }
-
-  // [v4.97 마이그레이션] 원단 페이지 URL 자동 적용 (url 필드 비어있는 원단만)
-  if(s.fabrics){
-    s.fabrics.forEach(f=>{
-      if(!f.url){
-        const u=DEFAULT_FABRIC_URLS[f.name];
-        if(u)f.url=u;
-      }
-    });
-  }
   return s;
 }
 function load(){
@@ -1589,6 +1308,32 @@ function load(){
     // migrate/dedup 결과를 즉시 localStorage에 반영
     if(raw)localStorage.setItem('rcv2',JSON.stringify(ST));
   }catch(e){ST=JSON.parse(JSON.stringify(DSTATE));}
+}
+// 고객사 등급 선택 옵션: 표준단가(항상 포함) + enabled 등급만
+function getCustGradeOptions(){
+  const opts=[{value:'standard',label:'표준단가',discount:0}];
+  ['silver','gold','vip'].forEach(g=>{
+    const info=ST.grades[g];
+    if(info&&info.enabled!==false){
+      const L={silver:'Silver',gold:'Gold',vip:'VIP'}[g];
+      opts.push({value:g,label:L,discount:info.discount||0});
+    }
+  });
+  return opts;
+}
+// 등급 표시 라벨 (배지/텍스트용)
+function gradeLabel(g){
+  if(g==='standard')return'표준단가';
+  return(g||'').toUpperCase();
+}
+// 등급 색상
+function gradeColor(g){
+  return({silver:'#5570a0',gold:'#c8900a',vip:'#7040b8',standard:'#6b7280'})[g]||'#888';
+}
+// 등급 할인율 (standard=0)
+function gradeDiscount(g){
+  if(g==='standard')return 0;
+  return ST.grades[g]?.discount||0;
 }
 
 // ─ Login ─
@@ -1613,7 +1358,7 @@ function enter(r,label,cls){
   pill.textContent=label;pill.className='user-role-pill '+cls;
   const isAdm=r==='superadmin'||r==='admin';
   const isSuperAdmin=r==='superadmin';
-  ['nb-admin','nb-color','ns-admin'].forEach(id=>{
+  ['nb-admin','ns-admin'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.style.display=isAdm?'':'none';
   });
@@ -1683,9 +1428,6 @@ function sv(name,btn,skipHistory){
   else if(name==='apparel'){activeAp='';activeApGrade='';renderByApparel();}
   else if(name==='cust')renderCust();
   else if(name==='admin'){renderAdminTbl();fillLevelSelects();fillCatList();renderTagMgmt();loadSeasonInput();}
-  else if(name==='color'){initColorView();}
-  else if(name==='colorsend'){initColorSendView();}
-  else if(name==='urlsend'){initUrlSendView();}
   else if(name==='special'){
     // 사이드바에서 진입 시 등급 필터 초기화 + 카드 목록으로 리셋
     spGradeFilter='';
@@ -1725,7 +1467,7 @@ window.addEventListener('popstate',e=>{
 // 초기 진입 시 hash 처리
 window.addEventListener('load',()=>{
   const hash=location.hash.replace('#','');
-  const valid=['price','special','byline','bycat','apparel','intro','admin','cust','sheets','color','colorsend'];
+  const valid=['price','special','byline','bycat','apparel','intro','admin','cust','sheets'];
   if(hash&&valid.includes(hash)){
     // 로그인 후에만 적용 — 앱 진입 이후에 처리
     window._initialView=hash;
@@ -1746,7 +1488,7 @@ function migrateLevels(){
   }
   if(!ST.categories){
     const fromFabrics=[...new Set(ST.fabrics.map(f=>f.category))];
-    const base=['싱글','쭈리','기모','양면','PK','골지','물나염','헤비니트','후라이스','실켓양면'];
+    const base=['싱글','쭈리','기모','양면','PK','골지','몰나염','헤비니트','후라이스','실켓양면'];
     ST.categories=[...new Set([...base,...fromFabrics,...(ST.customCats||[])])].filter(Boolean);
   }
 }
@@ -2430,26 +2172,37 @@ function selCapture(){
   if(selView==='special'&&specialCid){
     const c=ST.customers.find(x=>x.id===specialCid);
     if(c){
-      const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};
-      title=`${c.name} 선택 단가표 [${gl[c.grade]||c.grade.toUpperCase()}]`;
-      capGrade=c.grade;
+      title=`${c.name} 선택 단가표 [${gradeLabel(c.grade)}]`;
     }
   } else if(selGrade){
     title=`RECOVERIC 선택 단가표 [${selGrade.toUpperCase()}]`;
   }
   document.getElementById('cap-cn').textContent=title;
   document.getElementById('cap-dt').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'})+' 기준';
-  // 이전 결과 초기화 (프리뷰는 화면 밖에 대기)
-  const preview=document.getElementById('cap-preview');
-  preview.classList.add('cap-offscreen');
-  preview.style.display='none';
-  const imgWrap=document.getElementById('cap-img-wrap');
-  imgWrap.style.display='none';
-  imgWrap.innerHTML='';
+  // 고객사 뷰일 때: 등급 선택 바 숨기고 고객사 등급 그대로 사용
+  const gradeBar=document.getElementById('cap-grade-bar');
+  if(selView==='special'&&specialCid){
+    if(gradeBar)gradeBar.style.display='none';
+    // capGrade를 고객사 등급으로 설정
+    const c=ST.customers.find(x=>x.id===specialCid);
+    if(c)capGrade=c.grade;
+  } else {
+    if(gradeBar)gradeBar.style.display='flex';
+    document.querySelectorAll('.cap-grade-btn').forEach(b=>b.classList.toggle('active',b.dataset.grade===selGrade));
+    const disc=selGrade?ST.grades[selGrade]?.discount||0:0;
+    document.getElementById('cap-grade-info').textContent=selGrade?(selGrade.toUpperCase()+' · −'+disc+'%'):'';
+  }
+  document.getElementById('cap-preview').style.display='block';
+  document.getElementById('cap-img-wrap').style.display='none';
+  document.getElementById('cap-img-wrap').innerHTML='';
+  document.getElementById('cap-do-btn').style.display='inline-flex';
+  const btnTop=document.getElementById('cap-do-btn-top');
+  if(btnTop){btnTop.style.display='inline-flex';btnTop.textContent='📸 이미지 생성';btnTop.disabled=false;}
+  document.getElementById('cap-dl-btn').style.display='none';
+  document.getElementById('cap-cp-btn').style.display='none';
+  document.querySelectorAll('.cap-grade-btn').forEach(b=>b.disabled=false);
   buildCapTable();
-  // 오버레이 열고 바로 자동 캡처
   document.getElementById('capture-overlay').classList.add('open');
-  setTimeout(()=>doCapture(),100);
 }
 
 function copyR(id){
@@ -2542,7 +2295,7 @@ function copyAllSpecial(){
   const fabs=ST.fabrics;
   copyFabsToKakao(fabs,(f)=>{
     const ov=(c.priceOverrides||{})[f.name];
-    return ST.grades[c.grade]?.discount||0;
+    return gradeDiscount(c.grade);
   });
 }
 
@@ -2550,8 +2303,30 @@ function copyAllSpecial(){
 let capGrade='', capCtx='price'; // capGrade: 선택된 캡처 등급, capCtx: 캡처 컨텍스트
 
 function selectCapGrade(btn, grade){
-  // v4.87부터 등급 선택 바 제거됨 - 현재 뷰의 등급이 자동 적용됨
-  // 레거시 호환을 위해 빈 함수로 유지
+  capGrade=grade;
+  document.querySelectorAll('.cap-grade-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const disc=grade?ST.grades[grade]?.discount||0:0;
+  const info=document.getElementById('cap-grade-info');
+  info.textContent=grade?(grade.toUpperCase()+' 등급 · 기본 할인 −'+disc+'%'):'';
+  const titleEl=document.getElementById('cap-cn');
+  if(grade) titleEl.textContent='RECOVERIC 단가표 ['+grade.toUpperCase()+' 등급]';
+  else titleEl.textContent='RECOVERIC 단가표';
+  buildCapTable();
+  // 이미지 생성 후 등급 변경 시 → 미리보기 모드로 자동 복원
+  const imgWrap=document.getElementById('cap-img-wrap');
+  if(imgWrap&&imgWrap.style.display!=='none'){
+    imgWrap.style.display='none';
+    imgWrap.innerHTML='';
+    document.getElementById('cap-preview').style.display='block';
+    document.getElementById('cap-do-btn').style.display='inline-flex';
+    const btnTop=document.getElementById('cap-do-btn-top');
+    if(btnTop){btnTop.style.display='inline-flex';btnTop.textContent='📸 이미지 생성';btnTop.disabled=false;}
+    document.getElementById('cap-dl-btn').style.display='none';
+    document.getElementById('cap-cp-btn').style.display='none';
+    const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
+    capBlob=null;
+  }
 }
 
 function capDiscFor(f){
@@ -2671,8 +2446,7 @@ function openCapture(viewCtx){
   if(ctx==='special'&&specialCid){
     const c=ST.customers.find(x=>x.id===specialCid);
     if(c){
-      const gl={silver:'SILVER',gold:'GOLD',vip:'VIP'};
-      titleText=`${c.name} 전용 단가표 [${gl[c.grade]||c.grade.toUpperCase()}]`;
+      titleText=`${c.name} 전용 단가표 [${gradeLabel(c.grade)}]`;
     }
   } else if(ctx==='byline'&&activeBl){
     const allLvs=getAllLevels();titleText=`${allLvs[activeBl]||activeBl} 단가표`;
@@ -2684,7 +2458,8 @@ function openCapture(viewCtx){
   const titleEl=document.getElementById('cap-cn');
   if(titleEl)titleEl.textContent=titleText;
   document.getElementById('cap-dt').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'})+' 기준';
-  // 현재 뷰의 등급 자동 적용 (사용자 선택 없음)
+  const allLvs=getAllLevels();
+  // 컨텍스트별 초기 등급 결정
   let initGrade='';
   if(ctx==='byline') initGrade=activeBlGrade||'';
   else if(ctx==='bycat') initGrade=activeBcGrade||'';
@@ -2694,36 +2469,52 @@ function openCapture(viewCtx){
     if(c)initGrade=c.grade||'';
   } else initGrade=activeGrade||'';
   capGrade=initGrade;
+  document.querySelectorAll('.cap-grade-btn').forEach(b=>b.classList.toggle('active',b.dataset.grade===initGrade));
+  if(initGrade){const disc=ST.grades[initGrade]?.discount||0;document.getElementById('cap-grade-info').textContent=initGrade.toUpperCase()+' 등급 · −'+disc+'%';}
+  else document.getElementById('cap-grade-info').textContent='';
   buildCapTable();
-  // 이전 결과 초기화 (프리뷰는 화면 밖에 대기)
-  const preview=document.getElementById('cap-preview');
-  preview.classList.add('cap-offscreen');
-  preview.style.display='none';
-  const imgWrap=document.getElementById('cap-img-wrap');
-  imgWrap.style.display='none';
-  imgWrap.innerHTML='';
+  document.getElementById('cap-preview').style.display='block';
+  document.getElementById('cap-img-wrap').style.display='none';
+  document.getElementById('cap-img-wrap').innerHTML='';
+  document.getElementById('cap-do-btn').style.display='inline-flex';
+  const btnTop=document.getElementById('cap-do-btn-top');
+  if(btnTop){btnTop.style.display='inline-flex';btnTop.textContent='📸 이미지 생성';btnTop.disabled=false;}
+  document.getElementById('cap-dl-btn').style.display='none';
+  document.getElementById('cap-cp-btn').style.display='none';
   capBlob=null;
-  // 오버레이 열고 바로 자동 캡처
+
+  // ── 등급 선택 바 제어 ──
+  const gradeBar=document.getElementById('cap-grade-bar');
+  const gradeBtns=document.querySelectorAll('.cap-grade-btn');
+  if(ctx==='special'){
+    // 고객사는 등급 고정 → 바 숨김
+    if(gradeBar)gradeBar.style.display='none';
+  } else if(ctx==='byline'||ctx==='bycat'||ctx==='apparel'){
+    // 현재 선택 등급만 active, 나머지 disabled
+    if(gradeBar)gradeBar.style.display='flex';
+    const fixedGrade=ctx==='byline'?activeBlGrade:ctx==='bycat'?activeBcGrade:activeApGrade;
+    gradeBtns.forEach(b=>{
+      const isActive=b.dataset.grade===fixedGrade;
+      b.classList.toggle('active',isActive);
+      b.disabled=!isActive;
+    });
+    capGrade=fixedGrade;
+    const disc=fixedGrade?ST.grades[fixedGrade]?.discount||0:0;
+    const info=document.getElementById('cap-grade-info');
+    if(info)info.textContent=fixedGrade?(fixedGrade.toUpperCase()+' 등급 적용 중'):'';
+  } else {
+    // 등급별 단가표 → 자유 선택 가능
+    if(gradeBar)gradeBar.style.display='flex';
+    gradeBtns.forEach(b=>b.disabled=false);
+  }
+
   document.getElementById('capture-overlay').classList.add('open');
-  setTimeout(()=>doCapture(),100);
 }
 function doCapture(){
-  const redoBtn=document.getElementById('cap-redo-btn');
-  const dlBtn=document.getElementById('cap-dl-btn');
-  const cpBtn=document.getElementById('cap-cp-btn');
-  if(redoBtn){redoBtn.textContent='생성 중...';redoBtn.disabled=true;}
-  if(dlBtn)dlBtn.disabled=true;
-  if(cpBtn)cpBtn.disabled=true;
-  // 캡처 준비: 이전 결과 이미지 숨김 + 스피너 표시 + 프리뷰는 화면 밖으로 이동
+  const btn=document.getElementById('cap-do-btn');
+  const btnTop=document.getElementById('cap-do-btn-top');
+  [btn,btnTop].forEach(b=>{if(b){b.textContent='생성 중...';b.disabled=true;}});
   const target=document.getElementById('cap-preview');
-  const imgWrap=document.getElementById('cap-img-wrap');
-  const loading=document.getElementById('cap-loading');
-  imgWrap.style.display='none';
-  imgWrap.innerHTML='';
-  // 화면 밖으로 이동 — DOM에는 존재하여 html2canvas가 읽을 수 있지만 사용자 눈에는 안 보임
-  target.classList.add('cap-offscreen');
-  target.style.display='block';
-  if(loading)loading.classList.add('on');
   const targetW=Math.max(target.scrollWidth,900);
   const targetH=Math.max(target.scrollHeight,200);
 
@@ -2738,11 +2529,10 @@ function doCapture(){
     windowWidth:targetW,
     windowHeight:targetH,
     onclone:(clonedDoc,clonedEl)=>{
+      // cloned body를 완전히 비우고 clonedEl만 (0,0) 위치에 배치
       const clonedBody=clonedDoc.body;
       clonedBody.innerHTML='';
       clonedBody.style.cssText='margin:0;padding:0;background:#fff;overflow:visible;width:'+targetW+'px';
-      // 복제된 요소는 off-screen 클래스를 떼고 정상 위치로 렌더 (복제본은 가상 DOM이라 화면에 안 보임)
-      clonedEl.classList.remove('cap-offscreen');
       clonedEl.style.cssText='position:static;display:block;width:'+targetW+'px;overflow:visible;background:#fff;box-sizing:border-box';
       clonedBody.appendChild(clonedEl);
     },
@@ -2752,22 +2542,20 @@ function doCapture(){
       const url=URL.createObjectURL(blob);
       const img=document.createElement('img');
       img.src=url;
-      img.style.cssText='max-width:100%;border-radius:8px;border:1px solid #dde;display:block';
-      imgWrap.innerHTML='';
-      imgWrap.appendChild(img);
-      imgWrap.style.display='block';
-      // 스피너 숨기고 프리뷰는 계속 화면 밖에 유지 (다시 생성 대비)
-      if(loading)loading.classList.remove('on');
+      img.style.cssText='max-width:100%;border-radius:8px;border:1px solid #dde;margin-top:12px;display:block';
+      const imgWrap=document.getElementById('cap-img-wrap');
+      imgWrap.innerHTML='<p style="font-size:12px;color:var(--green);font-weight:600;padding:12px 4px 0">✅ 이미지 생성 완료!</p>';
+      imgWrap.appendChild(img);imgWrap.style.display='block';
       target.style.display='none';
-      if(redoBtn){redoBtn.textContent='🔄 다시 생성';redoBtn.disabled=false;}
-      if(dlBtn)dlBtn.disabled=false;
-      if(cpBtn)cpBtn.disabled=false;
+      document.getElementById('cap-do-btn').style.display='none';
+      if(btnTop)btnTop.style.display='none';
+      document.getElementById('cap-dl-btn').style.display='inline-flex';
+      document.getElementById('cap-cp-btn').style.display='inline-flex';
+      const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='inline';
+      [btn,btnTop].forEach(b=>{if(b){b.textContent='📸 이미지 생성';b.disabled=false;}});
     },'image/png');
   }).catch(e=>{
-    if(loading)loading.classList.remove('on');
-    if(redoBtn){redoBtn.textContent='🔄 다시 생성';redoBtn.disabled=false;}
-    if(dlBtn)dlBtn.disabled=false;
-    if(cpBtn)cpBtn.disabled=false;
+    [btn,btnTop].forEach(b=>{if(b){b.textContent='📸 이미지 생성';b.disabled=false;}});
     toast('캡처 실패: '+e.message,'error');
   });
 }
@@ -2802,15 +2590,13 @@ function capCopy(){
 }
 function closeCapture(){
   const prev=document.getElementById('cap-preview');
-  if(prev){prev.style.display='none';prev.classList.add('cap-offscreen');}
+  if(prev)prev.style.display='block';
   const imgWrap=document.getElementById('cap-img-wrap');
   if(imgWrap){imgWrap.style.display='none';imgWrap.innerHTML='';}
-  const loading=document.getElementById('cap-loading');
-  if(loading)loading.classList.remove('on');
-  const redoBtn=document.getElementById('cap-redo-btn');
-  if(redoBtn){redoBtn.textContent='🔄 다시 생성';redoBtn.disabled=false;}
-  const dlBtn=document.getElementById('cap-dl-btn');if(dlBtn)dlBtn.disabled=false;
-  const cpBtn=document.getElementById('cap-cp-btn');if(cpBtn)cpBtn.disabled=false;
+  const doBtn=document.getElementById('cap-do-btn');if(doBtn)doBtn.style.display='inline-flex';
+  const dlBtn=document.getElementById('cap-dl-btn');if(dlBtn)dlBtn.style.display='none';
+  const cpBtn=document.getElementById('cap-cp-btn');if(cpBtn)cpBtn.style.display='none';
+  const hint=document.getElementById('cap-cp-hint');if(hint)hint.style.display='none';
   capBlob=null;
   document.getElementById('capture-overlay').classList.remove('open');
 }
@@ -2828,16 +2614,19 @@ function renderCust(){
   const grid=document.getElementById('cgrid');
   if(!list.length){grid.innerHTML='<p style="color:var(--txt3);font-size:13px;padding:20px 0">조건에 맞는 고객사 없음</p>';return;}
   grid.innerHTML=list.map(c=>{
-    const d=ST.grades[c.grade]?.discount||0;
+    const d=gradeDiscount(c.grade);
     const ex=Object.entries(c.overrides||{}).filter(([,v])=>v!==0);
     const isSpecial=ex.length>0;
     const specialBadge=isSpecial?`<span style="font-size:9px;font-weight:800;background:#fff3e0;color:#b06000;border:1px solid #ffc060;padding:2px 8px;border-radius:4px;letter-spacing:.5px">특별단가</span>`:'';
+    const gCol=gradeColor(c.grade);
+    const gBadge=`<span class="grade-pill ${c.grade}" style="background:${gCol}22;color:${gCol};border:1.5px solid ${gCol}">${gradeLabel(c.grade)}</span>`;
+    const infoTxt=c.grade==='standard'?`표준단가 적용${ex.length?` · 품목별 조정 ${ex.length}건`:''}`:`기본 할인 −${d}%${ex.length?` · 품목별 조정 ${ex.length}건`:''}`;
     return `<div class="cc" style="${isSpecial?'border-color:#ffd080;border-width:2px':''}">
       <div class="cc-head">
         <div style="display:flex;align-items:center;gap:7px"><div class="cc-name">${c.name}</div>${specialBadge}</div>
-        <span class="grade-pill ${c.grade}">${c.grade.toUpperCase()}</span>
+        ${gBadge}
       </div>
-      <div class="cc-info">기본 할인 −${d}%${ex.length?` · 품목별 조정 ${ex.length}건`:''}</div>
+      <div class="cc-info">${infoTxt}</div>
       ${ex.length?`<div class="cc-ovr">${ex.map(([k,v])=>`${k} ${v>0?'추가−'+v+'%':'마크업+'+Math.abs(v)+'%'}`).join(' · ')}</div>`:''}
       <div class="cc-acts">
         <button class="btn btn-outline btn-sm" onclick="openEditC(${c.id})">편집</button>
@@ -2857,14 +2646,17 @@ function cForm(c){
       <td style="padding:4px;font-size:11px;color:var(--txt3)">%</td>
       <td style="padding:4px 8px;font-size:10px;color:var(--txt3)">${v>0?'추가할인':v<0?'⬆마크업':''}</td></tr>`;
   }).join('');
+  const opts=getCustGradeOptions();
+  const curGrade=c?.grade||'standard';
+  // 현재 고객사 등급이 옵션에 없으면(비활성화된 경우) 예외적으로 포함
+  const hasCur=opts.some(o=>o.value===curGrade);
+  const inactiveLabel={silver:'Silver',gold:'Gold',vip:'VIP'}[curGrade]||gradeLabel(curGrade);
+  const optsHtml=opts.map(o=>`<option value="${o.value}"${curGrade===o.value?' selected':''}>${o.label}</option>`).join('')
+    +(hasCur?'':`<option value="${curGrade}" selected>${inactiveLabel} (비활성)</option>`);
   return `<div class="form-row"><div class="fg"><label class="flabel">업체명</label>
     <input class="finput" id="cf-n" value="${c?.name||''}" placeholder="업체명"></div>
     <div class="fg"><label class="flabel">등급</label>
-    <select class="fsel" id="cf-g">
-      <option value="silver"${c?.grade==='silver'?' selected':''}>Silver</option>
-      <option value="gold"${c?.grade==='gold'?' selected':''}>Gold</option>
-      <option value="vip"${c?.grade==='vip'?' selected':''}>VIP</option>
-    </select></div></div>
+    <select class="fsel" id="cf-g">${optsHtml}</select></div></div>
     <div style="font-size:11px;color:var(--txt2);margin-bottom:8px;font-weight:600">품목별 추가 할인율 (0 = 등급 기본 할인만)</div>
     <div style="max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
       <table style="width:100%;border-collapse:collapse">${rows}</table></div>`;
@@ -2958,37 +2750,21 @@ function fForm(f){
     <div class="fg"><label class="flabel">SP%</label><input class="finput" id="fcs" type="number" value="${f?.sp||0}" style="width:55px"></div>
     <div class="fg"><label class="flabel">R%</label><input class="finput" id="fcr" type="number" value="${f?.r||0}" style="width:55px"></div>
   </div>
-  <div style="margin-top:6px">
-    <div class="flabel" style="margin-bottom:6px">배지</div>
-    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px">
-      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-rec" ${f?.badges?.recommend?'checked':''}><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:4px;font-weight:700">추천</span></label>
-      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-new" ${f?.badges?.newItem?'checked':''}><span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-weight:700">NEW</span></label>
-      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-sale" ${f?.badges?.sale?'checked':''}><span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;font-weight:700">SALE</span></label>
-    </div>
-  </div>
-  <div style="margin-top:8px"><div class="flabel" style="margin-bottom:6px">의류 태그</div>${tcs}</div>`;
+  <div style="margin-top:4px"><div class="flabel" style="margin-bottom:6px">의류 태그</div>${tcs}</div>`;
 }
 function saveF(){
   const catSel=document.getElementById('fc').value;
   const catVal=catSel==='_new'?(document.getElementById('fc-new')?.value.trim()||''):catSel;
   const name=document.getElementById('fn').value.trim();
   if(!name){toast('품목명 필요','error');return;}
-  // 태그 수집 - 배지 체크박스(fb-*)는 제외
-  const tags=[...document.querySelectorAll('#m-content input[type=checkbox]:checked')]
-    .filter(c=>!['fb-rec','fb-new','fb-sale'].includes(c.id))
-    .map(c=>c.value).filter(v=>v&&v!=='on');
-  const badges={
-    recommend:!!document.getElementById('fb-rec')?.checked,
-    newItem:!!document.getElementById('fb-new')?.checked,
-    sale:!!document.getElementById('fb-sale')?.checked,
-  };
+  const tags=[...document.querySelectorAll('#m-content input[type=checkbox]:checked')].map(c=>c.value).filter(v=>v&&v!=='on');
   const d={level:document.getElementById('fl').value,category:catVal||'기타',name,
     mg:parseInt(document.getElementById('fmg').value)||null,baek:parseInt(document.getElementById('fbk').value)||null,
     muji:parseInt(document.getElementById('fmj').value)||null,rib:parseInt(document.getElementById('frb').value)||null,
     ribUnit:document.getElementById('fru').value||undefined,
     width:document.getElementById('fwi').value.trim()||null,weight:parseInt(document.getElementById('fwt').value)||null,
     c:parseInt(document.getElementById('fcc').value)||0,p:parseInt(document.getElementById('fcp').value)||0,
-    sp:parseInt(document.getElementById('fcs').value)||0,r:parseInt(document.getElementById('fcr').value)||0,tags,badges};
+    sp:parseInt(document.getElementById('fcs').value)||0,r:parseInt(document.getElementById('fcr').value)||0,tags};
   if(editFid){const idx=ST.fabrics.findIndex(x=>x.id===editFid);if(idx>=0)ST.fabrics[idx]={...ST.fabrics[idx],...d};}
   else ST.fabrics.push({id:ST.nextFid++,...d});
   saveFabricsDirty();fillLevelSelects();fillCatList();
@@ -3101,48 +2877,6 @@ async function syncFrom(){
 // ─ Firebase Realtime Database 동기화 ─
 const FB_URL='https://recoveric-price-default-rtdb.firebaseio.com';
 let _fbPending=false,_fbQueued=false,_fbLastWrite=0;
-
-// ─ Firebase Storage 초기화 (이미지 업로드용) ─
-const FIREBASE_CONFIG={
-  apiKey: "AIzaSyDR2ltxeN04-_GhTPLdvjUif4Nn_4stoqw",
-  authDomain: "recoveric-price.firebaseapp.com",
-  databaseURL: "https://recoveric-price-default-rtdb.firebaseio.com",
-  projectId: "recoveric-price",
-  storageBucket: "recoveric-price.firebasestorage.app",
-  messagingSenderId: "105100929540",
-  appId: "1:105100929540:web:ca598be4cb3631d8d4a351"
-};
-let _fbApp=null, _fbStorage=null;
-
-// Firebase SDK 로드 완료 대기 (최대 5초)
-function waitForFirebaseSDK(timeout=5000){
-  return new Promise((resolve,reject)=>{
-    if(window._fbSDKFailed){reject(new Error('Firebase SDK CDN 로드 실패 — 네트워크 확인'));return;}
-    const start=Date.now();
-    (function check(){
-      if(window._fbSDKFailed){reject(new Error('Firebase SDK CDN 로드 실패 — 네트워크 확인'));return;}
-      if(typeof firebase!=='undefined'&&firebase.storage){resolve();return;}
-      if(Date.now()-start>timeout){reject(new Error('Firebase SDK 로드 시간 초과 — 인터넷 연결 확인'));return;}
-      setTimeout(check,100);
-    })();
-  });
-}
-
-// Firebase Storage 초기화 (동기 — 이미 로드된 경우만)
-function initFirebaseStorage(){
-  try{
-    if(typeof firebase==='undefined'||!firebase.storage)return null;
-    if(!_fbApp){_fbApp=firebase.initializeApp(FIREBASE_CONFIG);}
-    if(!_fbStorage){_fbStorage=firebase.storage();}
-    return _fbStorage;
-  }catch(e){console.error('[FB Storage] 초기화 실패:',e);return null;}
-}
-
-// Firebase Storage 비동기 초기화 (SDK 로딩 대기 포함)
-async function ensureFirebaseStorage(){
-  await waitForFirebaseSDK();
-  return initFirebaseStorage();
-}
 
 function getFBState(){
   return {
@@ -3315,8 +3049,6 @@ function renderSpCustCards(){
     if(copyBtn)copyBtn.style.display='none';
   }
   const isAdm=role==='superadmin'||role==='admin';
-  const colors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
-  const labels={silver:'SILVER',gold:'GOLD',vip:'VIP'};
   // 등급 필터 적용
   const list=spGradeFilter?ST.customers.filter(c=>(c.grade||'').toLowerCase()===spGradeFilter):ST.customers;
   if(!ST.customers.length){
@@ -3328,8 +3060,10 @@ function renderSpCustCards(){
     return;
   }
   wrap.innerHTML=list.map(c=>{
-    const col=colors[c.grade]||'#888';
+    const col=gradeColor(c.grade);
     const ovCnt=Object.keys(c.priceOverrides||{}).length;
+    const disc=gradeDiscount(c.grade);
+    const discTxt=c.grade==='standard'?`표준단가 적용${ovCnt?' · '+ovCnt+'개 품목에 직접 단가 적용':''}`:`기본 할인 −${disc}%${ovCnt?' · '+ovCnt+'개 품목에 직접 단가 적용':''}`;
     return `<div style="width:100%;box-sizing:border-box;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:box-shadow .15s;box-shadow:var(--shadow)"
       onclick="pickCust(${c.id})"
       onmouseover="this.style.boxShadow='var(--shadow-md)';this.style.borderColor='var(--border2)'"
@@ -3337,10 +3071,10 @@ function renderSpCustCards(){
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-size:15px;font-weight:700;color:var(--txt)">${c.name}</span>
-          <span style="padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col}">${labels[c.grade]||c.grade}</span>
+          <span style="padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col}">${gradeLabel(c.grade)}</span>
           ${ovCnt?`<span style="font-size:11px;color:var(--red);font-weight:600">직접단가 ${ovCnt}개 품목</span>`:'<span style="font-size:11px;color:var(--txt3)">등급할인 자동 적용</span>'}
         </div>
-        <div style="font-size:12px;color:var(--txt3);margin-top:4px">기본 할인 −${ST.grades[c.grade]?.discount||0}%${ovCnt?' · '+ovCnt+'개 품목에 직접 단가 적용':''}</div>
+        <div style="font-size:12px;color:var(--txt3);margin-top:4px">${discTxt}</div>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0" onclick="event.stopPropagation()">
         <button class="btn btn-gold btn-sm" onclick="pickCust(${c.id})" style="font-size:12px;padding:7px 16px">단가표 보기</button>
@@ -3397,7 +3131,6 @@ function closeCustDropdownOutside(e){
 function filterCustList(){
   const q=(document.getElementById('sp-search').value||'').toLowerCase();
   const dd=document.getElementById('sp-dropdown');
-  const gColors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
   const items=ST.customers.filter(c=>{
     if(spGradeFilter&&(c.grade||'').toLowerCase()!==spGradeFilter)return false;
     if(q&&!c.name.toLowerCase().includes(q))return false;
@@ -3405,11 +3138,11 @@ function filterCustList(){
   });
   if(!items.length){dd.innerHTML='<div style="padding:12px;text-align:center;font-size:12px;color:var(--txt3)">검색 결과 없음</div>';dd.style.display='block';return;}
   dd.innerHTML=items.map(c=>{
-    const gc=gColors[c.grade]||'#888';
+    const gc=gradeColor(c.grade);
     return `<div onclick="pickCust(${c.id})" style="padding:10px 14px;cursor:pointer;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px"
       onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
       <span style="flex:1">${c.name}</span>
-      <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${gc}22;color:${gc};border:1px solid ${gc}">${c.grade.toUpperCase()}</span>
+      <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${gc}22;color:${gc};border:1px solid ${gc}">${gradeLabel(c.grade)}</span>
     </div>`;
   }).join('');
   dd.style.display='block';
@@ -3436,19 +3169,28 @@ function updSpCustInfo(){
   document.getElementById('sp-cust-info').style.display='flex';
   document.getElementById('sp-cust-name').textContent=c.name;
   const badge=document.getElementById('sp-grade-badge');
-  const colors={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'};
-  const col=colors[c.grade]||'#888';
-  badge.textContent=c.grade.toUpperCase();
+  const col=gradeColor(c.grade);
+  badge.textContent=gradeLabel(c.grade);
   badge.style.background=col+'22';badge.style.color=col;badge.style.border='1.5px solid '+col;
-  const d=ST.grades[c.grade]?.discount||0;
-  document.getElementById('sp-grade-txt').textContent=`기본 할인 −${d}% | 빨간색=직접 지정 단가`;
+  const d=gradeDiscount(c.grade);
+  document.getElementById('sp-grade-txt').textContent=c.grade==='standard'?'표준단가 적용 | 빨간색=직접 지정 단가':`기본 할인 −${d}% | 빨간색=직접 지정 단가`;
 }
 function changeCustGrade(){
   const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
-  const grades=['silver','gold','vip'];
-  const labels={silver:'🥈 Silver(−3%)',gold:'🥇 Gold(−5%)',vip:'💎 VIP(−8%)'};
+  const opts=getCustGradeOptions();
+  const icons={standard:'⚪',silver:'🥈',gold:'🥇',vip:'💎'};
+  // 현재 등급이 비활성이면 예외적으로 맨 아래 "(비활성)" 옵션으로 포함
+  const hasCur=opts.some(o=>o.value===c.grade);
+  if(!hasCur&&c.grade){
+    opts.push({value:c.grade,label:gradeLabel(c.grade)+' (비활성)',discount:ST.grades[c.grade]?.discount||0,inactive:true});
+  }
+  const mkLabel=o=>{
+    const ic=icons[o.value]||'⚪';
+    const dt=o.value==='standard'?'할인 없음':`−${o.discount}%`;
+    return `${ic} ${o.label}(${dt})`;
+  };
   openM('등급 변경',`<div style="display:flex;flex-direction:column;gap:10px;padding:8px 0">
-    ${grades.map(g=>`<button onclick="setSpGrade('${g}')" class="btn ${c.grade===g?'btn-gold':'btn-outline'}" style="justify-content:center;padding:12px">${labels[g]}</button>`).join('')}
+    ${opts.map(o=>`<button onclick="setSpGrade('${o.value}')" class="btn ${c.grade===o.value?'btn-gold':'btn-outline'}" style="justify-content:center;padding:12px${o.inactive?';opacity:.6':''}">${mkLabel(o)}</button>`).join('')}
   </div>`,[{label:'닫기',cls:'btn-outline',fn:closeM}]);
 }
 function setSpGrade(g){
@@ -3458,12 +3200,12 @@ function setSpGrade(g){
 // 카드 목록에서 삭제 (팝업)
 function confirmDelCust(id){
   const c=ST.customers.find(x=>x.id===id);if(!c)return;
-  const col={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'}[c.grade]||'#888';
+  const col=gradeColor(c.grade);
   openM('고객사 삭제',
     `<div style="text-align:center;padding:8px 0">
       <div style="font-size:32px;margin-bottom:12px">🗑</div>
       <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:8px">
-        <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col};margin-right:6px">${(c.grade||'').toUpperCase()}</span>${c.name}
+        <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col};margin-right:6px">${gradeLabel(c.grade)}</span>${c.name}
       </div>
       <div style="font-size:13px;color:var(--txt2);margin-bottom:4px">고객사를 삭제하시겠습니까?</div>
       <div style="font-size:12px;color:var(--red)">삭제 후 복구할 수 없습니다.</div>
@@ -3477,12 +3219,12 @@ function confirmDelCust(id){
 }
 function delSpecialCust(){
   const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
-  const col={silver:'#5570a0',gold:'#c8900a',vip:'#7040b8'}[c.grade]||'#888';
+  const col=gradeColor(c.grade);
   openM('고객사 삭제',
     `<div style="text-align:center;padding:8px 0">
       <div style="font-size:32px;margin-bottom:12px">🗑</div>
       <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:8px">
-        <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col};margin-right:6px">${(c.grade||'').toUpperCase()}</span>${c.name}
+        <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${col}22;color:${col};border:1.5px solid ${col};margin-right:6px">${gradeLabel(c.grade)}</span>${c.name}
       </div>
       <div style="font-size:13px;color:var(--txt2);margin-bottom:4px">고객사를 삭제하시겠습니까?</div>
       <div style="font-size:12px;color:var(--red)">삭제 후 복구할 수 없습니다.</div>
@@ -3500,8 +3242,15 @@ function delSpecialCust(){
 }
 function openAddCust(){
   editCid=null;
+  const opts=getCustGradeOptions();
+  // 기본 선택: Gold가 있으면 Gold, 없으면 첫 번째 옵션
+  const hasGold=opts.some(o=>o.value==='gold');
+  const optsHtml=opts.map((o,i)=>{
+    const sel=hasGold?(o.value==='gold'?' selected':''):(i===0?' selected':'');
+    return `<option value="${o.value}"${sel}>${o.label}</option>`;
+  }).join('');
   openM('고객사 추가',`<div class="fg"><label class="flabel">고객사명</label><input class="finput" id="cn" placeholder="예: LOKWARD" style="width:220px"></div>
-    <div class="fg"><label class="flabel">등급</label><select class="fsel" id="cg"><option value="silver">Silver</option><option value="gold" selected>Gold</option><option value="vip">VIP</option></select></div>`,
+    <div class="fg"><label class="flabel">등급</label><select class="fsel" id="cg">${optsHtml}</select></div>`,
     [{label:'추가',cls:'btn-gold',fn:()=>{
       const name=document.getElementById('cn').value.trim();
       if(!name){toast('고객사명 필요','error');return;}
@@ -3515,7 +3264,7 @@ function openAddCust(){
 function getSpPrice(c,f,field){
   const ov=(c.priceOverrides||{})[f.name];
   if(ov&&typeof ov==='object'&&ov[field]!=null)return{price:ov[field],direct:true};
-  const d=ST.grades[c.grade]?.discount||0;
+  const d=gradeDiscount(c.grade);
   const p=f[field];if(!p)return{price:null,direct:false};
   return{price:applyD(p,d),direct:false};
 }
@@ -3582,7 +3331,7 @@ function renderSpecialTbl(){
 function restoreSpPrice(fid,field){
   const c=ST.customers.find(x=>x.id===specialCid);if(!c)return;
   const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-  const d=ST.grades[c.grade]?.discount||0;
+  const d=gradeDiscount(c.grade);
   const basePrice=f[field]?applyD(f[field],d):null;
   const fieldLabel={mg:'8%MG',baek:'백/백아이',muji:'무지',rib:'부속(RIB)'}[field]||field;
   const curPrice=(c.priceOverrides||{})[f.name]?.[field];
@@ -3590,14 +3339,14 @@ function restoreSpPrice(fid,field){
     `<div style="font-size:13px;color:var(--txt);line-height:2">
       <b>${f.name}</b> — ${fieldLabel}<br>
       <span style="color:var(--red);font-weight:700">직접 지정가: ${curPrice?curPrice.toLocaleString()+'원':'—'}</span><br>
-      <span style="color:var(--txt2)">→ ${c.grade.toUpperCase()} 등급 할인가: <b>${basePrice?basePrice.toLocaleString()+'원':'—'}</b></span><br><br>
-      <span style="font-size:12px;color:var(--txt2)">직접 지정 단가를 삭제하고 등급 할인가로 복원하시겠습니까?</span>
+      <span style="color:var(--txt2)">→ ${gradeLabel(c.grade)} ${c.grade==='standard'?'표준가':'등급 할인가'}: <b>${basePrice?basePrice.toLocaleString()+'원':'—'}</b></span><br><br>
+      <span style="font-size:12px;color:var(--txt2)">직접 지정 단가를 삭제하고 ${c.grade==='standard'?'표준가':'등급 할인가'}로 복원하시겠습니까?</span>
     </div>`,
     [{label:'복원',cls:'btn-gold',fn:()=>{
       if(!c.priceOverrides)c.priceOverrides={};
       if(c.priceOverrides[f.name])delete c.priceOverrides[f.name][field];
       if(c.priceOverrides[f.name]&&!Object.keys(c.priceOverrides[f.name]).length)delete c.priceOverrides[f.name];
-      saveCustomersDirty();renderSpecialTbl();closeM();toast('등급 할인가로 복원됨 ✓','success');
+      saveCustomersDirty();renderSpecialTbl();closeM();toast('단가 복원됨 ✓','success');
     }},{label:'취소',cls:'btn-outline',fn:closeM}]
   );
 }
@@ -3610,16 +3359,17 @@ function openSpSlidePanel(fid){
   spSlideFid=fid;
   if(!c.priceOverrides)c.priceOverrides={};
   const ov=c.priceOverrides[f.name]||{};
-  const d=ST.grades[c.grade]?.discount||0;
-  const gradeLabel=c.grade.toUpperCase();
+  const d=gradeDiscount(c.grade);
+  const gLbl=gradeLabel(c.grade);
   // 표준가 + 할인가 정보
   const priceInfo=field=>{
     const std=f[field];
     if(!std)return '';
     const discounted=applyD(std,d);
+    const discLabel=c.grade==='standard'?'표준가 적용가':`${gLbl}할인가`;
     return `<div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
       <span style="font-size:10px;color:var(--txt3)">표준가 <b style="color:var(--txt2)">${std.toLocaleString()}원</b></span>
-      <span style="font-size:10px;color:var(--txt3)">${gradeLabel}할인가 <b style="color:var(--blue)">${discounted.toLocaleString()}원</b></span>
+      <span style="font-size:10px;color:var(--txt3)">${discLabel} <b style="color:var(--blue)">${discounted.toLocaleString()}원</b></span>
     </div>`;
   };
   document.getElementById('sp-slide-title').textContent=`${f.name} — ${c.name} 직접 단가`;
@@ -3868,778 +3618,6 @@ function setApGrade(btn,grade){
 }
 
 
-// ─ 컬러 이미지 관리 ─
-// 메모리 캐시: 이미지 로드 결과 (true=성공, false=실패, undefined=미시도)
-const colorImgCache={};
-
-// 원단의 표시용 이미지 URL 가져오기 (Storage 우선, URL 폴백)
-function getColorImageUrl(f){
-  if(!f)return '';
-  return (f.colorImage||'').trim()||(f.colorUrl||'').trim();
-}
-// 원단이 Firebase Storage에 업로드된 이미지를 가지고 있는지
-function hasUploadedImage(f){
-  return !!(f&&f.colorImage&&f.colorImage.trim());
-}
-
-// 컬러 관리 뷰 진입 - 필터 선택 박스 채우기 + 테이블 렌더
-function initColorView(){
-  const catSel=document.getElementById('color-cat-filter');
-  if(catSel){
-    const cats=[...new Set(ST.fabrics.map(f=>f.category).filter(Boolean))].sort();
-    catSel.innerHTML='<option value="">전체</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
-  }
-  renderColorTable();
-}
-
-// 원단 상태 판정: 'ok' | 'err' | 'empty' | 'loading'
-function colorStatusOf(f){
-  const url=getColorImageUrl(f);
-  if(!url)return 'empty';
-  if(colorImgCache[url]===true)return 'ok';
-  if(colorImgCache[url]===false)return 'err';
-  return 'loading';
-}
-
-// 이미지 미리 로드 (비동기): 결과를 캐시에 저장하고 renderColorTable 재호출 불필요하게 해당 셀만 갱신
-function preloadColorImg(url){
-  if(!url)return;
-  if(url in colorImgCache&&colorImgCache[url]!==undefined)return; // 결과 확정된 경우만 스킵
-  colorImgCache[url]=undefined; // 진행 중 마킹
-  const img=new Image();
-  let settled=false;
-  const onDone=(ok)=>{
-    if(settled)return;
-    settled=true;
-    colorImgCache[url]=ok;
-    updateColorRowState(url);
-  };
-  img.onload=()=>onDone(true);
-  img.onerror=()=>onDone(false);
-  img.src=url;
-  // 10초 타임아웃 - 응답 없으면 err 처리
-  setTimeout(()=>{if(!settled)onDone(false);},10000);
-}
-
-// 특정 URL을 쓰는 모든 행의 썸네일/상태/입력창 클래스를 갱신
-function updateColorRowState(url){
-  if(!url)return;
-  // ── 컬러 이미지 관리 화면 (color-tbody) ──
-  const tbody=document.getElementById('color-tbody');
-  if(tbody){
-    const rows=tbody.querySelectorAll(`tr[data-url="${CSS.escape(url)}"]`);
-    rows.forEach(tr=>{
-      const fid=+tr.dataset.fid;
-      const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-      const status=colorStatusOf(f);
-      const thumbTd=tr.querySelector('.color-thumb-td');
-      const statusTd=tr.querySelector('.color-status-td');
-      const input=tr.querySelector('.color-url-input');
-      if(thumbTd){
-        if(status==='ok')thumbTd.innerHTML=`<img src="${f.colorUrl}" class="color-thumb" alt="${f.name}">`;
-        else if(status==='err')thumbTd.innerHTML='<div class="color-thumb-empty" title="이미지 로드 실패">⚠</div>';
-        else if(status==='loading')thumbTd.innerHTML='<div class="color-thumb-empty">⏳</div>';
-        else thumbTd.innerHTML='<div class="color-thumb-empty">—</div>';
-      }
-      if(statusTd)statusTd.innerHTML=colorStatusBadge(status);
-      if(input){
-        input.classList.remove('ok','err');
-        if(status==='ok')input.classList.add('ok');
-        else if(status==='err')input.classList.add('err');
-      }
-    });
-    updateColorProgress();
-  }
-  // ── 컬러 발송 화면 (cs-list-wrap) ──
-  updateColorSendRowState(url);
-}
-
-// 컬러 발송 목록에서 특정 URL 행의 썸네일 갱신
-function updateColorSendRowState(url){
-  if(!url)return;
-  const wrap=document.getElementById('cs-list-wrap');if(!wrap)return;
-  const rows=wrap.querySelectorAll(`.cs-row[data-url="${CSS.escape(url)}"]`);
-  rows.forEach(row=>{
-    const fid=+row.dataset.fid;
-    const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-    const status=colorStatusOf(f);
-    const dispUrl=getColorImageUrl(f);
-    // 썸네일 영역 첫 자식 교체
-    const oldThumb=row.querySelector('.cs-thumb, .cs-thumb-empty');
-    if(!oldThumb)return;
-    let newThumb;
-    if(status==='ok'&&dispUrl){
-      newThumb=document.createElement('img');
-      newThumb.src=dispUrl;
-      newThumb.className='cs-thumb';
-      newThumb.alt=f.name;
-      newThumb.onclick=()=>openCsImgModal(f.id);
-    } else {
-      newThumb=document.createElement('div');
-      newThumb.className='cs-thumb-empty';
-      newThumb.textContent=status==='err'?'⚠':status==='loading'?'⏳':'—';
-      newThumb.title=status==='err'?'이미지 로드 실패':status==='loading'?'로드 중':'이미지 미등록';
-    }
-    oldThumb.replaceWith(newThumb);
-  });
-}
-
-// 상태 배지 HTML
-function colorStatusBadge(status){
-  if(status==='ok')return '<span class="color-status ok" title="등록 완료">✓</span>';
-  if(status==='err')return '<span class="color-status err" title="URL 오류">⚠</span>';
-  if(status==='loading')return '<span class="color-status loading" title="로드 중">⏳</span>';
-  return '<span class="color-status empty" title="미등록">○</span>';
-}
-
-// 진행률 업데이트
-function updateColorProgress(){
-  const total=ST.fabrics.length;
-  const okCount=ST.fabrics.filter(f=>colorStatusOf(f)==='ok').length;
-  const txt=document.getElementById('color-progress-text');
-  if(txt)txt.textContent=`${okCount} / ${total} 등록됨`;
-  const fill=document.getElementById('color-progress-fill');
-  if(fill)fill.style.width=total?(okCount/total*100)+'%':'0%';
-}
-
-// 테이블 렌더
-function renderColorTable(){
-  const tbody=document.getElementById('color-tbody');if(!tbody)return;
-  const catFilter=(document.getElementById('color-cat-filter')||{}).value||'';
-  const statusFilter=(document.getElementById('color-status-filter')||{}).value||'';
-  const srch=((document.getElementById('color-search')||{}).value||'').trim().toLowerCase();
-
-  let fabs=ST.fabrics.filter(f=>f.name);
-  if(catFilter)fabs=fabs.filter(f=>f.category===catFilter);
-  if(srch)fabs=fabs.filter(f=>(f.name||'').toLowerCase().includes(srch));
-  if(statusFilter)fabs=fabs.filter(f=>colorStatusOf(f)===statusFilter);
-
-  // 라인(level) → 조직(category) 순 정렬
-  const lvOrder={promo:1,standard:2,premium:3,luxury:4,apparel:5};
-  fabs.sort((a,b)=>{
-    const la=lvOrder[a.level]||9,lb=lvOrder[b.level]||9;
-    if(la!==lb)return la-lb;
-    if(a.category!==b.category)return (a.category||'').localeCompare(b.category||'');
-    return (a.name||'').localeCompare(b.name||'');
-  });
-
-  if(!fabs.length){
-    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--txt3)">표시할 원단이 없습니다</td></tr>';
-    updateColorProgress();
-    return;
-  }
-
-  // 라인별 그룹 섹션 렌더
-  const allLvs=getAllLevels();
-  let html='';
-  let lastLv=null;
-  fabs.forEach(f=>{
-    if(f.level!==lastLv){
-      html+=`<tr class="color-sect"><td colspan="6">${(allLvs[f.level]||f.level||'').toUpperCase()}</td></tr>`;
-      lastLv=f.level;
-    }
-    const status=colorStatusOf(f);
-    const dispUrl=getColorImageUrl(f);
-    const hasUp=hasUploadedImage(f);
-    const thumbHtml=(status==='ok'||status==='loading')&&dispUrl
-      ?`<img src="${dispUrl}" class="color-thumb" alt="${f.name}" onerror="this.outerHTML='<div class=&quot;color-thumb-empty&quot; title=&quot;이미지 로드 실패&quot;>⚠</div>'">`
-      :status==='err'?'<div class="color-thumb-empty" title="이미지 로드 실패">⚠</div>'
-      :'<div class="color-thumb-empty">—</div>';
-    const inputCls=(!hasUp&&status==='ok')?'ok':(status==='err'?'err':'');
-    const urlVal=(f.colorUrl||'').replace(/"/g,'&quot;');
-    // 업로드된 이미지가 있으면 URL 입력란에 안내 + 비활성화 스타일
-    const urlField=hasUp
-      ?`<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);font-weight:600;padding:6px 10px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:7px">
-          <span>📷 업로드됨</span>
-          <span style="color:var(--txt3);font-weight:400;font-size:11px">· Firebase Storage</span>
-        </div>`
-      :`<input type="text" class="color-url-input ${inputCls}" value="${urlVal}" placeholder="https://... (또는 📷 업로드 버튼 사용)" onchange="onColorUrlChange(${f.id}, this.value)" onkeydown="if(event.key==='Enter')this.blur();">`;
-    // 액션 버튼: 업로드 항상 표시 + 제거(업로드된 경우) / URL 삭제(URL만 있는 경우)
-    const actionBtn=hasUp
-      ?`<button class="btn btn-sm" onclick="removeColorImage(${f.id})" title="업로드된 이미지 제거" style="font-size:11px;padding:4px 8px;background:#fff;border:1px solid var(--red);color:var(--red);border-radius:6px;cursor:pointer">제거</button>`
-      :((f.colorUrl||'')?`<button class="btn btn-sm" onclick="clearColorUrl(${f.id})" title="URL 제거" style="font-size:11px;padding:4px 8px;background:#fff;border:1px solid var(--border2);color:var(--txt3);border-radius:6px;cursor:pointer">✕</button>`:'');
-    const uploadBtn=`<button class="btn btn-sm" onclick="pickColorImageFile(${f.id})" title="${hasUp?'이미지 교체':'이미지 업로드'}" style="font-size:11px;padding:4px 10px;background:var(--gold);border:none;color:#fff;border-radius:6px;cursor:pointer;font-weight:600;white-space:nowrap">📷 ${hasUp?'교체':'업로드'}</button>`;
-    html+=`<tr data-fid="${f.id}" data-url="${dispUrl}">
-      <td><div style="font-weight:700;color:var(--txt)">${f.name}</div></td>
-      <td style="color:var(--txt2);font-size:12px">${f.category||'-'}</td>
-      <td class="color-thumb-td" style="text-align:center">${thumbHtml}</td>
-      <td>${urlField}</td>
-      <td class="color-status-td" style="text-align:center">${colorStatusBadge(status)}</td>
-      <td style="text-align:center;white-space:nowrap"><div style="display:flex;gap:4px;justify-content:center">${uploadBtn}${actionBtn}</div></td>
-    </tr>`;
-
-    // 이미지 로드 아직 시도 안 했으면 백그라운드 로드 예약
-    if(dispUrl&&!(dispUrl in colorImgCache))preloadColorImg(dispUrl);
-  });
-
-  tbody.innerHTML=html;
-  updateColorProgress();
-}
-
-// URL 변경 처리
-function onColorUrlChange(fid,url){
-  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-  const clean=(url||'').trim();
-  if(clean===(f.colorUrl||''))return; // 변경 없음
-  f.colorUrl=clean;
-  saveFabricsDirty();
-  if(clean){
-    if(!(clean in colorImgCache))preloadColorImg(clean);
-    else updateColorRowState(clean);
-    // 이전 URL의 캐시된 결과가 있다면 현재 행 UI만 해당 URL 기준으로 재설정
-    const tbody=document.getElementById('color-tbody');
-    if(tbody){
-      const tr=tbody.querySelector(`tr[data-fid="${fid}"]`);
-      if(tr)tr.dataset.url=clean;
-    }
-    updateColorRowState(clean);
-  } else {
-    // 빈 문자열로 변경 → 해당 행만 다시 렌더
-    renderColorTable();
-  }
-}
-
-// 단일 URL 제거
-function clearColorUrl(fid){
-  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-  if(!f.colorUrl)return;
-  f.colorUrl='';
-  saveFabricsDirty();
-  renderColorTable();
-  toast(`${f.name} 컬러 URL 제거됨`,'success');
-}
-
-// 기본값 일괄 적용 (DEFAULT_COLOR_URLS)
-function applyDefaultColorUrls(){
-  const entries=Object.entries(DEFAULT_COLOR_URLS);
-  const matched=[],skipped=[];
-  entries.forEach(([name,url])=>{
-    const f=ST.fabrics.find(x=>x.name===name);
-    if(f){matched.push({name,url,hadPrev:!!f.colorUrl});f.colorUrl=url;preloadColorImg(url);}
-    else skipped.push(name);
-  });
-  const replaced=matched.filter(m=>m.hadPrev).length;
-  const added=matched.length-replaced;
-  openM('기본값 일괄 적용 결과',
-    `<div style="font-size:13px;line-height:1.9">
-      <div><b style="color:var(--green)">✓ 신규 등록:</b> ${added}개</div>
-      <div><b style="color:var(--gold)">↻ 덮어쓰기:</b> ${replaced}개</div>
-      ${skipped.length?`<div style="margin-top:10px;color:var(--red)"><b>⚠ 원단을 찾지 못함:</b> ${skipped.join(', ')}</div>`:''}
-      <div style="margin-top:12px;padding:10px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--txt2)">기본 등록되는 원단: 스포츠싱글 · 노블싱글(스판) · 울트라싱글 · 슈퍼싱글 · 프리미엄싱글 · RS-400S (총 6종)</div>
-    </div>`,
-    [{label:'확인',cls:'btn-gold',fn:()=>{saveFabricsDirty();renderColorTable();closeM();toast(`기본값 ${matched.length}개 적용됨`,'success');}}]
-  );
-}
-
-// 엑셀 붙여넣기 모달 열기
-function openColorBulkPaste(){
-  openM('엑셀 붙여넣기로 일괄 등록',
-    `<div class="color-bulk-box" style="margin-bottom:12px">
-      <div style="font-weight:700;color:var(--txt);margin-bottom:6px">📋 사용 방법</div>
-      엑셀에서 <b>원단명 | 컬러이미지URL</b> 두 컬럼을 선택 → 복사 → 아래 박스에 붙여넣기(Ctrl+V)<br>
-      <span style="color:var(--txt3);font-size:11px">예) 스포츠싱글[탭]https://recoveric.com/data/productall/1050_h?ver=2</span>
-    </div>
-    <textarea class="color-bulk-textarea" id="color-bulk-textarea" placeholder="원단명&#9;URL&#10;원단명&#9;URL&#10;..."></textarea>
-    <div id="color-bulk-preview" style="margin-top:10px;font-size:12px;color:var(--txt2)"></div>`,
-    [
-      {label:'일괄 적용',cls:'btn-gold',fn:processColorBulkPaste},
-      {label:'취소',cls:'btn-outline',fn:closeM}
-    ]
-  );
-  // 입력 중 미리보기
-  setTimeout(()=>{
-    const ta=document.getElementById('color-bulk-textarea');
-    if(ta)ta.addEventListener('input',renderColorBulkPreview);
-  },100);
-}
-
-// 붙여넣기 텍스트 미리보기 (몇 건 매칭됐는지)
-function renderColorBulkPreview(){
-  const ta=document.getElementById('color-bulk-textarea');
-  const prev=document.getElementById('color-bulk-preview');
-  if(!ta||!prev)return;
-  const lines=ta.value.split('\n').map(l=>l.trim()).filter(Boolean);
-  const parsed=lines.map(line=>{
-    const parts=line.split(/\t|\s{2,}|,/).map(p=>p.trim()).filter(Boolean);
-    if(parts.length<2)return null;
-    const name=parts[0], url=parts[parts.length-1];
-    return {name,url,found:!!ST.fabrics.find(f=>f.name===name)};
-  }).filter(Boolean);
-  const found=parsed.filter(p=>p.found).length;
-  const notFound=parsed.filter(p=>!p.found);
-  prev.innerHTML=`<b>${parsed.length}</b>개 행 인식됨 · 매칭 <b style="color:var(--green)">${found}</b>개 · 매칭 안됨 <b style="color:var(--red)">${notFound.length}</b>개`
-    +(notFound.length?`<div style="margin-top:4px;color:var(--red);font-size:11px">⚠ 매칭 안됨: ${notFound.map(p=>p.name).join(', ')}</div>`:'');
-}
-
-// 붙여넣기 적용
-function processColorBulkPaste(){
-  const ta=document.getElementById('color-bulk-textarea');
-  if(!ta)return;
-  const lines=ta.value.split('\n').map(l=>l.trim()).filter(Boolean);
-  let applied=0,skipped=0;
-  lines.forEach(line=>{
-    const parts=line.split(/\t|\s{2,}|,/).map(p=>p.trim()).filter(Boolean);
-    if(parts.length<2){skipped++;return;}
-    const name=parts[0], url=parts[parts.length-1];
-    const f=ST.fabrics.find(x=>x.name===name);
-    if(!f){skipped++;return;}
-    f.colorUrl=url;
-    preloadColorImg(url);
-    applied++;
-  });
-  if(applied){saveFabricsDirty();renderColorTable();}
-  closeM();
-  toast(`${applied}개 적용됨${skipped?` · ${skipped}개 건너뜀`:''}`,applied?'success':'error');
-}
-
-// ─ Firebase Storage 이미지 업로드/관리 ─
-
-// 이미지 압축: File → Blob (JPEG, 최대 1200px, 품질 85%)
-function compressImage(file, maxWidth=1200, quality=0.85){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onload=e=>{
-      const img=new Image();
-      img.onload=()=>{
-        let w=img.naturalWidth, h=img.naturalHeight;
-        if(w>maxWidth){h=Math.round(h*maxWidth/w);w=maxWidth;}
-        const canvas=document.createElement('canvas');
-        canvas.width=w;canvas.height=h;
-        const ctx=canvas.getContext('2d');
-        // 하얀 배경(투명 PNG 대비)
-        ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
-        ctx.drawImage(img,0,0,w,h);
-        canvas.toBlob(b=>{
-          if(b)resolve(b);else reject(new Error('compress toBlob failed'));
-        },'image/jpeg',quality);
-      };
-      img.onerror=()=>reject(new Error('이미지 로드 실패'));
-      img.src=e.target.result;
-    };
-    reader.onerror=()=>reject(new Error('파일 읽기 실패'));
-    reader.readAsDataURL(file);
-  });
-}
-
-// Firebase Storage에 업로드 → 공개 URL 반환
-async function uploadColorImageToStorage(fid, blob){
-  const storage=await ensureFirebaseStorage();
-  if(!storage)throw new Error('Firebase Storage 초기화 실패 — 인터넷 연결 확인');
-  const fileName=`color-images/${fid}_${Date.now()}.jpg`;
-  const ref=storage.ref(fileName);
-  const snapshot=await ref.put(blob,{contentType:'image/jpeg'});
-  const url=await snapshot.ref.getDownloadURL();
-  return {url, path: fileName};
-}
-
-// Firebase Storage에서 파일 삭제 (이전 이미지 정리)
-async function deleteColorImageFromStorage(path){
-  if(!path)return;
-  try{
-    const storage=await ensureFirebaseStorage();
-    if(!storage)return;
-    await storage.ref(path).delete();
-  }catch(e){
-    // 이미 삭제됐거나 경로 오류는 무시
-    console.warn('[Storage delete]',e.message);
-  }
-}
-
-// 이미지 파일 선택 다이얼로그 → 업로드 처리
-function pickColorImageFile(fid){
-  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-  const input=document.createElement('input');
-  input.type='file';
-  input.accept='image/jpeg,image/png,image/webp,image/gif';
-  input.onchange=async(e)=>{
-    const file=e.target.files[0];
-    if(!file)return;
-    // 용량 제한 (원본 20MB까지)
-    if(file.size>20*1024*1024){
-      toast('파일이 너무 큽니다 (20MB 초과)','error');
-      return;
-    }
-    await handleColorImageUpload(fid, file);
-  };
-  input.click();
-}
-
-// 이미지 업로드 전체 흐름 (압축 → Storage 업로드 → DB 저장 → UI 갱신)
-async function handleColorImageUpload(fid, file){
-  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-  const statusEl=document.querySelector(`tr[data-fid="${fid}"] .color-status-td`);
-  const thumbEl=document.querySelector(`tr[data-fid="${fid}"] .color-thumb-td`);
-  try{
-    if(statusEl)statusEl.innerHTML='<span class="color-status loading" title="업로드 중">⏳</span>';
-    if(thumbEl)thumbEl.innerHTML='<div class="color-thumb-empty" title="업로드 중">⏳</div>';
-    toast('이미지 압축 중...','success');
-    const blob=await compressImage(file);
-    const sizeKB=Math.round(blob.size/1024);
-    toast(`업로드 중... (${sizeKB}KB)`,'success');
-    // 이전 이미지 삭제 (있으면) - 비동기, 결과 기다리지 않음
-    const oldPath=f.colorImagePath;
-    const result=await uploadColorImageToStorage(fid, blob);
-    console.log('[Upload]',f.name,'→',result.url);
-
-    // DB 저장 - LocalStorage는 즉시, Firebase RTDB는 대기
-    f.colorImage=result.url;
-    f.colorImagePath=result.path;
-    // LocalStorage 즉시 저장 (동기)
-    try{localStorage.setItem('rcv2',JSON.stringify(ST));}catch(e){}
-    // Firebase RTDB 저장 - 완료 대기 (중요: fbRead 덮어쓰기 방지 및 다른 기기 동기화)
-    _fbLastWrite=Date.now(); // fbRead 5초 보호 갱신
-    await fbWrite();
-    console.log('[Upload] RTDB 저장 완료',f.name);
-
-    // 이전 이미지 삭제 (DB 저장 후)
-    if(oldPath)deleteColorImageFromStorage(oldPath);
-
-    // 이미지 URL이 실제로 로드 가능한지 검증
-    await new Promise((resolve)=>{
-      const img=new Image();
-      img.onload=()=>{colorImgCache[result.url]=true;resolve();};
-      img.onerror=()=>{colorImgCache[result.url]=false;resolve();};
-      img.src=result.url;
-      setTimeout(resolve,5000); // 5초 타임아웃
-    });
-
-    renderColorTable();
-    if(document.getElementById('view-colorsend')?.classList.contains('active')){
-      renderColorSendList();
-    }
-    if(colorImgCache[result.url]===false){
-      toast(`⚠ ${f.name} 업로드됐으나 이미지 로드 실패 — 새로고침 필요`,'error');
-    } else {
-      toast(`✓ ${f.name} 이미지 업로드 완료 (${sizeKB}KB)`,'success');
-    }
-  }catch(e){
-    console.error('[Image upload]',e);
-    toast('업로드 실패: '+e.message,'error');
-    renderColorTable();
-  }
-}
-
-// 업로드한 이미지 제거 (Storage + DB)
-async function removeColorImage(fid){
-  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-  if(!f.colorImage&&!f.colorImagePath)return;
-  if(!confirm(`${f.name}의 업로드된 이미지를 제거하시겠습니까?`))return;
-  try{
-    if(f.colorImagePath)await deleteColorImageFromStorage(f.colorImagePath);
-    delete f.colorImage;
-    delete f.colorImagePath;
-    saveFabricsDirty();
-    renderColorTable();
-    if(document.getElementById('view-colorsend')?.classList.contains('active')){
-      renderColorSendList();
-    }
-    toast(`${f.name} 이미지 제거됨`,'success');
-  }catch(e){
-    toast('제거 실패: '+e.message,'error');
-  }
-}
-
-
-// ─ 컬러 발송 ─
-// 확대보기 모달 전용 상태
-let csModalCurrentFid=null;
-
-// 뷰 진입 시 초기화
-function initColorSendView(){
-  const catSel=document.getElementById('cs-cat-filter');
-  if(catSel){
-    const cats=[...new Set(ST.fabrics.map(f=>f.category).filter(Boolean))].sort();
-    const prev=catSel.value;
-    catSel.innerHTML='<option value="">전체</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
-    if(prev)catSel.value=prev;
-  }
-  renderColorSendList();
-}
-
-// 목록 렌더
-function renderColorSendList(){
-  const wrap=document.getElementById('cs-list-wrap');if(!wrap)return;
-  const catFilter=(document.getElementById('cs-cat-filter')||{}).value||'';
-  const srch=((document.getElementById('cs-search')||{}).value||'').trim().toLowerCase();
-  const onlyReg=!!(document.getElementById('cs-only-registered')||{}).checked;
-
-  let fabs=ST.fabrics.filter(f=>f.name);
-  if(onlyReg)fabs=fabs.filter(f=>getColorImageUrl(f));
-  if(catFilter)fabs=fabs.filter(f=>f.category===catFilter);
-  if(srch)fabs=fabs.filter(f=>(f.name||'').toLowerCase().includes(srch));
-
-  // 라인 → 조직 → 이름 순 정렬
-  const lvOrder={promo:1,standard:2,premium:3,luxury:4,apparel:5};
-  fabs.sort((a,b)=>{
-    const la=lvOrder[a.level]||9,lb=lvOrder[b.level]||9;
-    if(la!==lb)return la-lb;
-    if(a.category!==b.category)return (a.category||'').localeCompare(b.category||'');
-    return (a.name||'').localeCompare(b.name||'');
-  });
-
-  if(!fabs.length){
-    wrap.innerHTML=`<div class="cs-empty-notice">
-      <div class="cs-empty-ic">🎨</div>
-      <div style="font-size:14px;font-weight:600;color:var(--txt2);margin-bottom:4px">표시할 원단이 없습니다</div>
-      <div style="font-size:12px">${onlyReg?'"등록된 원단만" 체크를 해제하면 전체가 표시됩니다.':'필터 조건을 다시 확인해주세요.'}</div>
-    </div>`;
-    return;
-  }
-
-  // 조직별 그룹
-  const grouped={};
-  fabs.forEach(f=>{const k=f.category||'기타';if(!grouped[k])grouped[k]=[];grouped[k].push(f);});
-
-  let html='';
-  Object.keys(grouped).forEach(cat=>{
-    const rows=grouped[cat];
-    html+=`<div class="cs-sect-header">${cat} · ${rows.length}종</div>`;
-    rows.forEach(f=>{
-      const dispUrl=getColorImageUrl(f);
-      const hasUrl=!!dispUrl;
-      const hasUp=hasUploadedImage(f);
-      const status=hasUrl?colorStatusOf(f):'empty'; // ok | err | loading | empty
-      // 썸네일 영역 - loading 상태에서도 img로 표시하여 브라우저가 직접 로드하게 함
-      let thumbHtml='';
-      if(hasUrl&&(status==='ok'||status==='loading'))thumbHtml=`<img src="${dispUrl}" class="cs-thumb" alt="${f.name}" onclick="openCsImgModal(${f.id})" onerror="this.outerHTML='<div class=&quot;cs-thumb-empty&quot; title=&quot;이미지 로드 실패&quot;>⚠</div>'">`;
-      else if(hasUrl&&status==='err')thumbHtml=`<div class="cs-thumb-empty" title="이미지 로드 실패">⚠</div>`;
-      else thumbHtml=`<div class="cs-thumb-empty" title="이미지 미등록">—</div>`;
-      // 백그라운드 로드 예약
-      if(hasUrl&&!(dispUrl in colorImgCache))preloadColorImg(dispUrl);
-      // 메타 라인
-      const allLvs=getAllLevels();
-      const lvName=allLvs[f.level]||f.level||'';
-      // 업로드 배지 (Storage 이미지인 경우)
-      const upBadge=hasUp?'<span style="display:inline-block;background:#dcfce7;color:#166534;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle">📷 업로드</span>':'';
-      // 액션 버튼
-      let actions='';
-      if(hasUrl){
-        actions=`<button class="btn btn-gold btn-sm" onclick="copyCsImage(${f.id})" title="이미지 복사" style="font-size:12px;padding:6px 12px">📋 이미지</button>
-          <button class="btn btn-outline btn-sm" onclick="copyCsImageUrl(${f.id})" title="URL 텍스트 복사" style="font-size:12px;padding:6px 12px">🔗 URL</button>`;
-      } else {
-        actions=`<span style="font-size:11px;color:var(--txt3);padding:6px 10px;background:var(--bg3);border-radius:6px">이미지 미등록</span>`;
-      }
-      html+=`<div class="cs-row" data-fid="${f.id}" data-url="${hasUrl?dispUrl:''}">
-        ${thumbHtml}
-        <div class="cs-info">
-          <div class="cs-name">${f.name}${upBadge}</div>
-          <div class="cs-meta">${lvName}${f.width?' · '+f.width+'"':''}${f.weight?' · '+f.weight+'g/y':''}</div>
-        </div>
-        <div class="cs-actions">${actions}</div>
-      </div>`;
-    });
-  });
-  wrap.innerHTML=html;
-}
-
-// 이미지 복사 (fetch → blob → ClipboardItem)
-async function copyCsImage(fid){
-  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-  const url=getColorImageUrl(f);
-  if(!url)return;
-  if(!(navigator.clipboard&&window.ClipboardItem)){
-    // 환경 미지원 → URL 텍스트 복사로 fallback
-    copyCsImageUrl(fid);
-    return;
-  }
-  try{
-    const resp=await fetch(url,{mode:'cors'});
-    if(!resp.ok)throw new Error('HTTP '+resp.status);
-    let blob=await resp.blob();
-    // 브라우저 Clipboard API는 image/png만 허용 — JPEG이면 변환 필요
-    if(blob.type!=='image/png'){
-      blob=await convertToPng(blob);
-    }
-    await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
-    toast(`${f.name} 컬러 이미지 복사됨 ✓`,'success');
-    updateCsStatusBar(f.name,'image');
-  }catch(e){
-    // CORS 실패 또는 네트워크 문제 → URL 텍스트 복사로 자동 전환
-    toast(`이미지 복사 불가(브라우저 제약) — URL로 대체`,'error');
-    copyCsImageUrl(fid,true);
-  }
-}
-
-// URL 텍스트 복사
-function copyCsImageUrl(fid,isFallback){
-  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-  const url=getColorImageUrl(f);
-  if(!url)return;
-  doCopyText(url).then(()=>{
-    if(!isFallback)toast(`${f.name} URL 복사됨 ✓`,'success');
-    updateCsStatusBar(f.name,'url');
-  }).catch(()=>{
-    showCopyPopup(url);
-    updateCsStatusBar(f.name,'url');
-  });
-}
-
-// Blob을 PNG로 변환 (JPEG 이미지 → Canvas → PNG Blob)
-function convertToPng(blob){
-  return new Promise((resolve,reject)=>{
-    const url=URL.createObjectURL(blob);
-    const img=new Image();
-    img.onload=()=>{
-      try{
-        const canvas=document.createElement('canvas');
-        canvas.width=img.naturalWidth;
-        canvas.height=img.naturalHeight;
-        const ctx=canvas.getContext('2d');
-        ctx.drawImage(img,0,0);
-        canvas.toBlob(b=>{
-          URL.revokeObjectURL(url);
-          if(b)resolve(b);
-          else reject(new Error('toBlob failed'));
-        },'image/png');
-      }catch(e){URL.revokeObjectURL(url);reject(e);}
-    };
-    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('image load error'));};
-    img.src=url;
-  });
-}
-
-// 하단 상태바 갱신 (마지막 복사 내역 - 덮어쓰기)
-function updateCsStatusBar(name,type){
-  const bar=document.getElementById('cs-status-bar');
-  const ic=bar?bar.querySelector('.cs-status-ic'):null;
-  const title=document.getElementById('cs-status-title');
-  const hint=document.getElementById('cs-status-hint');
-  if(!bar||!title||!hint)return;
-  const now=new Date();
-  const hh=String(now.getHours()).padStart(2,'0');
-  const mm=String(now.getMinutes()).padStart(2,'0');
-  bar.classList.remove('empty');
-  if(ic)ic.textContent=type==='image'?'🖼️':'🔗';
-  if(type==='image'){
-    title.innerHTML=`<span style="color:var(--green)">✓ 복사됨</span> · <b>${name}</b> 컬러 이미지 <span style="color:var(--txt3);font-weight:400">(${hh}:${mm})</span>`;
-    hint.textContent='카톡 대화창에서 Ctrl+V 또는 길게 눌러 붙여넣기 하세요.';
-  } else {
-    title.innerHTML=`<span style="color:var(--green)">✓ 복사됨</span> · <b>${name}</b> 이미지 URL <span style="color:var(--txt3);font-weight:400">(${hh}:${mm})</span>`;
-    hint.textContent='카톡에 붙여넣으면 링크 미리보기로 전송됩니다.';
-  }
-}
-
-// 이미지 확대 모달
-function openCsImgModal(fid){
-  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-  const url=getColorImageUrl(f);
-  if(!url)return;
-  csModalCurrentFid=fid;
-  document.getElementById('cs-img-modal-title').textContent=f.name;
-  document.getElementById('cs-img-modal-img').src=url;
-  document.getElementById('cs-img-modal').classList.add('open');
-}
-function closeCsImgModal(){
-  document.getElementById('cs-img-modal').classList.remove('open');
-  document.getElementById('cs-img-modal-img').src='';
-  csModalCurrentFid=null;
-}
-function copyCsImageFromModal(){
-  if(csModalCurrentFid)copyCsImage(csModalCurrentFid);
-}
-
-
-// ─ 원단 URL 발송 ─ (v4.97 신규)
-
-// 뷰 진입 시 초기화
-function initUrlSendView(){
-  const catSel=document.getElementById('us-cat-filter');
-  if(catSel){
-    const cats=[...new Set(ST.fabrics.map(f=>f.category).filter(Boolean))].sort();
-    const prev=catSel.value;
-    catSel.innerHTML='<option value="">전체</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
-    if(prev)catSel.value=prev;
-  }
-  renderUrlSendList();
-}
-
-// 목록 렌더
-function renderUrlSendList(){
-  const wrap=document.getElementById('us-list-wrap');if(!wrap)return;
-  const catFilter=(document.getElementById('us-cat-filter')||{}).value||'';
-  const srch=((document.getElementById('us-search')||{}).value||'').trim().toLowerCase();
-  const onlyReg=!!(document.getElementById('us-only-registered')||{}).checked;
-
-  let fabs=ST.fabrics.filter(f=>f.name);
-  if(onlyReg)fabs=fabs.filter(f=>(f.url||'').trim());
-  if(catFilter)fabs=fabs.filter(f=>f.category===catFilter);
-  if(srch)fabs=fabs.filter(f=>(f.name||'').toLowerCase().includes(srch));
-
-  // 라인 → 조직 → 이름 순 정렬
-  const lvOrder={promo:1,standard:2,premium:3,luxury:4,apparel:5};
-  fabs.sort((a,b)=>{
-    const la=lvOrder[a.level]||9,lb=lvOrder[b.level]||9;
-    if(la!==lb)return la-lb;
-    if(a.category!==b.category)return (a.category||'').localeCompare(b.category||'');
-    return (a.name||'').localeCompare(b.name||'');
-  });
-
-  if(!fabs.length){
-    wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--txt3)">표시할 원단이 없습니다</div>';
-    return;
-  }
-
-  // 조직별 그룹핑
-  const grouped={};
-  fabs.forEach(f=>{const k=f.category||'기타';if(!grouped[k])grouped[k]=[];grouped[k].push(f);});
-
-  let html='';
-  Object.keys(grouped).forEach(cat=>{
-    const rows=grouped[cat];
-    html+=`<div class="cs-sect-header">${cat} · ${rows.length}종</div>`;
-    rows.forEach(f=>{
-      const url=(f.url||'').trim();
-      const hasUrl=!!url;
-      const allLvs=getAllLevels();
-      const lvName=allLvs[f.level]||f.level||'';
-      // 액션 버튼
-      let actions='';
-      if(hasUrl){
-        actions=`<button class="btn btn-gold btn-sm" onclick="copyFabricUrl(${f.id})" title="URL 복사" style="font-size:12px;padding:6px 12px">📋 URL 복사</button>
-          <a href="${url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" title="새 탭에서 열기" style="font-size:12px;padding:6px 12px;text-decoration:none">🔗 열기</a>`;
-      } else {
-        actions=`<span style="font-size:11px;color:var(--txt3);padding:6px 10px;background:var(--bg3,#f4f6fa);border-radius:6px">URL 미등록</span>`;
-      }
-      // URL 미리보기 (호버 시 보이도록 title)
-      const urlPreview=hasUrl?`<div style="font-size:11px;color:var(--txt3);font-family:'JetBrains Mono',monospace;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:380px" title="${url}">${url.replace('https://','')}</div>`:'';
-      html+=`<div class="cs-row" data-fid="${f.id}" style="grid-template-columns:1fr auto">
-        <div class="cs-info" style="min-width:0">
-          <div class="cs-name">${f.name}</div>
-          <div class="cs-meta">${lvName}${f.width?' · '+f.width+'"':''}${f.weight?' · '+f.weight+'g/y':''}</div>
-          ${urlPreview}
-        </div>
-        <div class="cs-actions">${actions}</div>
-      </div>`;
-    });
-  });
-  wrap.innerHTML=html;
-}
-
-// URL 복사 (텍스트)
-function copyFabricUrl(fid){
-  const f=ST.fabrics.find(x=>x.id===fid);if(!f)return;
-  const url=(f.url||'').trim();
-  if(!url){toast('URL이 등록되지 않았습니다','error');return;}
-  doCopyText(url).then(()=>{
-    toast(`${f.name} URL 복사됨 ✓`,'success');
-    updateUsStatusBar(f.name);
-  }).catch(()=>{
-    showCopyPopup(url);
-    updateUsStatusBar(f.name);
-  });
-}
-
-// 하단 상태바 갱신 (마지막 복사 항목 표시)
-function updateUsStatusBar(fabName){
-  const bar=document.getElementById('us-statusbar');
-  const txt=document.getElementById('us-status-text');
-  if(!bar||!txt)return;
-  const tm=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
-  txt.innerHTML=`<b style="color:var(--green)">복사됨</b> · ${fabName} <span style="color:var(--txt3);font-size:11px">(${tm})</span>`;
-  bar.style.display='block';
-}
-
-
 // ─ 원단 소개 ─
 let introFid=null;
 
@@ -4747,19 +3725,17 @@ function openIntroEditById(fid){
   openIntroEdit();
 }
 
-// 카톡 메세지 생성 (공통) — RECOVERIC 표준 형식 (이모지 없음, 특수기호 사용)
+// 카톡 메세지 생성 (공통)
 function buildIntroMsg(f){
   const specLine=[f.width?f.width+'"':null,f.weight?f.weight+'g/y':null].filter(Boolean).join(' x ');
-  const tags=(f.tags||[]).join(' · ')||'';
-  const url=(f.url||'').trim();
+  const tags=(f.tags||[]).join(' · ')||'—';
+  const url=f.url||'recoveric.com (상세페이지 준비중)';
   let msg=`[${f.name}]  RECOVERIC\n\n`;
   msg+=`▸ 소재 : ${comp(f)||'—'}\n`;
   if(specLine)msg+=`▸ 폭/중량 : ${specLine}\n`;
-  if(tags)msg+=`▸ 추천 의류 : ${tags}\n`;
-  if(f.description)msg+=`\n■ ${f.description}\n`;
-  // [v4.97] URL 자동 추가 - 등록된 URL만 표시 (없으면 라인 자체를 생략)
-  if(url)msg+=`\n▷ 상세 : ${url}\n`;
-  msg+=`\n현일텍스 CS팀 드림`;
+  msg+=`▸ 추천의류 : ${tags}\n`;
+  if(f.description)msg+=`\n📌 ${f.description}\n`;
+  msg+=`\n🔗 ${url}\n\n리커버릭 CS팀 드림`;
   return msg;
 }
 
@@ -4890,7 +3866,7 @@ function applyNewPrices(){
     'RS-365T(3단)': {mg:7300, baek:7400, muji:7600, rib:9300},
     '쉬폰후라이스':   {mg:null, baek:7800, muji:7800, rib:7400},
     '365기모':       {mg:8700, baek:9000, muji:9100, rib:9300},
-    '물나염싱글':     {mg:null, baek:null, muji:8400, rib:9300},
+    '몰나염싱글':     {mg:null, baek:null, muji:8400, rib:9300},
     '프리미엄싱글':   {mg:5500, baek:5700, muji:5800, rib:8400},
     '슈퍼싱글':       {mg:5500, baek:5500, muji:5700, rib:8400},
     '울트라싱글':     {mg:6000, baek:6200, muji:6300, rib:9300},
@@ -4898,7 +3874,7 @@ function applyNewPrices(){
     'RS-080GT':      {mg:10800,baek:11200,muji:11400,rib:9300},
     '소프트후리스':   {mg:10600,baek:10800,muji:11000,rib:9500},
     '2X2GB골지':     {mg:null, baek:7800, muji:7900, rib:null},
-    '물나염쭈리':     {mg:null, baek:null, muji:9600, rib:10000},
+    '몰나염쭈리':     {mg:null, baek:null, muji:9600, rib:10000},
     '노블싱글(스판)': {mg:null, baek:7300, muji:7400, rib:9500},
     'RS-400S':       {mg:7500, baek:7800, muji:7900, rib:9500},
     'RS-500S':       {mg:9400, baek:9600, muji:9700, rib:9500},
@@ -5030,35 +4006,6 @@ document.addEventListener('keydown',e=>{
   if(e.key>='0'&&e.key<='9')pi(e.key);
   else if(e.key==='Backspace')pd();
   else if(e.key==='Escape'){pb='';upd();document.getElementById('pin-err').textContent='';}
-});
-
-// ─ 캡처 오버레이 키보드 단축키: Ctrl+C / Cmd+C 로 이미지 클립보드 복사 ─
-document.addEventListener('keydown',e=>{
-  const ov=document.getElementById('capture-overlay');
-  if(!ov||!ov.classList.contains('open'))return;
-  // Ctrl+C (Windows/Linux) 또는 Cmd+C (Mac)
-  if((e.ctrlKey||e.metaKey)&&(e.key==='c'||e.key==='C')){
-    // 이미지가 아직 생성 안됐으면 무시
-    if(!capBlob)return;
-    // 사용자가 텍스트를 선택해놓은 경우(예: 특정 문자열 복사 의도)에는 양보
-    const sel=window.getSelection&&window.getSelection().toString();
-    if(sel&&sel.length>0)return;
-    e.preventDefault();
-    capCopy();
-  }
-});
-
-// ─ 컬러 발송 이미지 확대 모달 단축키 ─
-document.addEventListener('keydown',e=>{
-  const m=document.getElementById('cs-img-modal');
-  if(!m||!m.classList.contains('open'))return;
-  if(e.key==='Escape'){e.preventDefault();closeCsImgModal();}
-  else if((e.ctrlKey||e.metaKey)&&(e.key==='c'||e.key==='C')){
-    const sel=window.getSelection&&window.getSelection().toString();
-    if(sel&&sel.length>0)return;
-    e.preventDefault();
-    copyCsImageFromModal();
-  }
 });
 </script>
 </body>
