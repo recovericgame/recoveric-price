@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.121</title>
+<title>RECOVERIC 단가관리 시스템 v4.122</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -86,7 +86,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .view.active{display:flex}
 /* 단가표 뷰는 패딩 줄여서 테이블 최대 활용 */
 #view-price{padding:16px 20px;gap:8px}
-#view-special,#view-byline,#view-bycat,#view-apparel{padding:16px 20px;gap:8px}
+#view-special,#view-byline,#view-bycat,#view-apparel,#view-bybadge{padding:16px 20px;gap:8px}
 #view-intro{padding:20px 24px;gap:14px}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .view-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
@@ -574,7 +574,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.121</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.122</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -597,6 +597,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
       <button class="nav-btn" id="nb-apparel" onclick="sv('apparel',this)">
         <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7l-3 3 3 3M17 7l3 3-3 3M3 10h18M10 3l-1 18M14 3l1 18"/></svg>
         추천의류별 단가표
+      </button>
+      <button class="nav-btn" id="nb-bybadge" onclick="sv('bybadge',this)">
+        <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+        배지별 단가표
       </button>
       <button class="nav-btn" id="nb-intro" onclick="sv('intro',this)">
         <svg class="nav-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
@@ -863,10 +867,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
             <button class="grade-tab" data-grade="vip" onclick="setBlGrade(this,'vip')">💎 VIP</button>
           </div>
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--border);padding-top:8px">
-          <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap;min-width:36px">배지</span>
-          <div id="bl-badge-filter" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-        </div>
       </div>
       <div class="table-wrap" style="flex:1;min-height:0">
         <table class="price-tbl"><colgroup><col style="width:15%"><col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:7%"><col style="width:6%"><col style="width:14%"><col style="width:10%"></colgroup>
@@ -899,10 +899,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
             <button class="grade-tab" data-grade="gold" onclick="setBcGrade(this,'gold')">🥇 GOLD</button>
             <button class="grade-tab" data-grade="vip" onclick="setBcGrade(this,'vip')">💎 VIP</button>
           </div>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--border);padding-top:8px">
-          <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap;min-width:36px">배지</span>
-          <div id="bc-badge-filter" style="display:flex;gap:6px;flex-wrap:wrap"></div>
         </div>
       </div>
       <div class="table-wrap" style="flex:1;min-height:0">
@@ -940,15 +936,44 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
             <button class="grade-tab" data-grade="vip" onclick="setApGrade(this,'vip')">💎 VIP</button>
           </div>
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--border);padding-top:8px">
-          <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap;min-width:36px">배지</span>
-          <div id="ap-badge-filter" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-        </div>
       </div>
       <div class="table-wrap" style="flex:1;min-height:0">
         <table class="price-tbl"><colgroup><col style="width:13%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:7%"><col style="width:6%"><col style="width:14%"><col style="width:15%"></colgroup>
           <thead><tr><th>품목명</th><th>라인</th><th>조직</th><th>8%MG<span class="unit">원/YD</span></th><th>백·백아이<span class="unit">원/YD</span></th><th>무지<span class="unit">원/YD</span></th><th>폭<span class="unit">인치</span></th><th>g/y</th><th>혼용률</th><th>카톡</th></tr></thead>
           <tbody id="ap-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ 배지별 단가표 ══ -->
+    <div class="view" id="view-bybadge">
+      <div class="view-header" style="margin-bottom:10px">
+        <div class="view-title">배지별 <span>단가표</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gold btn-sm" onclick="openCapture('bybadge')">📸 캡처</button>
+          <button class="btn btn-outline btn-sm" onclick="copyAllByBadge()">📋 전체 텍스트 복사</button>
+          <button class="sel-mode-btn" id="sel-btn-bybadge" onclick="toggleSelMode('bybadge')">☑ 선택발송</button>
+        </div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap;min-width:36px">배지</span>
+          <div id="bb-badge-filter" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--border);padding-top:8px">
+          <span style="font-size:11px;font-weight:700;color:var(--txt2);white-space:nowrap;min-width:36px">등급</span>
+          <div class="grade-tab-bar" id="bb-grade-bar" style="margin-bottom:0">
+            <button class="grade-tab active" data-grade="" onclick="setBbGrade(this,'')">표준가</button>
+            <button class="grade-tab" data-grade="silver" onclick="setBbGrade(this,'silver')">🥈 SILVER</button>
+            <button class="grade-tab" data-grade="gold" onclick="setBbGrade(this,'gold')">🥇 GOLD</button>
+            <button class="grade-tab" data-grade="vip" onclick="setBbGrade(this,'vip')">💎 VIP</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap" style="flex:1;min-height:0">
+        <table class="price-tbl"><colgroup><col style="width:15%"><col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:7%"><col style="width:6%"><col style="width:14%"><col style="width:10%"></colgroup>
+          <thead><tr><th>품목명</th><th>조직</th><th>8%MG<span class="unit">원/YD</span></th><th>백·백아이<span class="unit">원/YD</span></th><th>무지<span class="unit">원/YD</span></th><th>부속(RIB)<span class="unit">원/YD</span></th><th>폭<span class="unit">인치</span></th><th>g/y</th><th>혼용률</th><th>카톡</th></tr></thead>
+          <tbody id="bb-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -1715,7 +1740,7 @@ function init(){
   fillSpecialSel();
   initIntroSelects();
   renderTbl();renderCust();renderAdminTbl();loadDisc();applyGradeTabsDisabled();
-  renderByLine();renderByCat();renderByApparel();
+  renderByLine();renderByCat();renderByApparel();renderByBadge();
   // Firebase URL은 코드에 고정됨 (설정 불필요)
   const fc=document.getElementById('float-capture');
   if(fc)fc.classList.add('visible');
@@ -1754,6 +1779,7 @@ function sv(name,btn,skipHistory){
   else if(name==='byline'){activeBl='';activeBlGrade='';renderByLine();}
   else if(name==='bycat'){activeBc='';activeBcGrade='';renderByCat();}
   else if(name==='apparel'){activeAp='';activeApGrade='';renderByApparel();}
+  else if(name==='bybadge'){activeBbGrade='';activeBadges.bybadge.clear();renderByBadge();}
   else if(name==='cust')renderCust();
   else if(name==='admin'){renderAdminTbl();fillLevelSelects();fillCatList();renderTagMgmt();loadSeasonInput();}
   else if(name==='color'){initColorView();}
@@ -2013,9 +2039,9 @@ function badgeHtml(f){
   return b;
 }
 // ─ 배지 필터 — 다중 선택, OR 조건 ─
-// 각 화면의 활성 배지 키 집합 (Set)
-const activeBadges={byline:new Set(),bycat:new Set(),apparel:new Set()};
-// 배지 필터 토글 — view: 'byline'|'bycat'|'apparel', key: 배지 키 또는 null('전체')
+// 배지별 단가표 화면 전용 활성 배지 키 집합 (Set)
+const activeBadges={bybadge:new Set()};
+// 배지 필터 토글 — view: 'bybadge', key: 배지 키 또는 null('전체')
 function toggleBadgeFilter(view,key){
   const set=activeBadges[view];if(!set)return;
   if(key===null){set.clear();}
@@ -2023,9 +2049,7 @@ function toggleBadgeFilter(view,key){
     if(set.has(key))set.delete(key);
     else set.add(key);
   }
-  if(view==='byline')renderByLine();
-  else if(view==='bycat')renderByCat();
-  else if(view==='apparel')renderByApparel();
+  if(view==='bybadge')renderByBadge();
 }
 // 배지 필터 바 HTML 렌더 — 컨테이너 ID, view 키 받음
 function renderBadgeFilterBar(containerId,view){
@@ -2038,16 +2062,6 @@ function renderBadgeFilterBar(containerId,view){
     h+=`<button class="badge-filter-btn ${def.cls}${on?' active':''}" onclick="toggleBadgeFilter('${view}','${def.key}')">${def.label}</button>`;
   }
   cont.innerHTML=h;
-}
-// 배지 필터 적용 (OR 조건) — 활성 배지 중 하나라도 해당 원단에 있으면 통과
-function applyBadgeFilter(fabs,view){
-  const set=activeBadges[view]||new Set();
-  if(set.size===0)return fabs;
-  return fabs.filter(f=>{
-    if(!f.badges)return false;
-    for(const k of set)if(f.badges[k])return true;
-    return false;
-  });
 }
 function getFabs(){
   const s=(document.getElementById('srch').value||'').toLowerCase();
@@ -2248,7 +2262,7 @@ function delFFromSlide(){
       const name=f.name;
       ST.fabrics=ST.fabrics.filter(x=>x.id!==slideFid);
       saveFabricsDirty();
-      renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
+      renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();renderByBadge();
       closeSlidePanel();closeM();
       toast('"'+name+'" 삭제됨','success');
     }},
@@ -2299,7 +2313,7 @@ function saveSlidePanel(){
       },
     });
     saveFabricsDirty();
-    renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
+    renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();renderByBadge();
     closeSlidePanel();
     toast('저장됨 ✓','success');
   }catch(err){
@@ -2452,7 +2466,7 @@ function exitSelMode(rerender=true){
 function closeSelPanel(){exitSelMode();}
 
 function updateSelModeBtn(){
-  const views=['price','special','byline','bycat','apparel','intro'];
+  const views=['price','special','byline','bycat','apparel','bybadge','intro'];
   views.forEach(v=>{
     const btn=document.getElementById('sel-btn-'+v);
     if(!btn)return;
@@ -2467,6 +2481,7 @@ function reRenderCurrentView(){
   else if(selView==='byline')renderByLine();
   else if(selView==='bycat')renderByCat();
   else if(selView==='apparel')renderByApparel();
+  else if(selView==='bybadge')renderByBadge();
   else if(selView==='intro')renderIntroList(document.getElementById('intro-cat-sel')?.value||'');
 }
 
@@ -2746,6 +2761,20 @@ function buildCapTable(){
     fabs=activeBc?ST.fabrics.filter(f=>f.category===activeBc):ST.fabrics;
   } else if(capCtx==='apparel'){
     fabs=activeAp?ST.fabrics.filter(f=>(f.tags||[]).includes(activeAp)):ST.fabrics;
+  } else if(capCtx==='bybadge'){
+    // 활성 배지 — 비어있으면 9종 모두
+    const activeKeys=activeBadges.bybadge.size>0?[...activeBadges.bybadge]:BADGE_DEFS.map(d=>d.key);
+    // 활성 배지 중 하나라도 가진 원단 (중복 제거)
+    const seen=new Set();
+    fabs=[];
+    for(const f of ST.fabrics){
+      if(seen.has(f.id))continue;
+      if(!f.badges)continue;
+      if(activeKeys.some(k=>f.badges[k])){
+        fabs.push(f);
+        seen.add(f.id);
+      }
+    }
   } else {
     fabs=getFabs();
   }
@@ -2838,6 +2867,11 @@ function openCapture(viewCtx){
     titleText=`${activeBc} 조직 단가표`;
   } else if(ctx==='apparel'&&activeAp){
     titleText=`${activeAp} 추천 단가표`;
+  } else if(ctx==='bybadge'){
+    if(activeBadges.bybadge.size>0){
+      const labels=BADGE_DEFS.filter(d=>activeBadges.bybadge.has(d.key)).map(d=>d.label).join(' / ');
+      titleText=`RECOVERIC 단가표 — ${labels}`;
+    }
   }
   const titleEl=document.getElementById('cap-cn');
   if(titleEl)titleEl.textContent=titleText;
@@ -2847,6 +2881,7 @@ function openCapture(viewCtx){
   if(ctx==='byline') initGrade=activeBlGrade||'';
   else if(ctx==='bycat') initGrade=activeBcGrade||'';
   else if(ctx==='apparel') initGrade=activeApGrade||'';
+  else if(ctx==='bybadge') initGrade=activeBbGrade||'';
   else if(ctx==='special'&&specialCid){
     const c=ST.customers.find(x=>x.id===specialCid);
     if(c)initGrade=c.grade||'';
@@ -3256,7 +3291,7 @@ function saveF(){
   if(editFid){const idx=ST.fabrics.findIndex(x=>x.id===editFid);if(idx>=0)ST.fabrics[idx]={...ST.fabrics[idx],...d};}
   else ST.fabrics.push({id:ST.nextFid++,...d});
   saveFabricsDirty();fillLevelSelects();fillCatList();
-  renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
+  renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();renderByBadge();
   closeM();toast('저장됨','success');
 }
 function delF(id){
@@ -3487,7 +3522,7 @@ async function fbRead(){
       console.log('[Firebase] 데이터 업데이트');
       localStorage.setItem('rcv2',JSON.stringify(ST));
       fillLevelSelects();fillCatList();fillSpecialSel();
-      renderTbl();renderCust();renderByLine();renderByCat();renderByApparel();
+      renderTbl();renderCust();renderByLine();renderByCat();renderByApparel();renderByBadge();
       renderTagBtns();renderTagMgmt();renderAdminTbl();applyGradeTabsDisabled();
       renderSpecialTbl();renderSpCustCards();
       if(typeof introFid!=='undefined'&&introFid)renderIntro(introFid);
@@ -3992,13 +4027,9 @@ function renderByLine(){
   });
   const d=ST.grades[activeBlGrade]?.discount||0;
   const g=activeBlGrade;
-  // 필터바 렌더 + 배지 필터 적용
-  renderBadgeFilterBar('bl-badge-filter','byline');
-  let fabs=activeBl?ST.fabrics.filter(f=>f.level===activeBl):ST.fabrics;
-  fabs=applyBadgeFilter(fabs,'byline');
+  const fabs=activeBl?ST.fabrics.filter(f=>f.level===activeBl):ST.fabrics;
   const tb=document.getElementById('bl-tbody');if(!tb)return;
-  const emptyMsg=activeBadges.byline.size>0?'선택한 배지에 해당하는 원단이 없습니다':'해당 라인 원단 없음';
-  if(!fabs.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">'+emptyMsg+'</td></tr>';return;}
+  if(!fabs.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">해당 라인 원단 없음</td></tr>';return;}
   // 항상 라인별 섹션 바 표시
   const lvOrder=Object.keys(allLvs);
   const grouped={};
@@ -4010,7 +4041,7 @@ function renderByLine(){
     html+=`<tr class="section-row lv-${lvCls}"><td colspan="10">▸ ${allLvs[lv]||lv} · ${grouped[lv].length}종</td></tr>`;
     sortFabs(grouped[lv]).forEach(f=>html+=blRow(f,d,g));
   });
-  tb.innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">'+emptyMsg+'</td></tr>';
+  tb.innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">해당 라인 원단 없음</td></tr>';
 }
 function blRow(f,d,g){
   const rib=f.rib?(f.ribUnit==='EA'?`<span class="price-val">${f.rib.toLocaleString()}/EA</span>`:fp(f.rib,d,g)):'<span class="price-null">—</span>';
@@ -4050,13 +4081,9 @@ function renderByCat(){
   });
   const d=ST.grades[activeBcGrade]?.discount||0;
   const g=activeBcGrade;
-  // 필터바 렌더 + 배지 필터 적용
-  renderBadgeFilterBar('bc-badge-filter','bycat');
-  let fabs=activeBc?ST.fabrics.filter(f=>f.category===activeBc):ST.fabrics;
-  fabs=applyBadgeFilter(fabs,'bycat');
+  const fabs=activeBc?ST.fabrics.filter(f=>f.category===activeBc):ST.fabrics;
   const tb=document.getElementById('bc-tbody');if(!tb)return;
-  const emptyMsg=activeBadges.bycat.size>0?'선택한 배지에 해당하는 원단이 없습니다':'해당 조직 원단 없음';
-  if(!fabs.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">'+emptyMsg+'</td></tr>';return;}
+  if(!fabs.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">해당 조직 원단 없음</td></tr>';return;}
   // 라인 순서 기준 정렬 후 표시
   const lvOrder2=Object.keys(allLvs);
   const sortedFabs=[...fabs].sort((a,b)=>{
@@ -4080,7 +4107,7 @@ function renderByCat(){
   (activeBc?[activeBc]:cats).forEach(cat=>{if(!grouped2[cat])return;
     html+=`<tr class="section-row lv-standard"><td colspan="10">▸ ${cat} · ${grouped2[cat].length}종</td></tr>`;
     sortFabs(grouped2[cat]).forEach(f=>html+=mkRow(f));});
-  tb.innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">'+emptyMsg+'</td></tr>';
+  tb.innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">해당 조직 원단 없음</td></tr>';
 }
 function setBc(cat,btn){
   activeBc=(cat!==undefined&&cat!==null)?cat:'';
@@ -4105,14 +4132,10 @@ function renderByApparel(){
   const d=ST.grades[activeApGrade]?.discount||0;
   const g=activeApGrade;
   const allLvs=getAllLevels();
-  // 필터바 렌더 + 배지 필터 적용
-  renderBadgeFilterBar('ap-badge-filter','apparel');
-  let fabs=activeAp?ST.fabrics.filter(f=>(f.tags||[]).includes(activeAp)):[];
-  fabs=applyBadgeFilter(fabs,'apparel');
+  const fabs=activeAp?ST.fabrics.filter(f=>(f.tags||[]).includes(activeAp)):[];
   const tb=document.getElementById('ap-tbody');if(!tb)return;
   if(!activeAp){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">의류 유형을 선택하세요</td></tr>';return;}
-  const apEmptyMsg=activeBadges.apparel.size>0?'선택한 배지에 해당하는 원단이 없습니다':'해당 태그 원단 없음';
-  if(!fabs.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">'+apEmptyMsg+'</td></tr>';return;}
+  if(!fabs.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">해당 태그 원단 없음</td></tr>';return;}
   // 라인별 섹션으로 구분 표시
   const lvOrder=Object.keys(allLvs);
   const grouped={};
@@ -4158,6 +4181,88 @@ function setApGrade(btn,grade){
   document.querySelectorAll('#ap-grade-bar .grade-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderByApparel();
+}
+
+// ─ 배지별 단가표 ─
+let activeBbGrade='';
+function renderByBadge(){
+  const allLvs=getAllLevels();
+  // 배지 필터바 렌더
+  renderBadgeFilterBar('bb-badge-filter','bybadge');
+  // 등급 탭 active 동기화
+  document.querySelectorAll('#bb-grade-bar .grade-tab').forEach(b=>{
+    b.classList.toggle('active',b.getAttribute('data-grade')===activeBbGrade);
+  });
+  const d=ST.grades[activeBbGrade]?.discount||0;
+  const g=activeBbGrade;
+  const tb=document.getElementById('bb-tbody');if(!tb)return;
+  // 활성 배지 — 비어있으면 9종 모두 사용
+  const activeKeys=activeBadges.bybadge.size>0?[...activeBadges.bybadge]:BADGE_DEFS.map(d=>d.key);
+  // BADGE_DEFS 순서(알파벳/한글) 따라 섹션 구성
+  let html='';
+  let totalCount=0;
+  for(const def of BADGE_DEFS){
+    if(!activeKeys.includes(def.key))continue;
+    // 해당 배지를 가진 원단 수집 (라인+중량 정렬)
+    const fabs=ST.fabrics.filter(f=>f.badges&&f.badges[def.key]);
+    if(!fabs.length)continue;
+    const sorted=sortFabs(fabs);
+    html+=`<tr class="section-row"><td colspan="10" style="background:${badgeSectionBg(def.key)};color:${badgeSectionFg(def.key)};border-left:4px solid ${badgeSectionFg(def.key)}">▸ ${def.label} · ${fabs.length}종</td></tr>`;
+    sorted.forEach(f=>html+=bbRow(f,d,g));
+    totalCount+=fabs.length;
+  }
+  if(!totalCount){
+    const emptyMsg=activeBadges.bybadge.size>0?'선택한 배지에 해당하는 원단이 없습니다':'배지가 부착된 원단이 없습니다';
+    tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--txt3)">'+emptyMsg+'</td></tr>';
+    return;
+  }
+  tb.innerHTML=html;
+}
+// 배지 섹션 바 색상 (배경/전경) — BADGE_DEFS 의 cls 활용해 CSS 색 추출
+function badgeSectionBg(key){
+  const map={best:'#fdf6e3',clearance:'#fbeae0',drysafe:'#dcfce7',hot:'#ffe8d6',limited:'#fce7f3',newItem:'#e8f0ff',sale:'#fff2f2',unique:'#f3e8ff',recommend:'#e6f9f0'};
+  return map[key]||'#f5f5f5';
+}
+function badgeSectionFg(key){
+  const map={best:'#a07000',clearance:'#7c2d12',drysafe:'#0f766e',hot:'#ea580c',limited:'#be185d',newItem:'#1850c0',sale:'#c02828',unique:'#5a28a0',recommend:'#0a7050'};
+  return map[key]||'#666';
+}
+function bbRow(f,d,g){
+  const rib=f.rib?(f.ribUnit==='EA'?`<span class="price-val">${f.rib.toLocaleString()}/EA</span>`:fp(f.rib,d,g)):'<span class="price-null">—</span>';
+  const selChk=selMode&&selView==='bybadge'?`<input type="checkbox" class="sel-chk" ${selItems.has(f.id)?'checked':''} onchange="toggleSelItem(${f.id})" onclick="event.stopPropagation()">`:'' ;
+  const copyBtn=!(selMode&&selView==='bybadge')?`<button class="copy-msg" onclick="copyRSimple(${f.id},${d})">복사</button>`:'';
+  return`<tr class="data-row${selMode&&selView==='bybadge'&&selItems.has(f.id)?' sel-selected':''}" data-fid="${f.id}">
+    <td class="td-name" style="display:flex;align-items:center;gap:8px">${selChk}${badgeHtml(f)}${f.name}</td><td class="td-cat">${f.category}</td>
+    <td class="td-price">${fp(f.mg,d,g)}</td><td class="td-price">${fp(f.baek,d,g)}</td>
+    <td class="td-price">${fp(f.muji,d,g)}</td><td class="td-price">${rib}</td>
+    <td class="td-spec">${f.width?f.width+'"':'—'}</td><td class="td-spec">${f.weight?f.weight+'g':'—'}</td>
+    <td class="td-comp">${comp(f)||'—'}</td>
+    <td class="td-copy"><div class="row-acts">${copyBtn}</div></td>
+  </tr>`;
+}
+function setBbGrade(btn,grade){
+  activeBbGrade=grade||'';
+  if(selMode&&selView==='bybadge'){selGrade=activeBbGrade;updateSelGradeBadge(selGrade);}
+  document.querySelectorAll('#bb-grade-bar .grade-tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderByBadge();
+}
+// 배지별 단가표 - 전체 텍스트 복사
+function copyAllByBadge(){
+  const d=ST.grades[activeBbGrade]?.discount||0;
+  const activeKeys=activeBadges.bybadge.size>0?[...activeBadges.bybadge]:BADGE_DEFS.map(d=>d.key);
+  // 활성 배지 중 하나라도 가진 원단 수집 (중복 제거 - 한 원단이 여러 배지를 가져도 1번만 복사)
+  const seen=new Set();
+  const fabs=[];
+  for(const def of BADGE_DEFS){
+    if(!activeKeys.includes(def.key))continue;
+    for(const f of sortFabs(ST.fabrics.filter(x=>x.badges&&x.badges[def.key]))){
+      if(seen.has(f.id))continue;
+      seen.add(f.id);
+      fabs.push(f);
+    }
+  }
+  copyFabsToKakao(fabs,d);
 }
 
 
@@ -5237,7 +5342,7 @@ function applyNewPrices(){
         }
       });
       saveFabricsDirty();
-      renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
+      renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();renderByBadge();
       closeM();
       toast('2026 표준단가 일괄 적용 완료 ✓','success');
     }},
@@ -5259,7 +5364,7 @@ function resetFabrics(){
       ST.fabrics=JSON.parse(JSON.stringify(DFABRICS));
       ST.nextFid=DFABRICS.length+1;
       saveFabricsDirty();
-      renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
+      renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();renderByBadge();
       fillLevelSelects();fillCatList();
       closeM();
       // 카운트다운 토스트
@@ -5287,7 +5392,7 @@ function undoFabrics(toastEl){
   ST.fabrics=_fabricsUndo;
   _fabricsUndo=null;
   saveFabricsDirty();
-  renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();
+  renderTbl();renderAdminTbl();renderByLine();renderByCat();renderByApparel();renderByBadge();
   fillLevelSelects();fillCatList();
   if(toastEl)toastEl.remove();
   toast('되돌리기 완료 ✓','success');
