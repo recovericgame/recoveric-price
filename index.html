@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.119</title>
+<title>RECOVERIC 단가관리 시스템 v4.120</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -405,6 +405,12 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
 .badge-rec{background:#e6f9f0;color:#0a7050;border:1px solid #90e0bc}
 .badge-new{background:#e8f0ff;color:#1850c0;border:1px solid #bdd0ff}
 .badge-sale{background:#fff2f2;color:#c02828;border:1px solid #ffaaaa}
+.badge-best{background:#fdf6e3;color:#a07000;border:1px solid #e8c878}
+.badge-clearance{background:#fbeae0;color:#7c2d12;border:1px solid #d8a48a}
+.badge-drysafe{background:#dcfce7;color:#0f766e;border:1px solid #86dbcd}
+.badge-hot{background:#ffe8d6;color:#ea580c;border:1px solid #fdba74}
+.badge-limited{background:#fce7f3;color:#be185d;border:1px solid #f5b8d3}
+.badge-unique{background:#f3e8ff;color:#5a28a0;border:1px solid #c8a8e8}
 /* 편집/삭제 버튼 공통 */
 .copy-xs{background:var(--bg3);border:1.5px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--txt2);cursor:pointer;transition:.15s;white-space:nowrap}
 .copy-xs:hover{border-color:var(--sidebar);color:var(--sidebar)}
@@ -552,7 +558,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.119</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.120</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -1958,12 +1964,24 @@ function sortFabs(arr){
     return (a.weight||9999)-(b.weight||9999);
   });
 }
-// ─ 배지 HTML ─
+// ─ 배지 HTML — 알파벳 → 한글 순 ─
+const BADGE_DEFS=[
+  {key:'best',     cls:'badge-best',     label:'BEST'},
+  {key:'clearance',cls:'badge-clearance',label:'CLEARANCE'},
+  {key:'drysafe',  cls:'badge-drysafe',  label:'DRYSAFE'},
+  {key:'hot',      cls:'badge-hot',      label:'HOT'},
+  {key:'limited',  cls:'badge-limited',  label:'LIMITED'},
+  {key:'newItem',  cls:'badge-new',      label:'NEW'},
+  {key:'sale',     cls:'badge-sale',     label:'SALE'},
+  {key:'unique',   cls:'badge-unique',   label:'UNIQUE'},
+  {key:'recommend',cls:'badge-rec',      label:'추천'},
+];
 function badgeHtml(f){
+  if(!f||!f.badges)return '';
   let b='';
-  if(f.badges?.recommend)b+='<span class="fab-badge badge-rec">추천</span>';
-  if(f.badges?.newItem)b+='<span class="fab-badge badge-new">NEW</span>';
-  if(f.badges?.sale)b+='<span class="fab-badge badge-sale">SALE</span>';
+  for(const def of BADGE_DEFS){
+    if(f.badges[def.key])b+='<span class="fab-badge '+def.cls+'">'+def.label+'</span>';
+  }
   return b;
 }
 function getFabs(){
@@ -2085,10 +2103,26 @@ function openSlidePanel(fid){
     <div class="sp-field"><span class="sp-label">의류 태그</span><div>${tagCks}</div></div>
     <div class="sp-field" style="margin-top:4px">
       <span class="sp-label">배지 표시</span>
-      <div style="display:flex;gap:16px;margin-top:4px">
+      <div style="display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:4px">
         <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
-          <input type="checkbox" id="sp-badge-rec" ${f.badges?.recommend?'checked':''}>
-          <span class="fab-badge badge-rec" style="margin:0">추천</span>
+          <input type="checkbox" id="sp-badge-best" ${f.badges?.best?'checked':''}>
+          <span class="fab-badge badge-best" style="margin:0">BEST</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
+          <input type="checkbox" id="sp-badge-clearance" ${f.badges?.clearance?'checked':''}>
+          <span class="fab-badge badge-clearance" style="margin:0">CLEARANCE</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
+          <input type="checkbox" id="sp-badge-drysafe" ${f.badges?.drysafe?'checked':''}>
+          <span class="fab-badge badge-drysafe" style="margin:0">DRYSAFE</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
+          <input type="checkbox" id="sp-badge-hot" ${f.badges?.hot?'checked':''}>
+          <span class="fab-badge badge-hot" style="margin:0">HOT</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
+          <input type="checkbox" id="sp-badge-limited" ${f.badges?.limited?'checked':''}>
+          <span class="fab-badge badge-limited" style="margin:0">LIMITED</span>
         </label>
         <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
           <input type="checkbox" id="sp-badge-new" ${f.badges?.newItem?'checked':''}>
@@ -2097,6 +2131,14 @@ function openSlidePanel(fid){
         <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
           <input type="checkbox" id="sp-badge-sale" ${f.badges?.sale?'checked':''}>
           <span class="fab-badge badge-sale" style="margin:0">SALE</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
+          <input type="checkbox" id="sp-badge-unique" ${f.badges?.unique?'checked':''}>
+          <span class="fab-badge badge-unique" style="margin:0">UNIQUE</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
+          <input type="checkbox" id="sp-badge-rec" ${f.badges?.recommend?'checked':''}>
+          <span class="fab-badge badge-rec" style="margin:0">추천</span>
         </label>
       </div>
     </div>
@@ -2183,6 +2225,12 @@ function saveSlidePanel(){
         recommend:!!(g('sp-badge-rec')?.checked),
         newItem:!!(g('sp-badge-new')?.checked),
         sale:!!(g('sp-badge-sale')?.checked),
+        best:!!(g('sp-badge-best')?.checked),
+        clearance:!!(g('sp-badge-clearance')?.checked),
+        drysafe:!!(g('sp-badge-drysafe')?.checked),
+        hot:!!(g('sp-badge-hot')?.checked),
+        limited:!!(g('sp-badge-limited')?.checked),
+        unique:!!(g('sp-badge-unique')?.checked),
       },
     });
     saveFabricsDirty();
@@ -2243,7 +2291,7 @@ function downloadExcel(){
   lvOrder.forEach(lv=>{
     if(!grouped[lv])return;
     sortFabs(grouped[lv]).forEach(f=>{
-      const badges=[f.badges?.recommend?'추천':'',f.badges?.newItem?'NEW':'',f.badges?.sale?'SALE':''].filter(Boolean).join('/');
+      const badges=BADGE_DEFS.filter(d=>f.badges&&f.badges[d.key]).map(d=>d.label).join('/');
       rows.push([
         s(f.name), s(allLvs[f.level]||f.level), s(f.category), s(badges),
         f.mg?n(f.mg):'', f.baek?n(f.baek):'', f.muji?n(f.muji):'',
@@ -3098,10 +3146,16 @@ function fForm(f){
   </div>
   <div style="margin-top:6px">
     <div class="flabel" style="margin-bottom:6px">배지</div>
-    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px">
-      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-rec" ${f?.badges?.recommend?'checked':''}><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:4px;font-weight:700">추천</span></label>
-      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-new" ${f?.badges?.newItem?'checked':''}><span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-weight:700">NEW</span></label>
-      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-sale" ${f?.badges?.sale?'checked':''}><span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;font-weight:700">SALE</span></label>
+    <div style="display:flex;gap:10px 14px;flex-wrap:wrap;font-size:12px">
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-best" ${f?.badges?.best?'checked':''}><span class="fab-badge badge-best" style="margin:0">BEST</span></label>
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-clearance" ${f?.badges?.clearance?'checked':''}><span class="fab-badge badge-clearance" style="margin:0">CLEARANCE</span></label>
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-drysafe" ${f?.badges?.drysafe?'checked':''}><span class="fab-badge badge-drysafe" style="margin:0">DRYSAFE</span></label>
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-hot" ${f?.badges?.hot?'checked':''}><span class="fab-badge badge-hot" style="margin:0">HOT</span></label>
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-limited" ${f?.badges?.limited?'checked':''}><span class="fab-badge badge-limited" style="margin:0">LIMITED</span></label>
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-new" ${f?.badges?.newItem?'checked':''}><span class="fab-badge badge-new" style="margin:0">NEW</span></label>
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-sale" ${f?.badges?.sale?'checked':''}><span class="fab-badge badge-sale" style="margin:0">SALE</span></label>
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-unique" ${f?.badges?.unique?'checked':''}><span class="fab-badge badge-unique" style="margin:0">UNIQUE</span></label>
+      <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fb-rec" ${f?.badges?.recommend?'checked':''}><span class="fab-badge badge-rec" style="margin:0">추천</span></label>
     </div>
   </div>
   <div style="margin-top:8px"><div class="flabel" style="margin-bottom:6px">의류 태그</div>${tcs}</div>`;
@@ -3112,13 +3166,20 @@ function saveF(){
   const name=document.getElementById('fn').value.trim();
   if(!name){toast('품목명 필요','error');return;}
   // 태그 수집 - 배지 체크박스(fb-*)는 제외
+  const badgeIds=['fb-rec','fb-new','fb-sale','fb-best','fb-clearance','fb-drysafe','fb-hot','fb-limited','fb-unique'];
   const tags=[...document.querySelectorAll('#m-content input[type=checkbox]:checked')]
-    .filter(c=>!['fb-rec','fb-new','fb-sale'].includes(c.id))
+    .filter(c=>!badgeIds.includes(c.id))
     .map(c=>c.value).filter(v=>v&&v!=='on');
   const badges={
     recommend:!!document.getElementById('fb-rec')?.checked,
     newItem:!!document.getElementById('fb-new')?.checked,
     sale:!!document.getElementById('fb-sale')?.checked,
+    best:!!document.getElementById('fb-best')?.checked,
+    clearance:!!document.getElementById('fb-clearance')?.checked,
+    drysafe:!!document.getElementById('fb-drysafe')?.checked,
+    hot:!!document.getElementById('fb-hot')?.checked,
+    limited:!!document.getElementById('fb-limited')?.checked,
+    unique:!!document.getElementById('fb-unique')?.checked,
   };
   const d={level:document.getElementById('fl').value,category:catVal||'기타',name,
     mg:parseInt(document.getElementById('fmg').value)||null,baek:parseInt(document.getElementById('fbk').value)||null,
