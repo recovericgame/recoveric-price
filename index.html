@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RECOVERIC 단가관리 시스템 v4.122</title>
+<title>RECOVERIC 단가관리 시스템 v4.123</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -574,7 +574,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;display:no
     <div class="sidebar-logo">
       <div class="logo-mark">RECOVERIC</div>
       <div class="logo-sub">단가 관리 시스템</div>
-      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.122</div>
+      <div style="font-size:9px;color:rgba(168,188,212,.35);margin-top:4px;letter-spacing:1px">v4.123</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">메인</div>
@@ -2030,10 +2030,17 @@ const BADGE_DEFS=[
   {key:'unique',   cls:'badge-unique',   label:'UNIQUE'},
   {key:'recommend',cls:'badge-rec',      label:'추천'},
 ];
-function badgeHtml(f){
+function badgeHtml(f,priorityKey){
   if(!f||!f.badges)return '';
   let b='';
+  // priorityKey가 있고 해당 배지를 가졌으면 맨 앞에 먼저 출력
+  if(priorityKey&&f.badges[priorityKey]){
+    const def=BADGE_DEFS.find(d=>d.key===priorityKey);
+    if(def)b+='<span class="fab-badge '+def.cls+'">'+def.label+'</span>';
+  }
+  // 나머지는 알파벳/한글 순 (priorityKey는 스킵)
   for(const def of BADGE_DEFS){
+    if(def.key===priorityKey)continue;
     if(f.badges[def.key])b+='<span class="fab-badge '+def.cls+'">'+def.label+'</span>';
   }
   return b;
@@ -2812,6 +2819,47 @@ function buildCapTable(){
   }
   let rows='';
   const allLvNames=getAllLevels();
+  // ─ 배지별 캡처: 배지 섹션으로 그룹핑 + 섹션 우선 정렬
+  if(capCtx==='bybadge'){
+    const activeKeys=activeBadges.bybadge.size>0?[...activeBadges.bybadge]:BADGE_DEFS.map(d=>d.key);
+    for(const def of BADGE_DEFS){
+      if(!activeKeys.includes(def.key))continue;
+      const sectionFabs=ST.fabrics.filter(f=>f.badges&&f.badges[def.key]);
+      if(!sectionFabs.length)continue;
+      const sortedSection=sortFabs(sectionFabs);
+      const sectBg=badgeSectionBg(def.key);
+      const sectFg=badgeSectionFg(def.key);
+      rows+=`<tr class="cap-sect"><td colspan="9" style="background:${sectBg};color:${sectFg};border-left:4px solid ${sectFg}">${def.label}</td></tr>`;
+      sortedSection.forEach(f=>{
+        const useCustomer=(capCtx==='special'||(capCtx==='selected'&&selView==='special'))&&specialCid;
+        const dispGrade=useCustomer?(ST.customers.find(x=>x.id===specialCid)?.grade||''):capGrade;
+        const gradeColor={silver:'#3a5a9a',gold:'#a07000',vip:'#5a28a0'}[dispGrade]||'';
+        const fmtCell=field=>{
+          if(field==='rib'&&f.ribUnit==='EA')return f.rib?f.rib.toLocaleString()+'/EA':'-';
+          const {price,direct}=capPriceFor(f,field);
+          if(!price)return '-';
+          if(direct)return`<span style="color:#c02828;font-weight:700">${price.toLocaleString()}</span>`;
+          if(gradeColor)return`<span style="color:${gradeColor};font-weight:700">${price.toLocaleString()}</span>`;
+          return price.toLocaleString();
+        };
+        const rib=f.rib?(f.ribUnit==='EA'?f.rib.toLocaleString()+'/EA':fmtCell('rib')):'-';
+        rows+=`<tr>
+          <td style="text-align:left;font-weight:600">${badgeHtml(f,def.key)}${f.name}</td>
+          <td style="text-align:center">${f.category}</td>
+          <td class="cp">${f.mg?fmtCell('mg'):'-'}</td>
+          <td class="cp">${f.baek?fmtCell('baek'):'-'}</td>
+          <td class="cp">${f.muji?fmtCell('muji'):'-'}</td>
+          <td class="cp">${rib}</td>
+          <td class="cs">${f.width?f.width+'"':'-'}</td>
+          <td class="cs">${f.weight?f.weight+'g':'-'}</td>
+          <td class="cx">${comp(f)||'-'}</td>
+        </tr>`;
+      });
+    }
+    document.getElementById('captbody').innerHTML=rows;
+    return;
+  }
+  // ─ 그 외: 기존 라인별 그룹핑
   Object.keys(allLvNames).forEach(lv=>{
     if(!grouped[lv])return;
     rows+=`<tr class="cap-sect"><td colspan="9" style="background:${lcols[lv]||'#f0f0f0'};color:${ltxt[lv]||'#333'};border-left:4px solid ${ltxt[lv]||'#999'}">${(allLvNames[lv]||lv).toUpperCase()}</td></tr>`;
@@ -4208,7 +4256,7 @@ function renderByBadge(){
     if(!fabs.length)continue;
     const sorted=sortFabs(fabs);
     html+=`<tr class="section-row"><td colspan="10" style="background:${badgeSectionBg(def.key)};color:${badgeSectionFg(def.key)};border-left:4px solid ${badgeSectionFg(def.key)}">▸ ${def.label} · ${fabs.length}종</td></tr>`;
-    sorted.forEach(f=>html+=bbRow(f,d,g));
+    sorted.forEach(f=>html+=bbRow(f,d,g,def.key));
     totalCount+=fabs.length;
   }
   if(!totalCount){
@@ -4227,12 +4275,12 @@ function badgeSectionFg(key){
   const map={best:'#a07000',clearance:'#7c2d12',drysafe:'#0f766e',hot:'#ea580c',limited:'#be185d',newItem:'#1850c0',sale:'#c02828',unique:'#5a28a0',recommend:'#0a7050'};
   return map[key]||'#666';
 }
-function bbRow(f,d,g){
+function bbRow(f,d,g,sectionKey){
   const rib=f.rib?(f.ribUnit==='EA'?`<span class="price-val">${f.rib.toLocaleString()}/EA</span>`:fp(f.rib,d,g)):'<span class="price-null">—</span>';
   const selChk=selMode&&selView==='bybadge'?`<input type="checkbox" class="sel-chk" ${selItems.has(f.id)?'checked':''} onchange="toggleSelItem(${f.id})" onclick="event.stopPropagation()">`:'' ;
   const copyBtn=!(selMode&&selView==='bybadge')?`<button class="copy-msg" onclick="copyRSimple(${f.id},${d})">복사</button>`:'';
   return`<tr class="data-row${selMode&&selView==='bybadge'&&selItems.has(f.id)?' sel-selected':''}" data-fid="${f.id}">
-    <td class="td-name" style="display:flex;align-items:center;gap:8px">${selChk}${badgeHtml(f)}${f.name}</td><td class="td-cat">${f.category}</td>
+    <td class="td-name" style="display:flex;align-items:center;gap:8px">${selChk}${badgeHtml(f,sectionKey)}${f.name}</td><td class="td-cat">${f.category}</td>
     <td class="td-price">${fp(f.mg,d,g)}</td><td class="td-price">${fp(f.baek,d,g)}</td>
     <td class="td-price">${fp(f.muji,d,g)}</td><td class="td-price">${rib}</td>
     <td class="td-spec">${f.width?f.width+'"':'—'}</td><td class="td-spec">${f.weight?f.weight+'g':'—'}</td>
